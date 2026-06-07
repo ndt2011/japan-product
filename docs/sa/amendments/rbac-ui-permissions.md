@@ -27,9 +27,10 @@
 | **Báo cáo** `/reports` | ✅ All | ✅ Limited | Company chỉ thấy báo cáo đơn mình |
 | **Nhà cung cấp** `/suppliers` | ✅ CRUD | ✅ Xem | |
 | **Tỷ giá** `/exchange-rates` | ✅ Sửa | ✅ Xem | |
-| **Quản trị** `/admin` | ✅ Full | ❌ | |
-| **Quản lý Admin** `/admin/admins` | ✅ | ❌ | |
-| **Quản lý Company** `/admin/companies` | ✅ | ❌ | |
+| **Quản trị** `/admin` | ✅ Full | ❌ | Tạo Admin + Công ty VN ✅ |
+| **Quản lý Admin** `/admin` tab Admin | ✅ | ❌ | API `/admin-users` |
+| **Quản lý Company** `/admin` tab Công ty VN | ✅ | ❌ | API `/company-users` |
+| **Chi nhánh** `/admin/branches` | ✅ | ❌ | Branch user tại `/branches/{id}/users` |
 | **Tờ khai HQ** `/import-declarations` | ✅ Full | ✅ Xem | |
 
 ---

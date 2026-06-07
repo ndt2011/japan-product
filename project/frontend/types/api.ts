@@ -61,6 +61,17 @@ export interface CompanyUserItem {
   disabled_flag: boolean;
 }
 
+export interface ProductBranchStat {
+  branch_id: number;
+  branch_name: string;
+  region: string;
+  province: string;
+  total_ordered: number;
+  pending_qty: number;
+  delivered_qty: number;
+  last_order_date: string | null;
+}
+
 export interface BranchUserItem {
   id: number;
   branch_id: number;

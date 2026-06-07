@@ -65,9 +65,11 @@
 | Chuyến hàng | `/shipments` | `4-001` (chờ xlsx) | ✅ BE+FE |
 | Kho / Nhập / Xuất / Kiểm kê | `/stock-in` … `/inventory` | `warehouse-operations.md` | ✅ BE+FE (admin) |
 | Báo cáo | `/reports` | `reports-module.md` | ✅ BE+FE |
-| Chi nhánh | `/admin/branches`, `/my-branch` | `branch-system.md` | 🔄 Phase 1 BE+FE |
+| Chi nhánh | `/admin/branches`, `/my-branch` | `branch-system.md` | ✅ Phase 1 |
+| Quản trị user | `/admin` | `5-001` | ✅ Tạo Admin + Công ty VN |
+| SP theo CN | `/products/{id}` tab | `branch-system.md` | ✅ branch-stats |
 | Nhà cung cấp | `/suppliers` | — | 🔄 UI demo |
-| Quản trị | `/admin` | `5-001` | 🔄 UI demo |
+| Đại lý | `/agents` | — | 📋 Placeholder |
 
 ---
 

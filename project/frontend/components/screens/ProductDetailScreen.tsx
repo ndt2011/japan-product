@@ -1,16 +1,22 @@
 "use client";
 
 import { ProductImageUpload } from "@/components/ProductImageUpload";
-import { Badge, Button, Card, PageHeader } from "@/components/ui";
+import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { useIsAdmin } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
-import type { ProductItem } from "@/types/api";
+import type { ProductBranchStat, ProductItem } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function ProductDetailScreen({ productId }: { productId: number }) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
+  const [tab, setTab] = useState<"detail" | "branches">("detail");
   const [product, setProduct] = useState<ProductItem | null>(null);
+  const [branchStats, setBranchStats] = useState<ProductBranchStat[]>([]);
+  const [branchTotal, setBranchTotal] = useState(0);
+  const [loadingBranches, setLoadingBranches] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -35,6 +41,24 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
     }
     load();
   }, [productId]);
+
+  useEffect(() => {
+    if (!isAdmin || tab !== "branches") return;
+    async function loadBranches() {
+      setLoadingBranches(true);
+      try {
+        const res = await fetch(`/api/proxy/products/${productId}/branch-stats`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setBranchStats(data.data.branches ?? []);
+          setBranchTotal(data.data.total_ordered_all_branches ?? 0);
+        }
+      } finally {
+        setLoadingBranches(false);
+      }
+    }
+    loadBranches();
+  }, [isAdmin, tab, productId]);
 
   async function handleDelete() {
     if (!confirm("Xóa mềm sản phẩm này?")) return;
@@ -107,6 +131,69 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
         }
       />
 
+      {isAdmin && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setTab("detail")}
+            className={`px-4 py-2 rounded-xl text-sm ${
+              tab === "detail" ? "bg-brand text-white" : "bg-white border border-border"
+            }`}
+          >
+            Chi tiết
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("branches")}
+            className={`px-4 py-2 rounded-xl text-sm ${
+              tab === "branches" ? "bg-brand text-white" : "bg-white border border-border"
+            }`}
+          >
+            Theo chi nhánh
+          </button>
+        </div>
+      )}
+
+      {tab === "branches" && isAdmin ? (
+        <Card className="p-6">
+          <p className="text-sm text-text-muted mb-4">
+            Tổng đã đặt tất cả chi nhánh: <strong>{branchTotal.toLocaleString("vi-VN")}</strong>
+          </p>
+          {loadingBranches ? (
+            <p className="text-sm text-text-muted">Đang tải...</p>
+          ) : branchStats.length === 0 ? (
+            <p className="text-sm text-text-muted">Chưa có đơn hàng từ chi nhánh nào.</p>
+          ) : (
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Chi nhánh</Th>
+                  <Th>Miền</Th>
+                  <Th>Tỉnh/TP</Th>
+                  <Th>Tổng đặt</Th>
+                  <Th>Đang xử lý</Th>
+                  <Th>Đã giao</Th>
+                  <Th>Đơn gần nhất</Th>
+                </Tr>
+              </Thead>
+              <tbody>
+                {branchStats.map((b) => (
+                  <Tr key={b.branch_id}>
+                    <Td>{b.branch_name}</Td>
+                    <Td>{b.region}</Td>
+                    <Td>{b.province}</Td>
+                    <Td>{Number(b.total_ordered).toLocaleString("vi-VN")}</Td>
+                    <Td>{Number(b.pending_qty).toLocaleString("vi-VN")}</Td>
+                    <Td>{Number(b.delivered_qty).toLocaleString("vi-VN")}</Td>
+                    <Td>{b.last_order_date ? String(b.last_order_date).slice(0, 10) : "—"}</Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+      ) : (
+        <>
       {primaryImage && (
         <Card className="p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -150,6 +237,8 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
           </div>
         )}
       </Card>
+        </>
+      )}
     </div>
   );
 }

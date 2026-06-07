@@ -666,7 +666,7 @@ if ($user->user_type === 'admin') {
 [x] Trang /admin/branches/{id}/users: quản lý user chi nhánh
 [x] Trang /my-branch: Branch user thấy thông tin chi nhánh mình
 [x] Sidebar branch_manager: ẩn menu Quản trị toàn hệ thống; link quản lý NV từ /my-branch
-[ ] Trang product detail (Admin): thêm tab "Theo chi nhánh" hiển thị branchStats
+[x] Trang product detail (Admin): tab "Theo chi nhánh" + branchStats API
 [x] Filter đơn hàng: branch user tự động lọc theo chi nhánh (BE)
 ```
 

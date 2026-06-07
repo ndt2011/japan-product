@@ -14,13 +14,13 @@
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
 | BE-001 | Khởi tạo Laravel 11, cấu hình MySQL + Redis | P0 | — | 0.5d | ✅ Local OK · Railway 📋 |
-| BE-002 | Migration: `users`, `roles`, `permissions`, `role_permissions`, `user_permissions` | P0 | BE-001 | 0.5d | ⏸ REQ-003 |
-| BE-003 | Seeder: 5 roles, permissions, SUPER_ADMIN | P0 | BE-002 | 0.5d | ⏸ REQ-003 |
+| BE-002 | Migration: `admins`, `companies_vn`, `branches`, `branch_users` | P0 | BE-001 | 0.5d | ✅ 2-role approach (không dùng role/permission tables) |
+| BE-003 | Seeder: admin + company + branch users | P0 | BE-002 | 0.5d | ✅ BranchSeeder ✅ |
 | BE-004 | `POST /auth/login` — `login_id`, `password`, `remember_me` (24h/30d) | P0 | BE-001 | 1d | ✅ |
 | BE-005 | `POST /auth/logout` — revoke token | P0 | BE-004 | 0.5d | ✅ |
-| BE-006 | Account lockout: Redis 5 lần fail → khóa 30 phút | P0 | BE-004 | 1d | ⏸ REQ-007 |
-| BE-007 | Middleware `CheckPermission` + Redis cache 5 phút | P0 | BE-002 | 1d | ⏸ REQ-003 |
-| BE-008 | API CRUD users | P0 | BE-007 | 1d | ⏸ REQ-003 |
+| BE-006 | Account lockout: Redis 5 lần fail → khóa 30 phút | P0 | BE-004 | 1d | 📋 (chưa implement) |
+| BE-007 | Middleware `RoleMiddleware` (admin/company/branch) | P0 | BE-002 | 1d | ✅ via `rbac-req003.md` |
+| BE-008 | API CRUD: AdminManagement + CompanyManagement + BranchManagement | P0 | BE-007 | 1d | ✅ |
 | BE-008b | `GET /health` — health check monitoring | P1 | BE-001 | 0.5h | ✅ |
 
 **Ghi chú BE-004**: Dùng `login_id` theo `1-001` + `04_API_Contract.md` (không `email` — xem REQ-008).
@@ -72,7 +72,7 @@
 |----|-------|---|-----|-----|------------|
 | BE-022 | Migration: `shipment_batches`, `batch_order_items` | P0 | — | 0.5d | ✅ |
 | BE-023 | API CRUD chuyến hàng | P0 | BE-022 | 2d | ✅ |
-| BE-024 | API permission matrix | P1 | BE-007 | 1d | ⏸ REQ-003 |
+| BE-024 | API permission matrix (full role/permission tables) | P3 | — | 1d | 📋 Future — không cần cho MVP |
 
 ---
 

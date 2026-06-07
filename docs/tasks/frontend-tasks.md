@@ -29,7 +29,7 @@
 | FE-001 | Next.js 14 + TS + Tailwind | P0 | — | 1d | ✅ |
 | FE-002 | Login: `login_id`, password, Remember Me, httpOnly cookie | P0 | BE-004 | 1d | ✅ |
 | FE-003 | Middleware auth redirect | P0 | FE-002 | 0.5d | ✅ |
-| FE-004 | Layout sidebar + header; **menu theo role** | P0 | FE-003 | 1.5d | 🔄 Shell ✅ · role ⏸ REQ-003 |
+| FE-004 | Layout sidebar + header; **menu theo role** | P0 | FE-003 | 1.5d | ✅ via `rbac-ui-permissions.md` + RouteGuard |
 | FE-005 | Zustand `useAuthStore` + AuthProvider | P0 | FE-002 | 0.5d | ✅ |
 | FE-006 | Vercel deployment | P0 | — | 0.5d | 📋 DEV-13 |
 
@@ -72,7 +72,10 @@
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
 | FE-401 | `/shipments` — quản lý batch | P0 | BE-023 | 2.5d | ✅ |
-| FE-402 | `/admin/permissions` — matrix toggle | P1 | BE-024 | 2d | ⏸ REQ-003 |
+| FE-402 | `/admin/permissions` — matrix toggle | P3 | BE-024 | 2d | 📋 Future — không cần cho MVP |
+| FE-403 | `/admin` — tạo Admin + Công ty VN | P0 | BE-008 | 1.5d | ✅ |
+| FE-404 | `/admin/branches` + `/my-branch` | P0 | branch-system | 2d | ✅ |
+| FE-405 | `/products/{id}` tab Theo chi nhánh | P1 | branch-stats API | 0.5d | ✅ |
 
 ---
 

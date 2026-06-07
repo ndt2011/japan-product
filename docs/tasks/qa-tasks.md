@@ -16,7 +16,7 @@
 | QA-001a | TC-AUTH-004/005 Remember Me TTL | P0 | 2h | 📋 DEV-05 |
 | QA-001b | TC-AUTH-007 logout revoke | P0 | 1h | 📋 DEV-05 |
 | QA-001c | TC-AUTH-006 lockout 5 lần | P0 | 2h | ⏸ REQ-007 + BE-006 |
-| QA-002 | RBAC: mỗi role → 403 khi không có quyền | P0 | 1d | ⏸ REQ-003 |
+| QA-002 | RBAC: admin/company/branch → 403 khi không có quyền | P0 | 1d | 📋 Có thể test ngay — 3 role đã implement |
 
 **Có thể chạy ngay**: TC-AUTH-001 (login OK), TC-AUTH-002 (sai MK → M0101), TC-AUTH-004/005 (remember_me), TC-AUTH-007 (logout).
 
@@ -27,7 +27,7 @@
 | ID | Mô tả | P | Est | Trạng thái |
 |----|-------|---|-----|------------|
 | QA-003 | CRUD sản phẩm + soft delete | P0 | 1d | 🔄 Create API test ✅ · ảnh 📋 |
-| QA-004 | VN Branch chỉ xem ACTIVE | P0 | 0.5d | ⏸ REQ-003 |
+| QA-004 | Company/Branch chỉ xem ACTIVE | P0 | 0.5d | 📋 Có thể test ngay (role middleware đã có) |
 
 ---
 
