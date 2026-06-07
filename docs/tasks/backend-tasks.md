@@ -60,7 +60,7 @@
 | BE-018 | Tỷ giá JPY/VND + Scheduler 7h JST | P0 | BE-017 | 1d | 🔄 GET current ✅ |
 | BE-019 | API CRUD orders + reserve tồn kho | P0 | BE-017 | 2d | ✅ |
 | BE-020 | `PUT /orders/{id}/confirm` — lock tỷ giá | P0 | BE-019 | 1d | ✅ |
-| BE-021 | Email Resend — đơn mới, confirm | P0 | BE-019 | 1d | 📋 |
+| BE-021 | Email — đơn mới, confirm → `mail_histories` | P0 | BE-019 | 1d | ✅ |
 
 ---
 

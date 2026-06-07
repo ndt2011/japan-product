@@ -17,7 +17,9 @@ class OrderTest extends TestCase
 
     private function adminHeaders(): array
     {
-        $admin = Admin::factory()->create();
+        $admin = Admin::factory()->create([
+            'email' => 'admin-notify@example.com',
+        ]);
         $token = $admin->createToken('test')->plainTextToken;
 
         return ['Authorization' => "Bearer {$token}"];
@@ -30,6 +32,7 @@ class OrderTest extends TestCase
             'login_id' => 'vn_test',
             'password' => 'pass',
             'company_name' => 'Test Company',
+            'email' => 'company-test@example.com',
             'disabled_flag' => false,
             'deleted_flag' => false,
         ]);
@@ -177,5 +180,67 @@ class OrderTest extends TestCase
 
         $show->assertStatus(403)
             ->assertJsonPath('message', 'M0407');
+    }
+
+    public function test_submit_order_sends_email_to_admin(): void
+    {
+        Admin::factory()->create(['email' => 'admin-notify@example.com']);
+
+        $product = $this->productWithStock();
+        $headers = $this->companyHeaders();
+
+        $create = $this->postJson('/api/orders', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+        ], $headers);
+
+        $orderId = $create->json('data.order.id');
+        $orderNo = $create->json('data.order.order_no');
+
+        $this->putJson("/api/orders/{$orderId}/submit", [], $headers)->assertOk();
+
+        $this->assertDatabaseHas('mail_histories', [
+            'to_address' => 'admin-notify@example.com',
+            'send_status' => true,
+        ]);
+
+        $this->assertDatabaseHas('mail_histories', [
+            'to_address' => 'admin-notify@example.com',
+        ]);
+
+        $history = \App\Models\MailHistory::query()
+            ->where('to_address', 'admin-notify@example.com')
+            ->latest('id')
+            ->first();
+
+        $this->assertStringContainsString($orderNo, $history->subject);
+    }
+
+    public function test_confirm_order_sends_email_to_company(): void
+    {
+        $product = $this->productWithStock();
+        $companyHeaders = $this->companyHeaders();
+
+        $create = $this->postJson('/api/orders', [
+            'submit' => true,
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+        ], $companyHeaders);
+
+        $orderId = $create->json('data.order.id');
+        $orderNo = $create->json('data.order.order_no');
+
+        $this->putJson("/api/orders/{$orderId}/confirm", [], $this->adminHeaders())->assertOk();
+
+        $this->assertDatabaseHas('mail_histories', [
+            'to_address' => 'company-test@example.com',
+            'send_status' => true,
+        ]);
+
+        $history = \App\Models\MailHistory::query()
+            ->where('to_address', 'company-test@example.com')
+            ->latest('id')
+            ->first();
+
+        $this->assertStringContainsString('CONFIRMED', $history->subject);
+        $this->assertStringContainsString($orderNo, $history->subject);
     }
 }

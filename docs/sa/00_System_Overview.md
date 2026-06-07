@@ -266,7 +266,7 @@ Mọi bảng đều có các cột audit:
 | Ticket | Mô tả | Trạng thái |
 |--------|-------|-----------|
 | **BE-016b** | `POST /ai/product-search` embedding (luồng B) | 📋 Có guide |
-| **BE-021** | Email đơn mới / confirm | 📋 |
+| **BE-021** | Email đơn mới / confirm → `mail_histories` | ✅ |
 | **S1 RBAC** | Permission matrix | ⏸ REQ-003 |
 | **DevOps** | Railway + Vercel staging | 📋 Cuối |
 

@@ -53,7 +53,7 @@
 | ID | Việc | File liên quan |
 |----|------|----------------|
 | BE-016b | AI embedding `/ai/product-search` | `sa/AI_Search_Implementation.md` |
-| BE-021 | Email đơn mới / confirm | `mail_histories` |
+| ~~BE-021~~ | Email đơn mới / confirm | ✅ `OrderMailService` |
 | DEV-12/13 | Railway + Vercel staging | `devops/staging-setup.md` |
 
 ---

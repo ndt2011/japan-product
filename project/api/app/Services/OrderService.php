@@ -19,6 +19,7 @@ class OrderService
     public function __construct(
         private readonly OrderRepository $orderRepository,
         private readonly InventoryService $inventoryService,
+        private readonly OrderMailService $orderMailService,
     ) {}
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
@@ -47,7 +48,7 @@ class OrderService
 
     public function store(array $data, CompanyVn $company, bool $submit = false): Order
     {
-        return DB::transaction(function () use ($data, $company, $submit) {
+        $order = DB::transaction(function () use ($data, $company, $submit) {
             $lines = $data['items'] ?? [];
             $status = $submit ? 'PENDING' : ($data['status'] ?? 'DRAFT');
 
@@ -85,6 +86,12 @@ class OrderService
 
             return $this->orderRepository->findDetail($order->id);
         });
+
+        if ($order->status === 'PENDING') {
+            $this->orderMailService->notifyAdminsNewOrder($order);
+        }
+
+        return $order;
     }
 
     public function update(int $id, array $data, Authenticatable $user, string $userType): Order
@@ -138,7 +145,7 @@ class OrderService
             throw new OrderException('M0407', 403);
         }
 
-        return DB::transaction(function () use ($order, $user) {
+        $updated = DB::transaction(function () use ($order, $user) {
             foreach ($order->details as $detail) {
                 $this->inventoryService->reserve($detail->product_id, $detail->quantity);
             }
@@ -149,6 +156,10 @@ class OrderService
                 'modified_user_id' => $user->id,
             ]);
         });
+
+        $this->orderMailService->notifyAdminsNewOrder($updated);
+
+        return $updated;
     }
 
     public function confirm(int $id, Admin $admin): Order
@@ -165,13 +176,17 @@ class OrderService
 
         $lockedRate = $this->currentExchangeRate();
 
-        return $this->orderRepository->update($order, [
+        $updated = $this->orderRepository->update($order, [
             'status' => 'CONFIRMED',
             'exchange_rate' => $lockedRate,
             'handler_admin_id' => $admin->id,
             'modified' => now(),
             'modified_user_id' => $admin->id,
         ]);
+
+        $this->orderMailService->notifyCompanyOrderConfirmed($updated);
+
+        return $updated;
     }
 
     public function cancel(int $id, Authenticatable $user, string $userType): Order

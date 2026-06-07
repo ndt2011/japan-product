@@ -15,7 +15,7 @@
 | **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory/Debts/Reports demo |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
 | **S3** AI Search | Luồng A + B (API + FE tab catalog) | **~90%** | Scraper Rakuten thật chờ production |
-| **S4** Đơn hàng | CRUD + confirm + reserve | **~70%** | Email notify chưa có |
+| **S4** Đơn hàng | CRUD + confirm + email | **~85%** | Resend/SMTP production |
 | **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
 | **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
 
@@ -31,7 +31,7 @@
 - **AI Search**: luồng A `/ai/search` + duyệt; luồng B `POST /ai/product-search` + `products:embed`
 - Orders: CRUD + submit/confirm/cancel + inventory reserve
 - Shipments: gom đơn CONFIRMED, status flow đến DELIVERED
-- PHPUnit: **37 tests pass** (auth, products, images, AI A+B, orders, shipments, health)
+- PHPUnit: **39 tests pass** (auth, products, images, AI A+B, orders+email, shipments, health)
 
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (13+ route)

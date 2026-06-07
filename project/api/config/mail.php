@@ -100,4 +100,9 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    | Fallback admin inbox when no active admin has email (order notifications).
+    */
+    'order_notify_address' => env('MAIL_ORDER_NOTIFY_ADDRESS'),
+
 ];
