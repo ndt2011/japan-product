@@ -33,6 +33,8 @@
 2. Add service từ GitHub `japan-product` → Root: **`project/api`**
 3. Generate public domain
 4. Variables: xem template [staging-env-railway.template.env](./staging-env-railway.template.env)
+   - **Rakuten AI:** `RAKUTEN_APPLICATION_ID`, `RAKUTEN_ACCESS_KEY`, `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` (copy từ `project/api/.env` local)
+   - Hướng dẫn: [rakuten-api-setup.md](./rakuten-api-setup.md)
 5. `APP_KEY`: `php artisan key:generate --show` (chạy local)
 6. Health: `GET https://<api>/api/health`
 

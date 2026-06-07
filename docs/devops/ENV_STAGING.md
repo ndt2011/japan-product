@@ -124,6 +124,23 @@ SESSION_DRIVER=database
 LOG_CHANNEL=stderr
 ```
 
+**AI + Rakuten (bắt buộc nếu dùng tab Khám phá web):**
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+AI_SEARCH_LIMIT=15
+
+RAKUTEN_APPLICATION_ID=...          # từ Rakuten Developers
+RAKUTEN_ACCESS_KEY=pk_...           # từ Rakuten Developers
+RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app
+PRODUCT_MARKUP_PERCENT=30
+```
+
+> Copy từ `project/api/.env` local → Railway Variables (service **product**).  
+> Trên [Rakuten Developers](https://webservice.rakuten.co.jp/) cần whitelist **IP Railway** + URL `https://japan-product.vercel.app`.  
+> Chi tiết: [rakuten-api-setup.md](./rakuten-api-setup.md)
+
 ### 4.3 Kiểm tra health
 
 ```json
