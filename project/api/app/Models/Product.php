@@ -24,6 +24,9 @@ class Product extends Model
         'spec',
         'unit',
         'cost_jpy',
+        'cost_price_jpy',
+        'selling_price_jpy',
+        'fee_rate',
         'price_vnd',
         'supplier_id',
         'origin',
@@ -51,6 +54,9 @@ class Product extends Model
     {
         return [
             'cost_jpy' => 'integer',
+            'cost_price_jpy' => 'decimal:2',
+            'selling_price_jpy' => 'decimal:2',
+            'fee_rate' => 'decimal:4',
             'price_vnd' => 'integer',
             'import_tax_rate' => 'decimal:2',
             'embedding' => 'array',

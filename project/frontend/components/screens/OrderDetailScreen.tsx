@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { useIsAdmin, useIsCompany } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
 import type { OrderItem } from "@/types/api";
 import Link from "next/link";
@@ -11,10 +12,19 @@ const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "
   DRAFT: { label: "Nháp", variant: "gray" },
   PENDING: { label: "Chờ xác nhận", variant: "warning" },
   CONFIRMED: { label: "Đã xác nhận", variant: "primary" },
+  PROCESSING: { label: "Đang xử lý", variant: "warning" },
+  SHIPPED: { label: "Đang giao", variant: "primary" },
+  DELIVERED: { label: "Đã giao", variant: "success" },
+  DELIVERED_ADMIN: { label: "Chờ xác nhận nhận", variant: "warning" },
+  COMPLETED: { label: "Hoàn tất", variant: "success" },
   CANCELLED: { label: "Hủy", variant: "danger" },
 };
 
+const INVOICE_ELIGIBLE = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "DELIVERED_ADMIN", "COMPLETED"];
+
 export function OrderDetailScreen({ orderId }: { orderId: number }) {
+  const isAdmin = useIsAdmin();
+  const isCompany = useIsCompany();
   const router = useRouter();
   const [order, setOrder] = useState<OrderItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,14 +46,22 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
     load();
   }, [orderId]);
 
-  async function action(path: string) {
+  async function action(path: string, method = "PUT", body?: object) {
     setActing(true);
     setError("");
     try {
-      const res = await fetch(path, { method: "PUT" });
+      const res = await fetch(path, {
+        method,
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      });
       const data = await res.json();
       if (!data.success) {
         setError(translateMessage(data.message ?? "M0001"));
+        return;
+      }
+      if (data.data?.invoice?.id) {
+        router.push(`/invoices/${data.data.invoice.id}`);
         return;
       }
       await load();
@@ -111,6 +129,25 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                   Hủy
                 </Button>
               </>
+            )}
+            {isCompany && order.status === "DELIVERED_ADMIN" && (
+              <Button
+                size="sm"
+                disabled={acting}
+                onClick={() => action(`/api/proxy/orders/${orderId}/confirm-receipt`)}
+              >
+                Đã nhận hàng
+              </Button>
+            )}
+            {isAdmin && INVOICE_ELIGIBLE.includes(order.status) && (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={acting}
+                onClick={() => action("/api/proxy/invoices", "POST", { order_id: orderId })}
+              >
+                Lập hóa đơn
+              </Button>
             )}
           </div>
         </div>

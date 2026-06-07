@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Admin;
 use App\Models\CompanyVn;
 use App\Models\Inventory;
+use App\Models\Order;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Warehouse;
@@ -151,6 +153,58 @@ class OrderTest extends TestCase
         $confirm->assertOk()
             ->assertJsonPath('message', 'M0404')
             ->assertJsonPath('data.order.status', 'CONFIRMED');
+
+        $this->assertDatabaseHas('invoices', [
+            'order_id' => $orderId,
+            'status' => 'draft',
+        ]);
+    }
+
+    public function test_company_can_confirm_receipt_after_delivered_admin(): void
+    {
+        $product = $this->productWithStock();
+        $company = CompanyVn::query()->create([
+            'login_id' => 'vn_receipt',
+            'password' => 'pass',
+            'company_name' => 'Receipt Co',
+            'disabled_flag' => false,
+            'deleted_flag' => false,
+        ]);
+        $headers = ['Authorization' => 'Bearer '.$company->createToken('test')->plainTextToken];
+
+        $order = Order::query()->create([
+            'company_vn_id' => $company->id,
+            'order_no' => 'ORD-RECEIPT-01',
+            'status' => 'DELIVERED_ADMIN',
+            'order_date' => now()->toDateString(),
+            'total_jpy' => '1000',
+            'total_vnd' => '200000',
+            'exchange_rate' => 170,
+            'delivered_admin_at' => now(),
+            'created' => now(),
+            'deleted_flag' => false,
+        ]);
+
+        OrderDetail::query()->create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price_vnd' => '100000',
+            'subtotal_vnd' => '100000',
+            'created' => now(),
+            'deleted_flag' => false,
+        ]);
+
+        $response = $this->putJson("/api/orders/{$order->id}/confirm-receipt", [], $headers);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'M0408')
+            ->assertJsonPath('data.order.status', 'COMPLETED');
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'status' => 'COMPLETED',
+        ]);
     }
 
     public function test_company_cannot_access_other_company_order(): void

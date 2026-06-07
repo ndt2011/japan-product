@@ -14,6 +14,8 @@ class ProductResource extends JsonResource
             return (int) $this->inventories->sum('quantity');
         });
 
+        $isAdmin = $request->user() instanceof \App\Models\Admin;
+
         return [
             'id' => $this->id,
             'product_category_id' => $this->product_category_id,
@@ -25,6 +27,9 @@ class ProductResource extends JsonResource
             'spec' => $this->spec,
             'unit' => $this->unit,
             'cost_jpy' => $this->cost_jpy,
+            'cost_price_jpy' => $this->when($isAdmin, $this->cost_price_jpy ?? $this->cost_jpy),
+            'selling_price_jpy' => $this->when($isAdmin, $this->selling_price_jpy ?? $this->cost_jpy),
+            'fee_rate' => $this->fee_rate ?? 0.05,
             'price_vnd' => $this->price_vnd,
             'supplier_id' => $this->supplier_id,
             'supplier_name' => $this->supplier?->supplier_name,

@@ -158,7 +158,7 @@ class ShipmentBatchTest extends TestCase
                 ->assertOk();
         }
 
-        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'DELIVERED']);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'DELIVERED_ADMIN']);
     }
 
     public function test_company_can_view_batch_with_own_order(): void

@@ -69,7 +69,7 @@
 | Quản trị user | `/admin` | `5-001` | ✅ Tạo Admin + Công ty VN |
 | SP theo CN | `/products/{id}` tab | `branch-system.md` | ✅ branch-stats |
 | Nhà cung cấp | `/suppliers` | — | 🔄 UI demo |
-| Đại lý | `/agents` | — | 📋 Placeholder |
+| Đại lý | `/agents` | 5-001 | ✅ List Công ty VN (admin) |
 
 ---
 

@@ -324,3 +324,62 @@ export interface ProductListData {
     last_page: number;
   };
 }
+
+export interface InvoiceLineItem {
+  id: number;
+  order_detail_id?: number | null;
+  product_name: string;
+  quantity: number;
+  unit_price_vnd: string;
+  amount: string;
+}
+
+export interface InvoiceItem {
+  id: number;
+  order_id: number;
+  order_no?: string | null;
+  company_vn_id: number;
+  company_name?: string | null;
+  invoice_no: string;
+  invoice_date: string;
+  due_date: string;
+  amount_vnd: string;
+  tax_amount: string;
+  total_amount: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  paid_at?: string | null;
+  paid_amount?: string | null;
+  payment_method?: string | null;
+  note?: string | null;
+  items?: InvoiceLineItem[];
+}
+
+export interface InvoiceListData {
+  items: InvoiceItem[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+export interface InvoiceDetailData {
+  invoice: InvoiceItem;
+}
+
+export interface DebtSummaryData {
+  total_unpaid_vnd: number;
+  total_overdue_vnd: number;
+  invoice_count: number;
+  overdue_count: number;
+  items: {
+    id: number;
+    invoice_no: string;
+    company_name?: string | null;
+    status: string;
+    due_date: string;
+    total_amount: string;
+    days_overdue: number;
+  }[];
+}

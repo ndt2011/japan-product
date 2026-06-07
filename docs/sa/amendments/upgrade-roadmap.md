@@ -19,6 +19,9 @@
 
 ### T1-001: Invoice & Payment (Hóa đơn & Thanh toán)
 
+> **Trạng thái** (2026-06-08): ✅ Spec hoàn chỉnh — `docs/sa/amendments/invoice-payment.md`  
+> Phase 2 tasks: BE-P2-001~011, FE-P2-001~006 — xem `backend-tasks.md`, `frontend-tasks.md`
+
 **Tại sao critical**: Hiện tại đơn hàng chỉ track status. Không có hóa đơn → không thu tiền được.
 
 **Tables mới**:
@@ -54,14 +57,18 @@ POST   /invoices/{id}/pay     → ghi nhận thanh toán → paid
 GET    /invoices/{id}/pdf     → xuất PDF hóa đơn
 ```
 
-**Luồng**:
+**Luồng** (đã mở rộng — xem `invoice-payment.md`):
 ```
 Order CONFIRMED
-  → Admin tạo Invoice (status: draft)
-  → Send → gửi email PDF cho company_vn (status: sent)
-  → Công ty chuyển khoản
-  → Admin mark Paid (status: paid)
-  → Nếu quá due_date → cron job → overdue
+  → AUTO: InvoiceService::createFromOrder() → invoice (status: draft)
+  → Admin gửi email PDF → invoice (status: sent)
+  → Công ty chuyển khoản → Admin mark Paid (status: paid)
+  → Nếu quá due_date → cron 9h JST → overdue
+
+Delivery 2 bước:
+  → Admin: DELIVERED_ADMIN (xác nhận phía JP)
+  → Đại lý: PUT /orders/{id}/confirm-receipt → COMPLETED (invoice auto-paid)
+  → Không xác nhận sau 7 ngày → Scheduler auto COMPLETED
 ```
 
 **FE màn hình**:

@@ -135,6 +135,21 @@ class OrderController extends Controller
         ], 'M0404');
     }
 
+    public function confirmReceipt(Request $request, int $id): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+
+        try {
+            $order = $this->orderService->confirmReceipt($id, $auth['user'], $auth['type']);
+        } catch (OrderException $e) {
+            return ApiResponse::error($e->messageCode, null, $e->status);
+        }
+
+        return ApiResponse::success([
+            'order' => new OrderResource($order),
+        ], 'M0408');
+    }
+
     public function cancel(Request $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);

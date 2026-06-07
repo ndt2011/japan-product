@@ -14,6 +14,7 @@ export type NavPageId =
   | "inventory"
   | "orders"
   | "shipments"
+  | "invoices"
   | "debts"
   | "reports"
   | "my-branch"
@@ -42,6 +43,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "inventory", label: "Kiểm Kê Kho", icon: "🗂️", href: "/inventory", group: "Kho Hàng", roles: ["admin"] },
   { id: "orders", label: "Đơn Đặt Hàng", icon: "🛒", href: "/orders", group: "Giao Dịch", roles: ["admin", "company", ...BRANCH_ROLES] },
   { id: "shipments", label: "Chuyến Hàng", icon: "🚢", href: "/shipments", group: "Giao Dịch", roles: ["admin", "company"] },
+  { id: "invoices", label: "Hóa Đơn", icon: "🧾", href: "/invoices", group: "Giao Dịch", roles: ["admin", "company"] },
   { id: "debts", label: "Công Nợ", icon: "💰", href: "/debts", group: "Giao Dịch", roles: ["admin"] },
   { id: "reports", label: "Báo Cáo", icon: "📈", href: "/reports", group: "Phân Tích", roles: ["admin", "company", "branch_manager"] },
   { id: "my-branch", label: "Chi Nhánh Của Tôi", icon: "📍", href: "/my-branch", group: "Hệ Thống", roles: BRANCH_ROLES },

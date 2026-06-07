@@ -76,6 +76,28 @@
 
 ---
 
+## PHASE 2 — Invoice, Dual Pricing & Delivery (2026-06-08)
+
+> Spec đầy đủ: `docs/sa/amendments/invoice-payment.md`
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-P2-001 | Migration: `products` thêm `cost_price_jpy`, `selling_price_jpy`, `fee_rate` | P0 | — | 2h | 📋 |
+| BE-P2-002 | Migration: tạo `invoices` + `invoice_items` + `order_costs` | P0 | — | 3h | 📋 |
+| BE-P2-003 | Migration: `orders` thêm `delivered_admin_at`, `delivered_client_at`, `completed_at` + status mới | P0 | — | 1h | 📋 |
+| BE-P2-004 | `InvoiceService::createFromOrder()` — gọi tự động từ `OrderController::confirm()` | P0 | BE-P2-001~003 | 1d | 📋 |
+| BE-P2-005 | `InvoiceController`: CRUD + `send` + `pay` + `pdf` + phân quyền | P0 | BE-P2-004 | 1.5d | 📋 |
+| BE-P2-006 | DomPDF integration — PDF template hóa đơn (logo, items, tổng) | P0 | BE-P2-005 | 1d | 📋 |
+| BE-P2-007 | `OrderController::confirmReceipt()` — `PUT /orders/{id}/confirm-receipt` | P0 | BE-P2-003 | 0.5d | 📋 |
+| BE-P2-008 | Scheduler: `invoice:check-overdue` — chạy 9h JST, đổi `sent`→`overdue` | P0 | BE-P2-005 | 3h | 📋 |
+| BE-P2-009 | Scheduler: `order:auto-complete` — 8h JST, sau 7 ngày `DELIVERED_ADMIN`→`COMPLETED` | P0 | BE-P2-007 | 3h | 📋 |
+| BE-P2-010 | `ReportController::profit()` — `GET /reports/profit` + `by-product` (Admin only) | P1 | BE-P2-004 | 1d | 📋 |
+| BE-P2-011 | `ProductResource` ẩn `cost_price_jpy` trong response cho non-admin | P0 | BE-P2-001 | 2h | 📋 |
+
+**Thứ tự implement**: BE-P2-001~003 → BE-P2-004 → BE-P2-005~006 → BE-P2-007~009 → BE-P2-010~011
+
+---
+
 ## Coding Standards
 
 - PSR-12 · Repository + Service · Form Request · API Resource

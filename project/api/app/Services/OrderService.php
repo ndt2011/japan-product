@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\InvoiceException;
 use App\Exceptions\OrderException;
 use App\Models\Admin;
 use App\Models\BranchUser;
@@ -21,6 +22,7 @@ class OrderService
         private readonly OrderRepository $orderRepository,
         private readonly InventoryService $inventoryService,
         private readonly OrderMailService $orderMailService,
+        private readonly InvoiceService $invoiceService,
     ) {}
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
@@ -196,7 +198,34 @@ class OrderService
 
         $this->orderMailService->notifyCompanyOrderConfirmed($updated);
 
+        try {
+            $this->invoiceService->createFromOrder($updated->id, $admin);
+        } catch (InvoiceException) {
+            // Đơn đã có HĐ hoặc không đủ điều kiện — bỏ qua sau confirm
+        }
+
         return $updated;
+    }
+
+    public function confirmReceipt(int $id, Authenticatable $user, string $userType): Order
+    {
+        if ($userType !== 'company' || ! $user instanceof CompanyVn) {
+            throw new OrderException('M0407', 403);
+        }
+
+        $order = $this->show($id, $user, $userType);
+
+        if ($order->status !== 'DELIVERED_ADMIN') {
+            throw new OrderException('M0402', 409);
+        }
+
+        return $this->orderRepository->update($order, [
+            'status' => 'COMPLETED',
+            'delivered_client_at' => now(),
+            'completed_at' => now(),
+            'modified' => now(),
+            'modified_user_id' => $user->id,
+        ]);
     }
 
     public function cancel(int $id, Authenticatable $user, string $userType): Order

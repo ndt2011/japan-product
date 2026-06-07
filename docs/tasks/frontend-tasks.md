@@ -81,6 +81,27 @@
 
 ---
 
+---
+
+## PHASE 2 — Invoice, Dual Pricing & Delivery (2026-06-08)
+
+> Spec đầy đủ: `docs/sa/amendments/invoice-payment.md`
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-P2-001 | `/invoices` — danh sách, filter status/date, badge overdue | P0 | BE-P2-005 | 1.5d | 📋 |
+| FE-P2-002 | `/invoices/{id}` — chi tiết items + PDF preview + nút "Gửi HĐ" / "Ghi nhận TT" (Admin) | P0 | BE-P2-006 | 2d | 📋 |
+| FE-P2-003 | `/orders/{id}` — thêm nút **"✅ Đã nhận hàng"** khi status=`DELIVERED_ADMIN` (Đại lý) | P0 | BE-P2-007 | 0.5d | 📋 |
+| FE-P2-004 | `/products/new` + `/products/{id}/edit` — section Admin: `cost_price_jpy`, `selling_price_jpy`, `fee_rate`; preview `unit_price_vnd` tự tính | P0 | BE-P2-001 | 1d | 📋 |
+| FE-P2-005 | `/reports/profit` — Recharts biểu đồ lãi/lỗ theo tháng + bảng chi tiết per order (Admin only) | P1 | BE-P2-010 | 1.5d | 📋 |
+| FE-P2-006 | Notification badge header khi có invoice `overdue` hoặc đơn `DELIVERED_ADMIN` chờ xác nhận | P1 | BE-P2-008 | 0.5d | 📋 |
+
+**Lưu ý FE-P2-004**: `cost_price_jpy` và `selling_price_jpy` render chỉ khi `userType === 'admin'`. Đại lý thấy `unit_price_vnd` (đã bao phí).
+
+**Cập nhật UI-003** (ui-improvements.md): 3 màn hình invoice → FE-P2-001, FE-P2-002, FE-P2-003.
+
+---
+
 ## Backlog P1
 
 | ID | Mô tả | Trạng thái |

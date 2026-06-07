@@ -10,6 +10,7 @@ use App\Http\Controllers\API\CompanyUserController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\BranchUserManagementController;
 use App\Http\Controllers\API\HealthController;
+use App\Http\Controllers\API\InvoiceController;
 use App\Http\Controllers\API\InventoryController;
 use App\Http\Controllers\API\MasterDataController;
 use App\Http\Controllers\API\OrderController;
@@ -70,6 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
 
+        Route::get('/invoices/debt-summary', [InvoiceController::class, 'debtSummary']);
+        Route::post('/invoices', [InvoiceController::class, 'store']);
+        Route::put('/invoices/{id}', [InvoiceController::class, 'update']);
+        Route::post('/invoices/{id}/send', [InvoiceController::class, 'send']);
+        Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay']);
+
         Route::get('/shipment-batches/available-orders', [ShipmentBatchController::class, 'availableOrders']);
         Route::post('/shipment-batches', [ShipmentBatchController::class, 'store']);
         Route::put('/shipment-batches/{id}', [ShipmentBatchController::class, 'update']);
@@ -90,11 +97,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai/candidates', [AiProductCandidateController::class, 'store']);
     Route::get('/ai/candidates/{id}', [AiProductCandidateController::class, 'show']);
 
+    Route::get('/invoices', [InvoiceController::class, 'index']);
+    Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->whereNumber('id');
+    Route::get('/invoices/{id}/pdf', [InvoiceController::class, 'pdf'])->whereNumber('id');
+
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}', [OrderController::class, 'update']);
     Route::put('/orders/{id}/submit', [OrderController::class, 'submit']);
+    Route::put('/orders/{id}/confirm-receipt', [OrderController::class, 'confirmReceipt']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
     Route::get('/shipment-batches', [ShipmentBatchController::class, 'index']);

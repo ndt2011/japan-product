@@ -181,7 +181,8 @@ class ShipmentBatchService
                     }
 
                     $order->update([
-                        'status' => 'DELIVERED',
+                        'status' => 'DELIVERED_ADMIN',
+                        'delivered_admin_at' => now(),
                         'modified' => now(),
                         'modified_user_id' => $admin->id,
                     ]);

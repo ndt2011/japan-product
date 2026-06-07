@@ -21,6 +21,7 @@ const MESSAGE_MAP: Record<string, string> = {
   M0404: "Xác nhận đơn hàng thành công.",
   M0405: "Gửi đơn hàng thành công.",
   M0406: "Hủy đơn hàng thành công.",
+  M0408: "Xác nhận nhận hàng thành công.",
   M0407: "Bạn không có quyền thao tác đơn hàng này.",
   M0501: "Chỉ đơn đã xác nhận mới được gom vào chuyến.",
   M0502: "Đơn hàng đã thuộc chuyến khác.",
@@ -29,6 +30,11 @@ const MESSAGE_MAP: Record<string, string> = {
   M0505: "Chuyển trạng thái chuyến không hợp lệ.",
   M0506: "Lưu chuyến hàng thành công.",
   M0507: "Bạn không có quyền truy cập chuyến hàng này.",
+  M0510: "Chỉ đơn đã xác nhận mới được lập hóa đơn.",
+  M0511: "Đơn hàng không có công ty VN để lập hóa đơn.",
+  M0512: "Đơn hàng đã có hóa đơn.",
+  M0513: "Chỉ hóa đơn nháp mới được sửa hoặc gửi.",
+  M0514: "Chỉ hóa đơn đã gửi hoặc quá hạn mới được ghi nhận thanh toán.",
   API_OFFLINE: "Không kết nối được API backend. Hãy chạy: cd project/api && php artisan serve",
 };
 
