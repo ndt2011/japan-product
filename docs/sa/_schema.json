@@ -1,0 +1,2065 @@
+{
+  "admins": {
+    "sheet": "admins",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "T\u00ean \u0111\u0103ng nh\u1eadp",
+        "name": "login_id",
+        "type": "varchar(50)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "M\u1eadt kh\u1ea9u (hash)",
+        "name": "password",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": "BCrypt"
+      },
+      {
+        "no": "4",
+        "vn": "H\u1ecd t\u00ean",
+        "name": "full_name",
+        "type": "varchar(100)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "Email",
+        "name": "email",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "ID chi nh\u00e1nh",
+        "name": "branch_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "1: V\u00f4 hi\u1ec7u h\u00f3a"
+      },
+      {
+        "no": "8",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      },
+      {
+        "name": "idx_login_id",
+        "cols": "login_id",
+        "pk": false,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_admins_branch",
+        "col": "branch_id",
+        "ref_table": "branches",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "companies_vn": {
+    "sheet": "companies_vn",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "M\u00e3 c\u00f4ng ty",
+        "name": "company_cd",
+        "type": "varchar(50)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "T\u00ean c\u00f4ng ty",
+        "name": "company_name",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "\u0110\u1ecba ch\u1ec9",
+        "name": "address",
+        "type": "varchar(500)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "T\u1ec9nh/Th\u00e0nh ph\u1ed1",
+        "name": "province",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "\u0110i\u1ec7n tho\u1ea1i",
+        "name": "tel",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "Fax",
+        "name": "fax",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Email",
+        "name": "email",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "M\u00e3 s\u1ed1 thu\u1ebf",
+        "name": "tax_code",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ng\u01b0\u1eddi li\u00ean h\u1ec7",
+        "name": "contact_name",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "1: V\u00f4 hi\u1ec7u h\u00f3a"
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "17",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "18",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "suppliers_jp": {
+    "sheet": "suppliers_jp",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "M\u00e3 nh\u00e0 cung c\u1ea5p",
+        "name": "supplier_cd",
+        "type": "varchar(50)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "T\u00ean nh\u00e0 cung c\u1ea5p",
+        "name": "supplier_name",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "T\u00ean nh\u00e0 CC (JP)",
+        "name": "supplier_name_jp",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": "T\u00ean ti\u1ebfng Nh\u1eadt"
+      },
+      {
+        "no": "5",
+        "vn": "\u0110\u1ecba ch\u1ec9",
+        "name": "address",
+        "type": "varchar(500)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "\u0110i\u1ec7n tho\u1ea1i",
+        "name": "tel",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "Email",
+        "name": "email",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Ng\u01b0\u1eddi li\u00ean h\u1ec7",
+        "name": "contact_name",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "product_categories": {
+    "sheet": "product_categories",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "T\u00ean danh m\u1ee5c",
+        "name": "category_name",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "Th\u1ee9 t\u1ef1 hi\u1ec3n th\u1ecb",
+        "name": "order_no",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "products": {
+    "sheet": "products",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID danh m\u1ee5c",
+        "name": "product_category_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "M\u00e3 h\u00e0ng h\u00f3a",
+        "name": "product_cd",
+        "type": "varchar(50)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "T\u00ean h\u00e0ng h\u00f3a (VN)",
+        "name": "product_name",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "T\u00ean h\u00e0ng h\u00f3a (JP)",
+        "name": "product_name_jp",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": "T\u00ean ti\u1ebfng Nh\u1eadt"
+      },
+      {
+        "no": "6",
+        "vn": "Th\u00f4ng s\u1ed1 k\u1ef9 thu\u1eadt",
+        "name": "spec",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "\u0110\u01a1n v\u1ecb t\u00ednh",
+        "name": "unit",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Gi\u00e1 nh\u1eadp (JPY)",
+        "name": "cost_jpy",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": "Gi\u00e1 nh\u1eadp t\u1ea1i Nh\u1eadt (y\u00ean)"
+      },
+      {
+        "no": "9",
+        "vn": "Gi\u00e1 b\u00e1n (VND)",
+        "name": "price_vnd",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": "Gi\u00e1 b\u00e1n t\u1ea1i VN (\u0111\u1ed3ng)"
+      },
+      {
+        "no": "10",
+        "vn": "ID nh\u00e0 cung c\u1ea5p",
+        "name": "supplier_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Xu\u1ea5t x\u1ee9",
+        "name": "origin",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "T\u1ef7 l\u1ec7 thu\u1ebf NK (%)",
+        "name": "import_tax_rate",
+        "type": "decimal(5,2)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "M\u00f4 t\u1ea3",
+        "name": "description",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "\u1ea2nh \u0111\u1ea1i di\u1ec7n",
+        "name": "image_path",
+        "type": "varchar(500)",
+        "not_null": false,
+        "default": "",
+        "note": "\u0110\u01b0\u1eddng d\u1eabn \u1ea3nh"
+      },
+      {
+        "no": "15",
+        "vn": "Th\u1ee9 t\u1ef1 hi\u1ec3n th\u1ecb",
+        "name": "order_no",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "C\u1edd b\u1eaft bu\u1ed9c",
+        "name": "require_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "1: B\u1eaft bu\u1ed9c \u0111\u1eb7t"
+      },
+      {
+        "no": "17",
+        "vn": "SL t\u1ed1i thi\u1ec3u",
+        "name": "min_quantity",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "18",
+        "vn": "SL t\u1ed1i \u0111a",
+        "name": "max_quantity",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "19",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "20",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "21",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "22",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "23",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "24",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "25",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "26",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_products_category",
+        "col": "product_category_id",
+        "ref_table": "product_categories",
+        "ref_col": "id"
+      },
+      {
+        "name": "fk_products_supplier",
+        "col": "supplier_id",
+        "ref_table": "suppliers_jp",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "warehouses": {
+    "sheet": "warehouses",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "M\u00e3 kho",
+        "name": "warehouse_cd",
+        "type": "varchar(50)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "T\u00ean kho",
+        "name": "warehouse_name",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "\u0110\u1ecba ch\u1ec9 kho",
+        "name": "address",
+        "type": "varchar(500)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "Qu\u1ed1c gia",
+        "name": "country",
+        "type": "varchar(10)",
+        "not_null": false,
+        "default": "VN",
+        "note": "JP ho\u1eb7c VN"
+      },
+      {
+        "no": "6",
+        "vn": "Ng\u01b0\u1eddi qu\u1ea3n l\u00fd",
+        "name": "manager_name",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "\u0110i\u1ec7n tho\u1ea1i",
+        "name": "tel",
+        "type": "varchar(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "inventories": {
+    "sheet": "inventories",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID h\u00e0ng h\u00f3a",
+        "name": "product_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "ID kho",
+        "name": "warehouse_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "S\u1ed1 l\u01b0\u1ee3ng t\u1ed3n",
+        "name": "quantity",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "S\u1ed1 l\u01b0\u1ee3ng \u0111\u1eb7t h\u00e0ng",
+        "name": "reserved_qty",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "0",
+        "note": "SL \u0111\u00e3 \u0111\u1eb7t ch\u01b0a xu\u1ea5t"
+      },
+      {
+        "no": "6",
+        "vn": "S\u1ed1 l\u01b0\u1ee3ng th\u1ef1c t\u1ebf",
+        "name": "actual_qty",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "0",
+        "note": "Sau khi ki\u1ec3m k\u00ea"
+      },
+      {
+        "no": "7",
+        "vn": "Ng\u00e0y ki\u1ec3m k\u00ea",
+        "name": "last_check_date",
+        "type": "date",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_inv_product",
+        "col": "product_id",
+        "ref_table": "products",
+        "ref_col": "id"
+      },
+      {
+        "name": "fk_inv_warehouse",
+        "col": "warehouse_id",
+        "ref_table": "warehouses",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "orders": {
+    "sheet": "orders",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID c\u00f4ng ty VN",
+        "name": "company_vn_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "S\u1ed1 \u0111\u01a1n h\u00e0ng",
+        "name": "order_no",
+        "type": "varchar(50)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "Tr\u1ea1ng th\u00e1i \u0111\u01a1n",
+        "name": "order_status",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "0:Nh\u00e1p 1:G\u1eedi 2:XN 3:Ho\u00e0n th\u00e0nh 4:H\u1ee7y"
+      },
+      {
+        "no": "5",
+        "vn": "Ng\u00e0y \u0111\u1eb7t h\u00e0ng",
+        "name": "order_date",
+        "type": "date",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "Ng\u00e0y giao d\u1ef1 ki\u1ebfn",
+        "name": "expected_date",
+        "type": "date",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "T\u1ed5ng ti\u1ec1n (JPY)",
+        "name": "total_jpy",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "T\u1ed5ng ti\u1ec1n (VND)",
+        "name": "total_vnd",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "T\u1ef7 gi\u00e1 \u00e1p d\u1ee5ng",
+        "name": "exchange_rate",
+        "type": "decimal(10,2)",
+        "not_null": false,
+        "default": "",
+        "note": "JPY/VND t\u1ea1i th\u1eddi \u0111i\u1ec3m \u0111\u1eb7t"
+      },
+      {
+        "no": "10",
+        "vn": "Ph\u00ed v\u1eadn chuy\u1ec3n",
+        "name": "shipping_fee",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Thu\u1ebf nh\u1eadp kh\u1ea9u",
+        "name": "import_tax",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "Ghi ch\u00fa \u0111\u1eb7t h\u00e0ng",
+        "name": "biko",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "ID ng\u01b0\u1eddi x\u1eed l\u00fd",
+        "name": "handler_admin_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "17",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "18",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "19",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_orders_company",
+        "col": "company_vn_id",
+        "ref_table": "companies_vn",
+        "ref_col": "id"
+      },
+      {
+        "name": "fk_orders_admin",
+        "col": "handler_admin_id",
+        "ref_table": "admins",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "order_details": {
+    "sheet": "order_details",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID \u0111\u01a1n h\u00e0ng",
+        "name": "order_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "ID h\u00e0ng h\u00f3a",
+        "name": "product_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "S\u1ed1 l\u01b0\u1ee3ng",
+        "name": "quantity",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "\u0110\u01a1n gi\u00e1 (JPY)",
+        "name": "unit_price_jpy",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "\u0110\u01a1n gi\u00e1 (VND)",
+        "name": "unit_price_vnd",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "Th\u00e0nh ti\u1ec1n (VND)",
+        "name": "subtotal_vnd",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "T\u1ef7 l\u1ec7 thu\u1ebf NK (%)",
+        "name": "import_tax_rate",
+        "type": "decimal(5,2)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "Ti\u1ec1n thu\u1ebf NK",
+        "name": "import_tax_amt",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ghi ch\u00fa",
+        "name": "comment",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_od_order",
+        "col": "order_id",
+        "ref_table": "orders",
+        "ref_col": "id"
+      },
+      {
+        "name": "fk_od_product",
+        "col": "product_id",
+        "ref_table": "products",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "exchange_rates": {
+    "sheet": "exchange_rates",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "M\u00e3 ti\u1ec1n t\u1ec7 g\u1ed1c",
+        "name": "from_currency",
+        "type": "varchar(10)",
+        "not_null": true,
+        "default": "JPY",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "M\u00e3 ti\u1ec1n t\u1ec7 \u0111\u00edch",
+        "name": "to_currency",
+        "type": "varchar(10)",
+        "not_null": true,
+        "default": "VND",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "T\u1ef7 gi\u00e1",
+        "name": "rate",
+        "type": "decimal(15,4)",
+        "not_null": true,
+        "default": "",
+        "note": "1 JPY = ? VND"
+      },
+      {
+        "no": "5",
+        "vn": "Ng\u00e0y \u00e1p d\u1ee5ng",
+        "name": "apply_date",
+        "type": "date",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "Ngu\u1ed3n t\u1ef7 gi\u00e1",
+        "name": "source",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": "Ng\u00e2n h\u00e0ng/SBV/..."
+      },
+      {
+        "no": "7",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "varchar(255)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "import_declarations": {
+    "sheet": "import_declarations",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID \u0111\u01a1n h\u00e0ng",
+        "name": "order_id",
+        "type": "int(11)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "S\u1ed1 t\u1edd khai",
+        "name": "declaration_no",
+        "type": "varchar(50)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "Ng\u00e0y khai b\u00e1o",
+        "name": "declaration_date",
+        "type": "date",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "Tr\u1ea1ng th\u00e1i th\u00f4ng quan",
+        "name": "customs_status",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "0:Ch\u1edd 1:\u0110ang XL 2:Th\u00f4ng quan 3:T\u1eeb ch\u1ed1i"
+      },
+      {
+        "no": "6",
+        "vn": "C\u1ea3ng nh\u1eadp kh\u1ea9u",
+        "name": "port_of_entry",
+        "type": "varchar(100)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "T\u1ed5ng tr\u1ecb gi\u00e1 (JPY)",
+        "name": "declared_value_jpy",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "T\u1ed5ng thu\u1ebf NK (VND)",
+        "name": "total_tax_vnd",
+        "type": "bigint(20)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "File t\u1edd khai",
+        "name": "declaration_file",
+        "type": "varchar(500)",
+        "not_null": false,
+        "default": "",
+        "note": "\u0110\u01b0\u1eddng d\u1eabn file"
+      },
+      {
+        "no": "10",
+        "vn": "Ghi ch\u00fa",
+        "name": "memo",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "16",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": [
+      {
+        "name": "fk_impd_order",
+        "col": "order_id",
+        "ref_table": "orders",
+        "ref_col": "id"
+      }
+    ]
+  },
+  "mail_templates": {
+    "sheet": "mail_templates",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "Lo\u1ea1i email",
+        "name": "mail_type",
+        "type": "varchar(50)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "Ti\u00eau \u0111\u1ec1 email",
+        "name": "subject",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "N\u1ed9i dung email",
+        "name": "body",
+        "type": "text",
+        "not_null": true,
+        "default": "",
+        "note": "H\u1ed7 tr\u1ee3 {bi\u1ebfn}"
+      },
+      {
+        "no": "5",
+        "vn": "C\u1edd v\u00f4 hi\u1ec7u h\u00f3a",
+        "name": "disabled_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "8",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  },
+  "mail_histories": {
+    "sheet": "mail_histories",
+    "columns": [
+      {
+        "no": "1",
+        "vn": "ID t\u1ef1 t\u0103ng",
+        "name": "id",
+        "type": "int(11) unsigned auto_increment",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "2",
+        "vn": "ID m\u1eabu email",
+        "name": "mail_template_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "3",
+        "vn": "\u0110\u1ecba ch\u1ec9 g\u1eedi \u0111\u1ebfn",
+        "name": "to_address",
+        "type": "text",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "4",
+        "vn": "CC",
+        "name": "cc_address",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "5",
+        "vn": "Ti\u00eau \u0111\u1ec1",
+        "name": "subject",
+        "type": "varchar(255)",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "6",
+        "vn": "N\u1ed9i dung",
+        "name": "body",
+        "type": "text",
+        "not_null": true,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "7",
+        "vn": "Tr\u1ea1ng th\u00e1i g\u1eedi",
+        "name": "send_status",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": "0:Ch\u1edd 1:\u0110\u00e3 g\u1eedi 2:L\u1ed7i"
+      },
+      {
+        "no": "8",
+        "vn": "Ng\u00e0y g\u1eedi",
+        "name": "sent_at",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "9",
+        "vn": "L\u1ed7i (n\u1ebfu c\u00f3)",
+        "name": "error_message",
+        "type": "text",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "10",
+        "vn": "Ng\u00e0y t\u1ea1o",
+        "name": "created",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "11",
+        "vn": "ID ng\u01b0\u1eddi t\u1ea1o",
+        "name": "created_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "12",
+        "vn": "Ng\u00e0y c\u1eadp nh\u1eadt",
+        "name": "modified",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "13",
+        "vn": "ID ng\u01b0\u1eddi c\u1eadp nh\u1eadt",
+        "name": "modified_user_id",
+        "type": "int(11)",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "14",
+        "vn": "Ng\u00e0y x\u00f3a",
+        "name": "deleted",
+        "type": "datetime",
+        "not_null": false,
+        "default": "",
+        "note": ""
+      },
+      {
+        "no": "15",
+        "vn": "C\u1edd \u0111\u00e3 x\u00f3a",
+        "name": "deleted_flag",
+        "type": "tinyint(1)",
+        "not_null": false,
+        "default": "0",
+        "note": ""
+      }
+    ],
+    "indexes": [
+      {
+        "name": "PRIMARY",
+        "cols": "id",
+        "pk": true,
+        "unique": true
+      }
+    ],
+    "fks": []
+  }
+}
