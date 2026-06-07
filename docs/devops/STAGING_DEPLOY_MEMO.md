@@ -147,15 +147,55 @@ Chỉ deploy staging khi **ít nhất mục 1 và 6** pass.
 
 ---
 
+## Không thấy Root Directory? (đọc trước)
+
+Railway có **2 loại Settings** — hay nhầm:
+
+| Loại | Mở bằng | Có Root Directory? |
+|------|---------|-------------------|
+| **Project Settings** | Bánh răng góc project / tên project trên đầu | ❌ Không |
+| **Service Settings** | **Click ô `japan-product`** trên canvas → tab **Settings** | ✅ Có |
+
+**Tìm Root Directory (Service Settings):**
+
+```
+Canvas (màn hình có MySQL, Redis, japan-product)
+    │
+    └── CLICK ô "japan-product" (icon GitHub)  ← không click MySQL/Redis
+            │
+            └── Thanh trên: Deployments | Metrics | Settings | Variables
+                    │
+                    └── Settings
+                            │
+                            ├── Ô "Filter Settings..." → gõ: root
+                            │
+                            └── Mục Source
+                                    └── Source Repo: ndt2011/japan-product
+                                    └── Link: "Add Root Directory"  ← CLICK vào đây
+                                            └── Gõ: project/api
+```
+
+Nếu **vẫn không thấy** → dùng **Cách B** (Bước 2.1): không cần Root Directory, repo đã có `Dockerfile` ở **thư mục gốc**.
+
+---
+
 ## Bước 2 — Railway: Deploy Laravel API
 
 ### 2.1 Thêm service từ GitHub
 
 1. Trong cùng project Railway → **+ New** → **GitHub Repo**
 2. Chọn repo **`ndt2011/japan-product`**
-3. Service mới tạo → **Settings**:
-   - **Root Directory**: `project/api`
-   - **Watch Paths** (nếu có): `project/api/**`
+3. Service mới tạo → **Settings** → mục **Source** (xem mục **“Không thấy Root Directory?”** bên dưới nếu UI khác)
+
+**Cách A — có Root Directory (ưu tiên):**
+
+- **Root Directory**: `project/api`
+
+**Cách B — không tìm thấy Root Directory:**
+
+- Để trống Root Directory (build từ repo gốc)
+- Repo có `Dockerfile` + `railway.toml` **ở thư mục gốc** — Railway tự build Laravel trong `project/api`
+- **Build** → Builder = **Dockerfile**
 
 Repo đã có `project/api/railway.toml`:
 
