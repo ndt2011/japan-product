@@ -77,7 +77,8 @@ docs/
 | **B — Tìm trong catalog nội bộ** | Semantic search bằng OpenAI embedding + cosine similarity | `POST /ai/product-search` | ✅ API + tab `/ai-center` |
 
 **FE**: `/ai-center` (luồng A) · `/admin/ai-candidates` (duyệt)  
-**Docs chi tiết**: `sa/04_API_Contract.md` Module 3 · `sa/amendments/ai_search-tables.md`
+**Setup key/env**: [`sa/AI_Setup_Guide.md`](./sa/AI_Setup_Guide.md) — file `project/api/.env`  
+**Docs API**: `sa/04_API_Contract.md` Module 3 · `sa/amendments/ai_search-tables.md`
 
 ---
 

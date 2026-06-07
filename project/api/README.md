@@ -113,11 +113,29 @@ php artisan migrate:fresh --seed
 | `APP_URL` | `http://localhost:8000` | URL API |
 | `APP_TIMEZONE` | `Asia/Tokyo` | Múi giờ hệ thống |
 | `SANCTUM_TOKEN_EXPIRATION` | `1440` | Token hết hạn sau 24h (phút) |
-| `QUEUE_CONNECTION` | `redis` | Local không có Redis → đổi `database` |
+| `QUEUE_CONNECTION` | `sync` | Local khuyến nghị `sync` (AI job chạy ngay) |
 | `CACHE_STORE` | `database` | SQLite dev → đổi `file` |
-| `REDIS_HOST` | `127.0.0.1` | Cần khi dùng queue Redis |
+| `OPENAI_API_KEY` | *(trống)* | Trống = mock/keyword · Có key = GPT + embedding |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Luồng A — tìm SP web |
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Luồng B — semantic catalog |
+| `AI_SEARCH_LIMIT` | `15` | Số SP trả về luồng B |
 
-File mẫu đầy đủ: `.env.example`
+File mẫu đầy đủ: `.env.example`  
+**Hướng dẫn AI chi tiết**: [`../../docs/sa/AI_Setup_Guide.md`](../../docs/sa/AI_Setup_Guide.md)
+
+### AI — chạy nhanh (không cần key)
+
+```bash
+# Backend + seed đã xong → mở http://localhost:3000/ai-center
+# Tab "Khám phá web" → mock Rakuten
+# Tab "Tìm catalog" → tìm theo từ khóa (VD: collagen)
+```
+
+### AI — bật OpenAI thật
+
+1. Thêm key vào `.env`: `OPENAI_API_KEY=sk-proj-...`
+2. Restart `php artisan serve`
+3. Luồng B: `php artisan products:embed`
 
 ---
 

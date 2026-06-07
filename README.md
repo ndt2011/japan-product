@@ -29,7 +29,8 @@ Hệ thống có **hai luồng AI** (tách biệt):
 | **B — Tìm catalog nội bộ** | Embedding OpenAI + cosine similarity | `/ai/product-search` | ✅ API (keyword fallback local) |
 
 - FE: `/ai-center` · `/admin/ai-candidates`
-- Docs: [docs/sa/04_API_Contract.md](docs/sa/04_API_Contract.md) Module 3 · [docs/sa/AI_Search_Implementation.md](docs/sa/AI_Search_Implementation.md)
+- **Cấu hình key**: [docs/sa/AI_Setup_Guide.md](docs/sa/AI_Setup_Guide.md) ← file `project/api/.env`
+- Docs API: [docs/sa/04_API_Contract.md](docs/sa/04_API_Contract.md) Module 3
 
 ---
 
