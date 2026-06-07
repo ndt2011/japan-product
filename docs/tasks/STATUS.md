@@ -14,7 +14,7 @@
 | **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
 | **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory/Debts/Reports demo |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
-| **S3** AI Search | Luồng A + B semantic search API | **~85%** | Scraper thật · FE luồng B chưa có |
+| **S3** AI Search | Luồng A + B (API + FE tab catalog) | **~90%** | Scraper Rakuten thật chờ production |
 | **S4** Đơn hàng | CRUD + confirm + reserve | **~70%** | Email notify chưa có |
 | **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
 | **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
@@ -36,7 +36,7 @@
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (13+ route)
 - Login + Remember Me + httpOnly cookie
-- API thật: `/products`, `/ai-center`, `/admin/ai-candidates`, `/orders`, `/shipments`
+- API thật: `/products`, `/ai-center` (web + catalog tab), `/admin/ai-candidates`, `/orders`, `/shipments`
 - Demo UI: stock-in, inventory, debts, reports, suppliers
 - Build production OK
 

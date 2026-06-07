@@ -53,6 +53,7 @@
 | FE-201 | `/ai-center` — chat UI + polling API | P0 | BE-016 | 2.5d | ✅ |
 | FE-202 | Card kết quả + chọn + gửi duyệt | P0 | FE-201 | 1d | ✅ |
 | FE-203 | `/admin/ai-candidates` — duyệt/từ chối | P0 | BE-016 | 2d | ✅ |
+| FE-204 | Tab catalog nội bộ trên `/ai-center` + BFF | P1 | BE-016b | 1d | ✅ |
 
 ---
 

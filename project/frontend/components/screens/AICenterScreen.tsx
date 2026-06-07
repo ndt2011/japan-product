@@ -1,10 +1,13 @@
 "use client";
 
+import { AICatalogSearchPanel } from "@/components/screens/AICatalogSearchPanel";
 import { Badge, Button, Card } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import type { AiSearchItem } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+
+type SearchMode = "web" | "catalog";
 
 type Message = {
   id: string;
@@ -25,7 +28,7 @@ function itemKey(item: AiSearchItem, index: number) {
   return item.external_id ?? `${item.product_name_jp}-${index}`;
 }
 
-export function AICenterScreen() {
+function WebSearchPanel() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "0",
@@ -362,6 +365,41 @@ export function AICenterScreen() {
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+export function AICenterScreen() {
+  const [mode, setMode] = useState<SearchMode>("web");
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("web")}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            mode === "web"
+              ? "bg-brand text-white"
+              : "bg-white border border-border text-text-body hover:border-brand/40"
+          }`}
+        >
+          Khám phá web (Rakuten/Amazon)
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("catalog")}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            mode === "catalog"
+              ? "bg-brand text-white"
+              : "bg-white border border-border text-text-body hover:border-brand/40"
+          }`}
+        >
+          Tìm catalog nội bộ
+        </button>
+      </div>
+
+      {mode === "web" ? <WebSearchPanel /> : <AICatalogSearchPanel />}
     </div>
   );
 }

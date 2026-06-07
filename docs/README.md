@@ -74,7 +74,7 @@ docs/
 | Luồng | Mục đích | API | Trạng thái code |
 |-------|----------|-----|-----------------|
 | **A — Khám phá sản phẩm mới** | Tìm trên web (Rakuten/Amazon JP), gửi duyệt, thêm vào catalog | `POST/GET /ai/search`, `/ai/candidates` | ✅ Đã triển khai (mock khi không có OpenAI key) |
-| **B — Tìm trong catalog nội bộ** | Semantic search bằng OpenAI embedding + cosine similarity | `POST /ai/product-search` | ✅ API · FE chưa nối |
+| **B — Tìm trong catalog nội bộ** | Semantic search bằng OpenAI embedding + cosine similarity | `POST /ai/product-search` | ✅ API + tab `/ai-center` |
 
 **FE**: `/ai-center` (luồng A) · `/admin/ai-candidates` (duyệt)  
 **Docs chi tiết**: `sa/04_API_Contract.md` Module 3 · `sa/amendments/ai_search-tables.md`

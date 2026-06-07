@@ -92,6 +92,29 @@ export interface ProductFormData {
   disabled_flag: boolean;
 }
 
+export interface AiCatalogSearchItem {
+  id: number;
+  product_cd: string | null;
+  product_name: string;
+  product_name_jp: string | null;
+  spec?: string | null;
+  unit?: string | null;
+  cost_jpy?: number | null;
+  price_vnd?: number | null;
+  origin?: string | null;
+  import_tax_rate?: string | number | null;
+  category?: string | null;
+  supplier?: string | null;
+  image_url?: string | null;
+  images?: { url: string; is_primary: boolean; order_no: number }[];
+}
+
+export interface AiCatalogSearchData {
+  query: string;
+  count: number;
+  items: AiCatalogSearchItem[];
+}
+
 export interface AiSearchItem {
   external_id?: string;
   product_name_jp: string;
