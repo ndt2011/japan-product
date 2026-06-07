@@ -10,7 +10,7 @@
 
 | Sprint | Mục tiêu | Tiến độ | Ghi chú |
 |--------|----------|---------|---------|
-| **S1** Auth & RBAC | Login, Remember Me, RBAC UI | **~85%** | + branch_manager/staff login ✅ |
+| **S1** Auth & RBAC | Login, Remember Me, RBAC UI | **~90%** | Tạo Admin/Công ty VN tại `/admin` ✅ |
 | **S2** Sản phẩm | CRUD + ảnh multipart | **~95%** | Upload khi tạo SP ✅ · R2 staging ✅ |
 | **UI shell** | Route + menu theo role | **~95%** | + menu chi nhánh ✅ |
 | **DevOps** | Railway + Vercel staging | **~90%** | R2 Railway Bucket configured |

@@ -41,6 +41,26 @@ export interface BranchItem {
   users_count?: number;
 }
 
+export interface AdminUserItem {
+  id: number;
+  login_id: string;
+  full_name: string;
+  email?: string | null;
+  user_type: "admin";
+  disabled_flag: boolean;
+}
+
+export interface CompanyUserItem {
+  id: number;
+  login_id: string;
+  company_cd?: string | null;
+  company_name: string;
+  contact_name?: string | null;
+  email?: string | null;
+  user_type: "company";
+  disabled_flag: boolean;
+}
+
 export interface BranchUserItem {
   id: number;
   branch_id: number;

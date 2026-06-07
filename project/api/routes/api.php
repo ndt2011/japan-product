@@ -3,8 +3,10 @@
 use App\Http\Controllers\API\AiProductCandidateController;
 use App\Http\Controllers\API\AiProductSearchController;
 use App\Http\Controllers\API\AiSearchController;
+use App\Http\Controllers\API\AdminUserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BranchController;
+use App\Http\Controllers\API\CompanyUserController;
 use App\Http\Controllers\API\BranchUserManagementController;
 use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\InventoryController;
@@ -34,6 +36,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin-users', [AdminUserController::class, 'index']);
+        Route::post('/admin-users', [AdminUserController::class, 'store']);
+        Route::put('/admin-users/{id}/toggle', [AdminUserController::class, 'toggle']);
+
+        Route::get('/company-users', [CompanyUserController::class, 'index']);
+        Route::post('/company-users', [CompanyUserController::class, 'store']);
+        Route::put('/company-users/{id}/toggle', [CompanyUserController::class, 'toggle']);
+
         Route::get('/branches', [BranchController::class, 'index']);
         Route::post('/branches', [BranchController::class, 'store']);
         Route::get('/branches/{id}', [BranchController::class, 'show']);

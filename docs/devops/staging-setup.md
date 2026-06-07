@@ -68,7 +68,8 @@ Template: [staging-env-vercel.template.env](./staging-env-vercel.template.env)
 
 ```bash
 php artisan migrate:status          # tất cả Ran (không migrate thủ công nếu đã auto)
-php artisan db:seed --class=BranchSeeder   # user chi nhánh demo
+php artisan db:seed --class=BranchSeeder   # user chi nhánh demo (hn_manager/hn_staff)
+# Hoặc tạo user qua UI: /admin → tab Admin hoặc Công ty VN
 php artisan products:generate-vi
 php artisan products:embed --force
 ```
