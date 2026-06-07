@@ -14,7 +14,8 @@
 | **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
 | **UI shell** | 12 màn theo demothietke | **~80%** | StockIn/Inventory/Debts demo · còn Orders/AI/Reports |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
-| **S3–S7** AI, Order, Batch | Chưa bắt đầu API | **0%** | Phụ thuộc S1–S2 |
+| **S3** AI Search | Tìm + duyệt sản phẩm | **~75%** | Scraper/Rakuten thật chờ SA |
+| **S4–S7** Order, Batch | Chưa bắt đầu API | **0%** | REQ-002 API contract |
 
 ---
 
@@ -25,7 +26,7 @@
 - 13 migrations CSDL (admins, companies_vn, products, orders, …)
 - Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
 - Products: CRUD + master data (`/suppliers`, `/product-categories`, `/exchange-rates/current`)
-- PHPUnit: **16 tests pass** (auth, products, product images, health)
+- PHPUnit: **22 tests pass** (auth, products, images, AI search, health)
 
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (12 route từ `demothietke`)
@@ -78,8 +79,10 @@
 | ~~DEV-11~~ | Soft delete products (API có sẵn) | Backend | ✅ |
 | ~~DEV-19~~ | API `product_images` + upload (public/R2) | Backend | ✅ |
 | ~~DEV-20~~ | FE drag-drop upload ảnh sản phẩm | Frontend | ✅ |
+| ~~DEV-21~~ | Sprint 3 AI: migrations + API + job + tests | Backend | ✅ |
+| ~~DEV-22~~ | FE `/ai-center` + `/admin/ai-candidates` | Frontend | ✅ |
 
-### Ưu tiên P1 — DevOps
+### Ưu tiên P1 — DevOps (sau khi xong S1–S4)
 
 | ID | Việc | Role | Estimate |
 |----|------|------|----------|
@@ -94,7 +97,7 @@
 |----|------|---------|
 | ~~DEV-16~~ | Port đầy đủ `StockIn`, `Inventory`, `Debts` từ demothietke | ✅ UI demo |
 | **DEV-17** | `next-intl` VI/JP (FE i18n HANDOFF §5) | P1 backlog |
-| **DEV-18** | Kết nối `/ai-center` API khi BE-016 xong | Blocked S3 |
+| ~~DEV-18~~ | Kết nối `/ai-center` API | Frontend | ✅ |
 
 ---
 

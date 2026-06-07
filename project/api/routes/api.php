@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\AiProductCandidateController;
+use App\Http\Controllers\API\AiSearchController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\MasterDataController;
@@ -29,4 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/suppliers', [MasterDataController::class, 'suppliers']);
     Route::get('/product-categories', [MasterDataController::class, 'categories']);
     Route::get('/exchange-rates/current', [MasterDataController::class, 'currentExchangeRate']);
+
+    Route::post('/ai/search', [AiSearchController::class, 'store']);
+    Route::get('/ai/search/{id}', [AiSearchController::class, 'show']);
+
+    Route::get('/ai/candidates', [AiProductCandidateController::class, 'index']);
+    Route::post('/ai/candidates', [AiProductCandidateController::class, 'store']);
+    Route::get('/ai/candidates/{id}', [AiProductCandidateController::class, 'show']);
+    Route::put('/ai/candidates/{id}/approve', [AiProductCandidateController::class, 'approve']);
+    Route::put('/ai/candidates/{id}/reject', [AiProductCandidateController::class, 'reject']);
 });

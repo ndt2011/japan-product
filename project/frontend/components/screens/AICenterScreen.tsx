@@ -1,27 +1,29 @@
 "use client";
 
 import { Badge, Button, Card } from "@/components/ui";
+import { translateMessage } from "@/lib/messages";
+import type { AiSearchItem } from "@/types/api";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  products?: AiSearchItem[];
   timestamp: string;
 };
 
 const suggestedPrompts = [
-  "Phân tích xu hướng sản phẩm TPCN tháng 6/2026",
-  "Tìm top 5 sản phẩm bán chạy trong tháng này",
-  "Kiểm tra hàng tồn kho sắp hết và đề xuất đặt hàng",
-  "Phân tích công nợ quá hạn và đề xuất xử lý",
+  "コラーゲン サプリ",
+  "ビタミンC ファンケル",
+  "オメガ3 大塚",
+  "TPCN bán chạy Nhật Bản",
 ];
 
-const mockResponses = [
-  "Tôi đã tìm được 3 sản phẩm TPCN phù hợp. Dưới đây là danh sách cùng thông tin giá nhập và xu hướng thị trường. (Demo — chờ API AI Product Search)",
-  "Dựa trên dữ liệu tồn kho demo, có **4 sản phẩm** cần bổ sung:\n\n• Collagen DHC: còn 8 unit (min: 20)\n• Vitamin C Fancl: hết hàng\n• Omega-3 Otsuka: còn 5 unit (min: 15)",
-  "Phân tích công nợ demo:\n\n• Tổng công nợ: 4.2 tỷ\n• Chưa thu: 1.8 tỷ (43%)\n\n⚠️ 2 đại lý quá hạn cần nhắc nhở.",
-];
+function itemKey(item: AiSearchItem, index: number) {
+  return item.external_id ?? `${item.product_name_jp}-${index}`;
+}
 
 export function AICenterScreen() {
   const [messages, setMessages] = useState<Message[]>([
@@ -29,23 +31,66 @@ export function AICenterScreen() {
       id: "0",
       role: "assistant",
       content:
-        "Xin chào! Tôi là AI Product Assistant (demo). Chờ tài liệu 2-101 và API AI Product Search để kết nối dữ liệu thật.",
+        "Nhập từ khóa sản phẩm (tiếng Nhật hoặc Việt) để AI tìm trên Rakuten/Amazon JP. Chọn sản phẩm và gửi duyệt cho JP Agency.",
       timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selected, setSelected] = useState<Record<string, AiSearchItem>>({});
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const responseIdx = useRef(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  async function pollSession(id: number, keyword: string, maxAttempts = 30) {
+    for (let i = 0; i < maxAttempts; i++) {
+      const res = await fetch(`/api/proxy/ai/search/${id}`);
+      const data = await res.json();
+
+      if (!data.success && data.message !== "M0201") {
+        throw new Error(data.message ?? "M0001");
+      }
+
+      const session = data.data?.session;
+      if (!session) throw new Error("M0002");
+
+      if (session.status === "processing") {
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
+      }
+
+      if (session.status === "timeout") {
+        return { text: translateMessage("M0202"), products: [] as AiSearchItem[] };
+      }
+
+      if (data.message === "M0201" || !session.items?.length) {
+        return {
+          text: translateMessage("M0201"),
+          products: [] as AiSearchItem[],
+        };
+      }
+
+      return {
+        text: `Tìm thấy ${session.items.length} sản phẩm cho "${keyword}". Chọn sản phẩm cần gửi duyệt:`,
+        products: session.items as AiSearchItem[],
+      };
+    }
+
+    return { text: translateMessage("M0202"), products: [] as AiSearchItem[] };
+  }
+
   async function sendMessage(text?: string) {
     const msgText = text || input.trim();
     if (!msgText || loading) return;
     setInput("");
+    setError("");
+    setSelected({});
+    setSessionId(null);
 
     setMessages((prev) => [
       ...prev,
@@ -58,30 +103,109 @@ export function AICenterScreen() {
     ]);
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 1000));
+    try {
+      const startRes = await fetch("/api/proxy/ai/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: msgText }),
+      });
+      const startData = await startRes.json();
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: mockResponses[responseIdx.current % mockResponses.length],
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
-    responseIdx.current++;
-    setLoading(false);
+      if (!startRes.ok || !startData.success) {
+        setError(translateMessage(startData.message ?? "M0001"));
+        return;
+      }
+
+      const id = startData.data?.session?.id as number;
+      setSessionId(id);
+
+      const result = await pollSession(id, msgText);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: result.text,
+          products: result.products,
+          timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } catch {
+      setError("Không thể tìm kiếm AI. Kiểm tra API backend.");
+    } finally {
+      setLoading(false);
+    }
   }
+
+  function toggleProduct(item: AiSearchItem, index: number) {
+    const key = itemKey(item, index);
+    setSelected((prev) => {
+      const next = { ...prev };
+      if (next[key]) delete next[key];
+      else next[key] = item;
+      return next;
+    });
+  }
+
+  async function submitForApproval() {
+    const items = Object.values(selected);
+    if (items.length === 0) return;
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/proxy/ai/candidates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          items: items.map((item) => ({
+            product_name_jp: item.product_name_jp,
+            image_url: item.image_url,
+            price_jpy: item.price_jpy,
+            source_url: item.source_url,
+            source_platform: item.source_platform,
+            description: item.description,
+          })),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(translateMessage(data.message ?? "M0001"));
+        return;
+      }
+
+      setSelected({});
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: translateMessage("M0203") + ` (${items.length} sản phẩm)`,
+          timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } catch {
+      setError("Không gửi được duyệt. Kiểm tra API.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const selectedCount = Object.keys(selected).length;
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
       <aside className="w-64 shrink-0">
         <Card className="p-4 h-full flex flex-col overflow-hidden">
-          <p className="text-xs text-text-placeholder mb-2">Câu hỏi gợi ý:</p>
+          <p className="text-xs text-text-placeholder mb-2">Từ khóa gợi ý:</p>
           <div className="space-y-2 overflow-y-auto flex-1">
-            {suggestedPrompts.map((prompt, i) => (
+            {suggestedPrompts.map((prompt) => (
               <button
-                key={i}
+                key={prompt}
                 type="button"
                 onClick={() => sendMessage(prompt)}
                 className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-text-body hover:bg-brand-light hover:text-brand border border-border hover:border-brand/30 transition-all leading-relaxed"
@@ -90,9 +214,11 @@ export function AICenterScreen() {
               </button>
             ))}
           </div>
-          <Badge variant="info" className="mt-3 justify-center">
-            Chờ docs 2-101
-          </Badge>
+          <Link href="/admin/ai-candidates" className="mt-3">
+            <Button variant="outline" size="sm" className="w-full">
+              Duyệt sản phẩm AI →
+            </Button>
+          </Link>
         </Card>
       </aside>
 
@@ -103,17 +229,23 @@ export function AICenterScreen() {
               🤖
             </div>
             <div>
-              <p className="text-sm text-text-primary font-medium">AI Product Assistant</p>
+              <p className="text-sm text-text-primary font-medium">AI Product Search</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-                <span className="text-xs text-success">Demo mode</span>
+                <span className="text-xs text-success">API kết nối</span>
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setMessages((prev) => [prev[0]])}>
-            🗑 Xóa chat
-          </Button>
+          {selectedCount > 0 && (
+            <Button size="sm" onClick={submitForApproval} disabled={submitting}>
+              {submitting ? "Đang gửi..." : `Gửi duyệt (${selectedCount})`}
+            </Button>
+          )}
         </Card>
+
+        {error && (
+          <Card className="p-3 mb-3 text-sm text-danger border-danger/30 bg-red-50">{error}</Card>
+        )}
 
         <Card className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {messages.map((msg) => (
@@ -127,7 +259,7 @@ export function AICenterScreen() {
               >
                 {msg.role === "assistant" ? "🤖" : "👤"}
               </div>
-              <div className={`flex-1 max-w-[75%] ${msg.role === "user" ? "flex flex-col items-end" : ""}`}>
+              <div className={`flex-1 max-w-[85%] ${msg.role === "user" ? "flex flex-col items-end" : ""}`}>
                 <div
                   className={`px-4 py-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                     msg.role === "assistant"
@@ -137,6 +269,61 @@ export function AICenterScreen() {
                 >
                   {msg.content}
                 </div>
+                {msg.products && msg.products.length > 0 && (
+                  <div className="mt-3 grid grid-cols-1 gap-2 w-full">
+                    {msg.products.map((p, index) => {
+                      const key = itemKey(p, index);
+                      const isSelected = Boolean(selected[key]);
+                      return (
+                        <div
+                          key={key}
+                          className={`bg-white border rounded-xl p-3 flex items-start gap-3 ${
+                            isSelected ? "border-brand ring-2 ring-brand/20" : "border-border"
+                          }`}
+                        >
+                          {p.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={p.image_url} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 bg-surface-muted rounded-lg flex items-center justify-center shrink-0">
+                              📦
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-text-primary font-medium">{p.product_name_jp}</p>
+                            {p.price_jpy != null && (
+                              <p className="text-xs text-brand mt-0.5">¥{p.price_jpy.toLocaleString("ja-JP")}</p>
+                            )}
+                            {p.description && (
+                              <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{p.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {p.source_platform && <Badge variant="info">{p.source_platform}</Badge>}
+                              {p.source_url && (
+                                <a
+                                  href={p.source_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs text-brand hover:underline"
+                                >
+                                  Link nguồn
+                                </a>
+                              )}
+                              <Button
+                                variant={isSelected ? "primary" : "outline"}
+                                size="sm"
+                                type="button"
+                                onClick={() => toggleProduct(p, index)}
+                              >
+                                {isSelected ? "✓ Đã chọn" : "Chọn"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 <p className="text-xs text-text-placeholder mt-1 px-1">{msg.timestamp}</p>
               </div>
             </div>
@@ -147,15 +334,7 @@ export function AICenterScreen() {
                 🤖
               </div>
               <div className="bg-white border border-border rounded-2xl px-4 py-3">
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="w-1.5 h-1.5 bg-text-placeholder rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
+                <p className="text-xs text-text-muted">Đang tìm sản phẩm...</p>
               </div>
             </div>
           )}
@@ -173,12 +352,12 @@ export function AICenterScreen() {
                   sendMessage();
                 }
               }}
-              placeholder="Nhập câu hỏi về sản phẩm, tồn kho... (Enter để gửi)"
+              placeholder="Nhập từ khóa sản phẩm (VD: コラーゲン, vitamin C...)"
               rows={2}
-              className="flex-1 px-3 py-2 rounded-xl border border-border text-xs text-text-primary placeholder:text-text-placeholder resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+              className="flex-1 px-3 py-2 rounded-xl border border-border text-xs text-text-primary placeholder:text-text-placeholder resize-none focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
             <Button size="sm" onClick={() => sendMessage()} disabled={!input.trim() || loading}>
-              ↑
+              Tìm
             </Button>
           </div>
         </Card>

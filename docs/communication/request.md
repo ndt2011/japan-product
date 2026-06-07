@@ -68,7 +68,7 @@
 | Account lockout | ⏸ | — | ⏸ |
 | Products CRUD | 🔄 | 🔄 List | 🔄 |
 | UI demothietke (12 route) | — | 🔄 | — |
-| AI Search | 📋 | 🔄 demo | 📋 |
+| AI Search | ✅ mock | ✅ API | 🔄 |
 | Orders | 📋 | 🔄 demo | 📋 |
 | CI GitHub Actions | ✅ test | ✅ build | — |
 | Cloud deploy | 📋 | 📋 | 📋 |

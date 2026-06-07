@@ -43,11 +43,11 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| BE-012 | Migration: `ai_search_sessions`, `ai_product_candidates` | P0 | — | 0.5d | 📋 REQ-005 |
-| BE-013 | OpenAI GPT-4o service | P0 | BE-012 | 2d | 📋 |
-| BE-014 | Scraper Rakuten/Amazon JP | P0 | BE-013 | 2d | 📋 |
-| BE-015 | Queue `AiProductSearchJob` + poll status API | P0 | BE-013 | 1d | 📋 |
-| BE-016 | API: `/ai/search`, candidates approve/reject | P0 | BE-015 | 1d | 📋 |
+| BE-012 | Migration: `ai_search_sessions`, `ai_product_candidates` | P0 | — | 0.5d | ✅ amendment |
+| BE-013 | OpenAI GPT-4o service | P0 | BE-012 | 2d | 🔄 Mock khi không có key |
+| BE-014 | Scraper Rakuten/Amazon JP | P0 | BE-013 | 2d | 🔄 Mock catalog |
+| BE-015 | Queue `AiProductSearchJob` + poll status API | P0 | BE-013 | 1d | ✅ |
+| BE-016 | API: `/ai/search`, candidates approve/reject | P0 | BE-015 | 1d | ✅ |
 
 ---
 

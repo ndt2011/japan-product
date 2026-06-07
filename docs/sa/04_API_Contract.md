@@ -182,6 +182,44 @@
 
 ---
 
+## Module 3 — AI Product Search
+
+### POST `/ai/search`
+
+**Body**: `{ "keyword": "コラーゲン" }`  
+**Response 202**: `{ session: { id, keyword, status: "processing" } }`
+
+### GET `/ai/search/{id}`
+
+**Response 200**:
+- Đang xử lý: `status: "processing"`
+- Có kết quả: `status: "completed"`, `items: [{ external_id, product_name_jp, image_url, price_jpy, source_url, source_platform, description }]`
+- Không có kết quả: `message: M0201`, `items: []`
+- Timeout: `message: M0202`, `status: "timeout"`
+
+### POST `/ai/candidates`
+
+**Body**: `{ session_id?: number, items: [{ product_name_jp, image_url?, price_jpy?, source_url?, source_platform?, description? }] }`  
+**Response 201** (`M0203`)
+
+### GET `/ai/candidates?status=PENDING`
+
+**Response 200**: `{ items: [...], pagination }`
+
+### PUT `/ai/candidates/{id}/approve`
+
+**Body**: `{ product_category_id, product_name_vn?, price_vnd?, cost_jpy? }`  
+**Response 200** (`M0204`) — tạo `products`
+
+### PUT `/ai/candidates/{id}/reject`
+
+**Body**: `{ reason: string (min 10) }`  
+**Response 200** (`M0205`) | **422** nếu thiếu lý do
+
+**Ghi chú**: Không có `OPENAI_API_KEY` → dùng mock catalog (local dev). Production: GPT-4o + scraper.
+
+---
+
 ## Module 2 — Master data (hỗ trợ form)
 
 ### GET `/suppliers`

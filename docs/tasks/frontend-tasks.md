@@ -50,9 +50,9 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| FE-201 | `/ai-center` — chat UI + polling API | P0 | BE-016 | 2.5d | 🔄 UI demo · API 📋 |
-| FE-202 | Card kết quả + chọn + gửi duyệt | P0 | FE-201 | 1d | 📋 |
-| FE-203 | `/admin/ai-candidates` — duyệt/từ chối | P0 | BE-016 | 2d | 📋 |
+| FE-201 | `/ai-center` — chat UI + polling API | P0 | BE-016 | 2.5d | ✅ |
+| FE-202 | Card kết quả + chọn + gửi duyệt | P0 | FE-201 | 1d | ✅ |
+| FE-203 | `/admin/ai-candidates` — duyệt/từ chối | P0 | BE-016 | 2d | ✅ |
 
 ---
 

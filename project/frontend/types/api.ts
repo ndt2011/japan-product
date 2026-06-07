@@ -92,6 +92,39 @@ export interface ProductFormData {
   disabled_flag: boolean;
 }
 
+export interface AiSearchItem {
+  external_id?: string;
+  product_name_jp: string;
+  image_url?: string | null;
+  price_jpy?: number | null;
+  source_url?: string | null;
+  source_platform?: string | null;
+  description?: string | null;
+}
+
+export interface AiSearchSession {
+  id: number;
+  keyword: string;
+  status: "processing" | "completed" | "failed" | "timeout";
+  items?: AiSearchItem[];
+  error_message?: string | null;
+}
+
+export interface AiCandidateItem {
+  id: number;
+  ai_search_session_id?: number | null;
+  product_name_jp: string;
+  product_name_vn?: string | null;
+  image_url?: string | null;
+  price_jpy?: number | null;
+  source_url?: string | null;
+  source_platform?: string | null;
+  description?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reject_reason?: string | null;
+  product_id?: number | null;
+}
+
 export interface ProductListData {
   items: ProductItem[];
   pagination: {
