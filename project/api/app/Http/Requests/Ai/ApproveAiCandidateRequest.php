@@ -23,6 +23,7 @@ class ApproveAiCandidateRequest extends FormRequest
             'cost_jpy' => ['nullable', 'integer', 'min:0'],
             'price_vnd' => ['nullable', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
+            'spec' => ['nullable', 'string', 'max:255'],
             'origin' => ['nullable', 'string', 'max:100'],
         ];
     }

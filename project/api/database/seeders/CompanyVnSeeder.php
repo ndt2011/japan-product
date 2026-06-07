@@ -14,9 +14,9 @@ class CompanyVnSeeder extends Seeder
             [
                 'password' => 'Company@123',
                 'company_cd' => 'VN001',
-                'company_name' => 'Công ty Demo Việt Nam',
-                'email' => 'demo@company.vn',
-                'contact_name' => 'Nguyễn Văn A',
+                'company_name' => 'Công ty TNHH Thương mại XNK Việt Nam',
+                'email' => 'contact@xnk-vietnam.vn',
+                'contact_name' => 'Nguyễn Minh Tuấn',
                 'disabled_flag' => false,
                 'deleted_flag' => false,
                 'created' => now(),

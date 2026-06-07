@@ -55,7 +55,7 @@ function WebSearchPanel() {
       const res = await fetch(`/api/proxy/ai/search/${id}`);
       const data = await res.json();
 
-      if (!data.success && data.message !== "M0201") {
+      if (!data.success && !["M0201", "M0206", "M0207"].includes(data.message)) {
         throw new Error(data.message ?? "M0001");
       }
 
@@ -69,6 +69,13 @@ function WebSearchPanel() {
 
       if (session.status === "timeout") {
         return { text: translateMessage("M0202"), products: [] as AiSearchItem[] };
+      }
+
+      if (data.message === "M0206" || data.message === "M0207") {
+        return {
+          text: translateMessage(data.message),
+          products: [] as AiSearchItem[],
+        };
       }
 
       if (data.message === "M0201" || !session.items?.length) {
@@ -166,11 +173,17 @@ function WebSearchPanel() {
           session_id: sessionId,
           items: items.map((item) => ({
             product_name_jp: item.product_name_jp,
+            product_name_vn: item.product_name_vn,
             image_url: item.image_url,
             price_jpy: item.price_jpy,
             source_url: item.source_url,
             source_platform: item.source_platform,
             description: item.description,
+            suggested_category_id: item.suggested_category_id,
+            suggested_category_name: item.suggested_category_name,
+            usage_instructions: item.usage_instructions,
+            spec: item.spec,
+            data_source: item.data_source,
           })),
         }),
       });
@@ -294,13 +307,28 @@ function WebSearchPanel() {
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-text-primary font-medium">{p.product_name_jp}</p>
-                            {p.price_jpy != null && (
-                              <p className="text-xs text-brand mt-0.5">¥{p.price_jpy.toLocaleString("ja-JP")}</p>
+                            {p.product_name_vn && (
+                              <p className="text-xs text-text-body mt-0.5">{p.product_name_vn}</p>
                             )}
+                            {p.price_jpy != null && (
+                              <p className="text-xs text-brand mt-0.5">Giá gốc ¥{p.price_jpy.toLocaleString("ja-JP")}</p>
+                            )}
+                            {p.suggested_category_name && (
+                              <p className="text-xs text-text-muted mt-0.5">Gợi ý: {p.suggested_category_name}</p>
+                            )}
+                            {p.spec && <p className="text-xs text-text-muted mt-0.5">Quy cách: {p.spec}</p>}
                             {p.description && (
                               <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{p.description}</p>
                             )}
+                            {p.usage_instructions && (
+                              <p className="text-xs text-text-muted mt-0.5 line-clamp-2">Cách dùng: {p.usage_instructions}</p>
+                            )}
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {p.data_source === "rakuten_api" ? (
+                                <Badge variant="success">Rakuten (giá thật)</Badge>
+                              ) : p.data_source === "openai" || p.data_source === "openai_guess" ? (
+                                <Badge variant="warning">AI gợi ý (chưa có link/ảnh)</Badge>
+                              ) : null}
                               {p.source_platform && <Badge variant="info">{p.source_platform}</Badge>}
                               {p.source_url && (
                                 <a

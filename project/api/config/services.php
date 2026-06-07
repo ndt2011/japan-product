@@ -41,4 +41,15 @@ return [
         'limit' => (int) env('AI_SEARCH_LIMIT', 15),
     ],
 
+    'rakuten' => [
+        'application_id' => env('RAKUTEN_APPLICATION_ID', ''),
+        'access_key' => env('RAKUTEN_ACCESS_KEY', ''),
+        'affiliate_id' => env('RAKUTEN_AFFILIATE_ID', ''),
+        'origin_url' => env('RAKUTEN_ORIGIN_URL', 'http://localhost:3000'),
+    ],
+
+    'product' => [
+        'markup_percent' => (float) env('PRODUCT_MARKUP_PERCENT', 30),
+    ],
+
 ];

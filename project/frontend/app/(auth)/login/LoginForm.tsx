@@ -151,9 +151,6 @@ export function LoginForm() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-text-placeholder">
-            Demo: admin / Admin@123 · vn_company01 / Company@123
-          </p>
         </div>
       </div>
     </div>

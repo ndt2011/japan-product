@@ -52,6 +52,38 @@ class ProductImageService
         return $image;
     }
 
+    public function importFromUrl(int $productId, string $url, bool $isPrimary = true): ?ProductImage
+    {
+        $product = $this->assertProductExists($productId);
+        $imagePath = $this->imageStorageService->uploadFromUrl($url, $productId);
+
+        if (! $imagePath) {
+            return null;
+        }
+
+        $hasImages = $this->productImageRepository->listByProduct($productId)->isNotEmpty();
+        $makePrimary = $isPrimary || ! $hasImages;
+
+        if ($makePrimary) {
+            $this->productImageRepository->clearPrimary($productId);
+        }
+
+        $image = $this->productImageRepository->create([
+            'product_id' => $productId,
+            'image_path' => $imagePath,
+            'is_primary' => $makePrimary,
+            'order_no' => $this->productImageRepository->nextOrderNo($productId),
+            'created' => now(),
+            'deleted_flag' => false,
+        ]);
+
+        if ($makePrimary) {
+            $this->syncProductPrimaryImage($product->id, $imagePath);
+        }
+
+        return $image;
+    }
+
     public function update(int $productId, int $imageId, array $data): ProductImage
     {
         $this->assertProductExists($productId);

@@ -21,7 +21,7 @@ class AdminSeeder extends Seeder
             ],
         );
 
-        // Luôn reset mật khẩu demo (tránh hash lỗi sau migrate:test / seed cũ)
+        // Luôn reset mật khẩu khi seed lại (tránh hash lỗi sau migrate:test)
         if (! $admin->wasRecentlyCreated) {
             $admin->password = 'Admin@123';
             $admin->save();

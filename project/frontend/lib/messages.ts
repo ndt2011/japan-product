@@ -10,6 +10,8 @@ const MESSAGE_MAP: Record<string, string> = {
   M0001: "Dữ liệu nhập không hợp lệ.",
   M0201: "AI không tìm thấy sản phẩm phù hợp. Thử từ khóa khác.",
   M0202: "Tìm kiếm AI quá thời gian. Vui lòng thử lại.",
+  M0206: "Rakuten API chưa cho phép IP máy bạn. Vào Rakuten Developers → ứng dụng → thêm IP public vào danh sách cho phép (xem docs/devops/rakuten-api-setup.md).",
+  M0207: "Rakuten API từ chối request. Kiểm tra RAKUTEN_ORIGIN_URL khớp URL đã đăng ký trên Rakuten Developers.",
   M0203: "Đã gửi sản phẩm chờ duyệt thành công.",
   M0204: "Duyệt sản phẩm AI thành công — đã thêm vào catalog.",
   M0205: "Đã từ chối sản phẩm AI.",

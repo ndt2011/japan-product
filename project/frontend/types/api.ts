@@ -118,11 +118,25 @@ export interface AiCatalogSearchData {
 export interface AiSearchItem {
   external_id?: string;
   product_name_jp: string;
+  product_name_vn?: string | null;
   image_url?: string | null;
   price_jpy?: number | null;
   source_url?: string | null;
   source_platform?: string | null;
   description?: string | null;
+  data_source?: "rakuten_api" | "openai" | string | null;
+  genre_name?: string | null;
+  suggested_category_id?: number | null;
+  suggested_category_name?: string | null;
+  usage_instructions?: string | null;
+  spec?: string | null;
+}
+
+export interface PricingPreview {
+  exchange_rate: number;
+  markup_percent: number;
+  cost_jpy: number;
+  price_vnd: number | null;
 }
 
 export interface AiSearchSession {
@@ -143,6 +157,12 @@ export interface AiCandidateItem {
   source_url?: string | null;
   source_platform?: string | null;
   description?: string | null;
+  suggested_category_id?: number | null;
+  suggested_category_name?: string | null;
+  usage_instructions?: string | null;
+  spec?: string | null;
+  data_source?: string | null;
+  pricing?: PricingPreview;
   status: "PENDING" | "APPROVED" | "REJECTED";
   reject_reason?: string | null;
   product_id?: number | null;

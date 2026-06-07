@@ -1,7 +1,7 @@
 # Hướng dẫn cấu hình AI — Local & Production
 
 > **Cập nhật**: 2026-06-07  
-> **Không cần OpenAI key** để dev cơ bản — hệ thống tự dùng mock/keyword fallback.
+> **Luồng A (khám phá web)** cần `OPENAI_API_KEY` để trả kết quả. **Luồng B (catalog)** tìm trong DB — không cần key (fallback từ khóa).
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Luồng | Màn hình | API | Cần `OPENAI_API_KEY`? |
 |-------|----------|-----|------------------------|
-| **A — Khám phá web** | `/ai-center` tab *Khám phá web* | `POST /ai/search` | Không bắt buộc (mock catalog) · Có key → GPT gợi ý SP |
+| **A — Khám phá web** | `/ai-center` tab *Khám phá web* | `POST /ai/search` | **Bắt buộc** — GPT gợi ý SP Rakuten/Amazon JP |
 | **B — Catalog nội bộ** | `/ai-center` tab *Tìm catalog* | `POST /ai/product-search` | Không bắt buộc (tìm theo từ khóa) · Có key + embed → semantic |
 
 **Frontend không cần OpenAI key** — chỉ gọi BFF → Laravel API.
@@ -24,7 +24,7 @@
 
 ```env
 # === AI (thêm vào cuối file) ===
-OPENAI_API_KEY=sk-proj-xxxxxxxx          # Để TRỐNG = mock/keyword (dev OK)
+OPENAI_API_KEY=sk-proj-xxxxxxxx          # Bắt buộc cho luồng A; luồng B vẫn tìm keyword nếu trống
 OPENAI_MODEL=gpt-4o-mini                 # Luồng A — chat tìm SP
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small   # Luồng B — vector
 AI_SEARCH_LIMIT=15
@@ -100,10 +100,10 @@ curl -X POST http://localhost:8000/api/ai/product-search \
 
 ## 5. Luồng A — Khám phá web
 
-| `OPENAI_API_KEY` | Hành vi |
-|------------------|---------|
-| Trống | Mock catalog (collagen, vitamin, v.v.) — đủ test UI |
-| Có key | Gọi GPT-4o-mini, fallback mock nếu lỗi |
+| `OPENAI_API_KEY` | Hành vi luồng A |
+|------------------|----------------|
+| Trống | Không có kết quả (M0201) |
+| Có key | Gọi GPT-4o-mini → trả danh sách SP gợi ý (JSON) |
 
 `QUEUE_CONNECTION=sync` → không cần `queue:work`.
 

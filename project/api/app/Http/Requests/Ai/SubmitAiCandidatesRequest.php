@@ -23,6 +23,11 @@ class SubmitAiCandidatesRequest extends FormRequest
             'items.*.source_url' => ['nullable', 'string', 'max:500'],
             'items.*.source_platform' => ['nullable', 'string', 'max:50'],
             'items.*.description' => ['nullable', 'string'],
+            'items.*.suggested_category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'items.*.suggested_category_name' => ['nullable', 'string', 'max:100'],
+            'items.*.usage_instructions' => ['nullable', 'string'],
+            'items.*.spec' => ['nullable', 'string', 'max:255'],
+            'items.*.data_source' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Repositories\AiSearchSessionRepository;
-use App\Services\Ai\OpenAiProductSearchService;
+use App\Services\Ai\AiWebProductSearchService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +20,7 @@ class AiProductSearchJob implements ShouldQueue
 
     public function handle(
         AiSearchSessionRepository $sessionRepository,
-        OpenAiProductSearchService $searchService,
+        AiWebProductSearchService $searchService,
     ): void {
         $session = $sessionRepository->find($this->sessionId);
 
@@ -29,11 +29,14 @@ class AiProductSearchJob implements ShouldQueue
         }
 
         try {
-            $results = $searchService->search($session->keyword);
+            $meta = $searchService->searchWithMeta($session->keyword);
+            $results = $meta['items'];
+            $rakutenError = $meta['rakuten_error'];
 
             $sessionRepository->update($session, [
                 'status' => 'completed',
                 'results_json' => $results,
+                'error_message' => $rakutenError,
                 'completed_at' => now(),
             ]);
         } catch (\Throwable $e) {

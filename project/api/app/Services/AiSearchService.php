@@ -52,6 +52,14 @@ class AiSearchService
         }
 
         if ($session->status === 'completed' && empty($session->results_json)) {
+            if ($session->error_message === 'CLIENT_IP_NOT_ALLOWED') {
+                return 'M0206';
+            }
+
+            if (in_array($session->error_message, ['REQUEST_CONTEXT_BODY_HTTP_REFERRER_MISSING', 'HTTP_403'], true)) {
+                return 'M0207';
+            }
+
             return 'M0201';
         }
 

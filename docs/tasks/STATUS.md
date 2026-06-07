@@ -96,8 +96,8 @@
 
 | ID | Việc | Role | Estimate |
 |----|------|------|----------|
-| **DEV-12** | Railway staging — làm theo `docs/devops/staging-setup.md` | DevOps | 0.5 ngày |
-| **DEV-13** | Vercel staging — `vercel.json` + root `project/frontend` | DevOps | 0.5 ngày |
+| **DEV-12** | Railway staging — **[STAGING_DEPLOY_MEMO.md](../devops/STAGING_DEPLOY_MEMO.md)** Bước 1–3 | DevOps | 0.5 ngày |
+| **DEV-13** | Vercel staging — memo **Bước 4–5** + `vercel.json` | DevOps | 0.5 ngày |
 | **DEV-14** | `deploy.yml` — deploy sau CI pass (optional staging) | DevOps | 1 ngày |
 | **DEV-15** | GitHub branch protection `main` | DevOps | 0.5h |
 

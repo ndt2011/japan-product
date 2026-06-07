@@ -11,7 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             CompanyVnSeeder::class,
-            MasterDataSeeder::class,
+            ProductCategorySeeder::class,
+            ExchangeRateSeeder::class,
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Admin;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AiSearchTest extends TestCase
@@ -30,6 +31,31 @@ class AiSearchTest extends TestCase
 
     public function test_search_returns_products_for_collagen_keyword(): void
     {
+        config([
+            'services.openai.api_key' => 'test-key',
+            'services.rakuten.application_id' => '',
+            'services.rakuten.access_key' => '',
+        ]);
+
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                [
+                                    'product_name_jp' => 'DHC コラーゲン 360粒',
+                                    'price_jpy' => 1188,
+                                    'source_platform' => 'rakuten',
+                                    'description' => 'コラーゲンサプリ',
+                                ],
+                            ], JSON_UNESCAPED_UNICODE),
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
         $start = $this->postJson('/api/ai/search', [
             'keyword' => 'コラーゲン',
         ], $this->authHeaders());
@@ -97,6 +123,15 @@ class AiSearchTest extends TestCase
 
     public function test_approve_candidate_creates_product(): void
     {
+        \App\Models\ExchangeRate::query()->create([
+            'from_currency' => 'JPY',
+            'to_currency' => 'VND',
+            'rate' => 170,
+            'apply_date' => now()->toDateString(),
+            'deleted_flag' => false,
+            'created' => now(),
+        ]);
+
         $category = ProductCategory::query()->create([
             'category_name' => 'TPCN',
             'disabled_flag' => false,
@@ -107,9 +142,10 @@ class AiSearchTest extends TestCase
             'items' => [
                 [
                     'product_name_jp' => 'DHC コラーゲン 360粒',
-                    'price_jpy' => 1188,
+                    'price_jpy' => 1000,
                     'image_url' => 'https://example.com/img.jpg',
                     'source_platform' => 'rakuten',
+                    'usage_instructions' => 'Uống 2 viên/ngày',
                 ],
             ],
         ], $this->authHeaders());
@@ -119,16 +155,19 @@ class AiSearchTest extends TestCase
         $approve = $this->putJson("/api/ai/candidates/{$candidateId}/approve", [
             'product_category_id' => $category->id,
             'product_name_vn' => 'Collagen DHC 360 viên',
-            'price_vnd' => 250000,
         ], $this->authHeaders());
 
         $approve->assertOk()
             ->assertJsonPath('message', 'M0204')
             ->assertJsonPath('data.candidate.status', 'APPROVED');
 
+        $expectedVnd = app(\App\Services\ProductPricingService::class)->calculateSellingPriceVnd(1000);
+
         $this->assertDatabaseHas('products', [
             'product_name' => 'Collagen DHC 360 viên',
             'product_name_jp' => 'DHC コラーゲン 360粒',
+            'cost_jpy' => 1000,
+            'price_vnd' => $expectedVnd,
         ]);
     }
 

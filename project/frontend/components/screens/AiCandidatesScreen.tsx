@@ -6,6 +6,11 @@ import type { AiCandidateItem, CategoryOption } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+function fmtVnd(n: number | null | undefined) {
+  if (n == null) return "—";
+  return `${new Intl.NumberFormat("vi-VN").format(n)}đ`;
+}
+
 export function AiCandidatesScreen() {
   const [candidates, setCandidates] = useState<AiCandidateItem[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -16,6 +21,8 @@ export function AiCandidatesScreen() {
     product_category_id: "" as number | "",
     product_name_vn: "",
     price_vnd: "" as number | "",
+    description: "",
+    spec: "",
   });
   const [rejectReason, setRejectReason] = useState("");
   const [saving, setSaving] = useState(false);
@@ -49,9 +56,11 @@ export function AiCandidatesScreen() {
   function openReview(candidate: AiCandidateItem) {
     setActiveId(candidate.id);
     setApproveForm({
-      product_category_id: "",
-      product_name_vn: candidate.product_name_jp,
-      price_vnd: "",
+      product_category_id: candidate.suggested_category_id ?? "",
+      product_name_vn: candidate.product_name_vn ?? candidate.product_name_jp,
+      price_vnd: candidate.pricing?.price_vnd ?? "",
+      description: candidate.description ?? "",
+      spec: candidate.spec ?? "",
     });
     setRejectReason("");
     setError("");
@@ -72,6 +81,8 @@ export function AiCandidatesScreen() {
           product_category_id: Number(approveForm.product_category_id),
           product_name_vn: approveForm.product_name_vn,
           price_vnd: approveForm.price_vnd !== "" ? Number(approveForm.price_vnd) : undefined,
+          description: approveForm.description || undefined,
+          spec: approveForm.spec || undefined,
         }),
       });
       const data = await res.json();
@@ -136,9 +147,9 @@ export function AiCandidatesScreen() {
             <Thead>
               <tr>
                 <Th>Tên (JP)</Th>
-                <Th>Giá JPY</Th>
+                <Th>Giá gốc JPY</Th>
+                <Th>Giá bán gợi ý</Th>
                 <Th>Nguồn</Th>
-                <Th>Trạng thái</Th>
                 <Th>Thao tác</Th>
               </tr>
             </Thead>
@@ -158,13 +169,16 @@ export function AiCandidatesScreen() {
               ) : (
                 candidates.map((c) => (
                   <Tr key={c.id}>
-                    <Td className="text-xs text-text-primary max-w-xs">{c.product_name_jp}</Td>
+                    <Td className="text-xs text-text-primary max-w-xs">
+                      <p>{c.product_name_jp}</p>
+                      {c.product_name_vn && <p className="text-text-muted">{c.product_name_vn}</p>}
+                    </Td>
                     <Td className="text-xs">
                       {c.price_jpy != null ? `¥${c.price_jpy.toLocaleString("ja-JP")}` : "—"}
                     </Td>
-                    <Td className="text-xs">{c.source_platform ?? "—"}</Td>
-                    <Td>
-                      <Badge variant="warning">Chờ duyệt</Badge>
+                    <Td className="text-xs">{fmtVnd(c.pricing?.price_vnd)}</Td>
+                    <Td className="text-xs">
+                      {c.data_source === "rakuten_api" ? "Rakuten" : c.source_platform ?? "—"}
                     </Td>
                     <Td>
                       <Button size="sm" variant="outline" onClick={() => openReview(c)}>
@@ -178,7 +192,7 @@ export function AiCandidatesScreen() {
           </Table>
         </Card>
 
-        <Card className="p-5 space-y-4 h-fit">
+        <Card className="p-5 space-y-4 h-fit max-h-[85vh] overflow-y-auto">
           {!active ? (
             <p className="text-sm text-text-muted text-center py-8">Chọn một sản phẩm để duyệt hoặc từ chối</p>
           ) : (
@@ -187,17 +201,52 @@ export function AiCandidatesScreen() {
                 <h3 className="text-sm font-semibold text-text-primary">{active.product_name_jp}</h3>
                 {active.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={active.image_url} alt="" className="mt-3 w-full max-h-40 object-contain rounded-xl border border-border" />
+                  <img
+                    src={active.image_url}
+                    alt=""
+                    className="mt-3 w-full max-h-40 object-contain rounded-xl border border-border"
+                  />
                 )}
-                {active.description && (
-                  <p className="text-xs text-text-muted mt-2">{active.description}</p>
+                {active.suggested_category_name && (
+                  <Badge variant="info" className="mt-2">
+                    AI gợi ý: {active.suggested_category_name}
+                  </Badge>
+                )}
+                {active.usage_instructions && (
+                  <div className="mt-3 p-3 bg-surface-muted rounded-xl">
+                    <p className="text-xs font-medium text-text-primary">Cách dùng</p>
+                    <p className="text-xs text-text-muted mt-1 whitespace-pre-wrap">{active.usage_instructions}</p>
+                  </div>
                 )}
                 {active.source_url && (
-                  <a href={active.source_url} target="_blank" rel="noreferrer" className="text-xs text-brand mt-2 inline-block hover:underline">
-                    Link nguồn
+                  <a
+                    href={active.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-brand mt-2 inline-block hover:underline"
+                  >
+                    Link nguồn Rakuten
                   </a>
                 )}
               </div>
+
+              {active.pricing && (
+                <div className="p-3 bg-brand-light/40 rounded-xl text-xs space-y-1">
+                  <p>
+                    <span className="text-text-muted">Giá gốc (JPY):</span>{" "}
+                    <strong>¥{active.price_jpy?.toLocaleString("ja-JP") ?? "—"}</strong>
+                  </p>
+                  <p>
+                    <span className="text-text-muted">Tỷ giá:</span> {active.pricing.exchange_rate} VND/JPY
+                  </p>
+                  <p>
+                    <span className="text-text-muted">Markup:</span> +{active.pricing.markup_percent}%
+                  </p>
+                  <p className="text-text-primary">
+                    Công thức: JPY × tỷ giá × 1.{active.pricing.markup_percent}
+                  </p>
+                </div>
+              )}
 
               <Select
                 label="Danh mục *"
@@ -217,7 +266,12 @@ export function AiCandidatesScreen() {
                 onChange={(e) => setApproveForm((f) => ({ ...f, product_name_vn: e.target.value }))}
               />
               <Input
-                label="Giá bán VND"
+                label="Quy cách"
+                value={approveForm.spec}
+                onChange={(e) => setApproveForm((f) => ({ ...f, spec: e.target.value }))}
+              />
+              <Input
+                label="Giá bán VND (tự tính, có thể sửa)"
                 type="number"
                 min={0}
                 value={approveForm.price_vnd}
@@ -228,10 +282,21 @@ export function AiCandidatesScreen() {
                   }))
                 }
               />
+              <label className="block">
+                <span className="text-xs text-text-muted">Mô tả / công dụng</span>
+                <textarea
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-border text-sm min-h-24"
+                  value={approveForm.description}
+                  onChange={(e) => setApproveForm((f) => ({ ...f, description: e.target.value }))}
+                />
+              </label>
+              <p className="text-xs text-text-muted">
+                Khi duyệt: ảnh tải về lưu theo sản phẩm; giá gốc JPY giữ trong cost_jpy.
+              </p>
 
               <div className="flex gap-2">
                 <Button className="flex-1" onClick={handleApprove} disabled={saving}>
-                  Duyệt
+                  Duyệt & lưu catalog
                 </Button>
               </div>
 

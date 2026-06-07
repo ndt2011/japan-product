@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Chỉ tài khoản demo — không sản phẩm / kho / đơn hàng mẫu.
- * Dùng sau migrate:fresh trên staging.
+ * Chỉ tài khoản hệ thống — không seed sản phẩm / kho / đơn hàng.
+ * Dùng sau migrate:fresh trên staging hoặc local.
  */
 class AuthOnlySeeder extends Seeder
 {
@@ -15,6 +15,8 @@ class AuthOnlySeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             CompanyVnSeeder::class,
+            ProductCategorySeeder::class,
+            ExchangeRateSeeder::class,
         ]);
     }
 }

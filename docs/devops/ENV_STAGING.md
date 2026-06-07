@@ -55,7 +55,7 @@ Frontend **không** gọi Railway trực tiếp từ browser.
 
 ---
 
-## 3. Tài khoản demo (sau seed)
+## 3. Tài khoản hệ thống (sau seed)
 
 | Login ID | Mật khẩu | Vai trò |
 |----------|----------|---------|
@@ -69,11 +69,7 @@ php artisan migrate:fresh --force
 php artisan db:seed --class=AuthOnlySeeder --force
 ```
 
-**Seed đầy đủ (có 1 SP demo + kho):**
-
-```bash
-php artisan db:seed --force
-```
+> Seed **không** tạo sản phẩm/kho mẫu — dữ liệu nghiệp vụ thêm qua UI hoặc API.
 
 ---
 

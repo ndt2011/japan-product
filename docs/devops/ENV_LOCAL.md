@@ -120,7 +120,7 @@ NEXT_PUBLIC_APP_NAME=Hệ thống quản lý hàng hóa Nhật-Việt
 
 ---
 
-## 5. Tài khoản demo
+## 5. Tài khoản hệ thống (sau seed)
 
 | Login ID | Mật khẩu | URL |
 |----------|----------|-----|
@@ -143,8 +143,8 @@ php artisan db:seed --class=AuthOnlySeeder --force
 cd project\api
 
 php artisan serve                    # Chạy API
-php artisan migrate --seed           # Migrate + seed đầy đủ
-php artisan migrate:fresh --seed     # Reset DB + seed
+php artisan migrate --seed           # Migrate + tài khoản hệ thống
+php artisan migrate:fresh --seed     # Reset DB + tài khoản
 php artisan db:seed --class=AuthOnlySeeder --force   # Chỉ account
 php artisan test                     # 39 tests (DB :memory: — không xóa sqlite dev)
 php artisan route:list --path=api
@@ -241,11 +241,7 @@ php artisan migrate:fresh --force
 php artisan db:seed --class=AuthOnlySeeder --force
 ```
 
-**Seed đầy đủ** (1 SP demo + kho):
-
-```powershell
-php artisan migrate:fresh --seed --force
-```
+> Seed không tạo sản phẩm/kho mẫu — thêm dữ liệu qua UI (Sản phẩm, Đơn hàng, AI).
 
 ---
 
