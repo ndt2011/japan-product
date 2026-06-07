@@ -1,4 +1,4 @@
-import { jsonFromProxy, proxyToApi } from "@/lib/server-api";
+import { jsonFromProxy, proxyFormToApi, proxyToApi } from "@/lib/server-api";
 import type { ProductListData } from "@/types/api";
 
 export async function GET(request: Request) {
@@ -11,6 +11,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const { result, status } = await proxyFormToApi("/products", formData);
+    return jsonFromProxy(result, status === 200 || status === 201 ? 201 : status);
+  }
+
   const body = await request.json();
   const { result, status } = await proxyToApi("/products", {
     method: "POST",

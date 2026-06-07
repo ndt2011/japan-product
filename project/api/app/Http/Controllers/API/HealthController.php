@@ -35,6 +35,8 @@ class HealthController extends Controller
                 && config('services.rakuten.access_key') !== '',
             'openai_configured' => config('services.openai.api_key') !== '',
             'ai_search_result_limit' => min(max((int) config('services.ai_search.limit', 15), 1), 10),
+            'product_image_disk' => config('filesystems.product_images_disk', 'public'),
+            'r2_configured' => $this->isR2Configured(),
         ];
 
         if ($request->boolean('ip')) {
@@ -43,6 +45,14 @@ class HealthController extends Controller
         }
 
         return ApiResponse::success($payload);
+    }
+
+    private function isR2Configured(): bool
+    {
+        return config('filesystems.disks.r2.key') !== ''
+            && config('filesystems.disks.r2.secret') !== ''
+            && config('filesystems.disks.r2.bucket') !== ''
+            && config('filesystems.disks.r2.endpoint') !== '';
     }
 
     private function resolveOutboundIp(): ?string

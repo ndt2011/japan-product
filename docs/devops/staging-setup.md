@@ -25,6 +25,7 @@
 | 4 | Deploy FE — Root `project/frontend`, `API_URL` | Vercel |
 | 5 | Login staging `admin` / `Admin@123` | Browser |
 | 6 | Cấu hình Rakuten AI + whitelist IP Railway | Railway Variables + Rakuten Developers |
+| 7 | Ảnh SP persistent — Cloudflare R2 | [r2-cloudflare-setup.md](./r2-cloudflare-setup.md) |
 
 ---
 
@@ -36,6 +37,7 @@
 4. Variables: xem template [staging-env-railway.template.env](./staging-env-railway.template.env)
    - **Rakuten AI:** `RAKUTEN_APPLICATION_ID`, `RAKUTEN_ACCESS_KEY`, `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` (copy từ `project/api/.env` local)
    - Hướng dẫn: [rakuten-api-setup.md](./rakuten-api-setup.md)
+   - **Ảnh SP (R2)**: `PRODUCT_IMAGE_DISK=r2` + `R2_*` — [r2-cloudflare-setup.md](./r2-cloudflare-setup.md)
 5. `APP_KEY`: `php artisan key:generate --show` (**chạy trên máy local**, không Railway Shell)
 6. Health: `GET https://<api>/api/health`
 7. **Rakuten** (bước 6): xem [rakuten-api-setup.md](./rakuten-api-setup.md)

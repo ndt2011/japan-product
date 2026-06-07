@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Services\ProductImageService;
 use App\Services\ProductService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,7 @@ class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService,
+        private readonly ProductImageService $productImageService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -51,13 +53,20 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
-            $product = $this->productService->store($request->validated());
+            $data = $request->validated();
+            unset($data['images']);
+            $product = $this->productService->store($data);
+
+            if ($request->hasFile('images')) {
+                $this->productImageService->uploadMany($product->id, $request->file('images'), true);
+                $product->refresh();
+            }
         } catch (ProductException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
         }
 
         return ApiResponse::success([
-            'product' => new ProductResource($product->load(['category', 'supplier', 'inventories'])),
+            'product' => new ProductResource($product->load(['category', 'supplier', 'inventories', 'images'])),
         ], 'M0301', 201);
     }
 

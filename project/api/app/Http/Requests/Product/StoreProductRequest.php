@@ -34,6 +34,8 @@ class StoreProductRequest extends FormRequest
             'image_path' => ['nullable', 'string', 'max:500'],
             'memo' => ['nullable', 'string'],
             'disabled_flag' => ['nullable', 'boolean'],
+            'images' => ['sometimes', 'array', 'max:8'],
+            'images.*' => ['file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ];
     }
 

@@ -28,7 +28,53 @@ class ImageStorageService
 
         Storage::disk($disk)->put($filename, $file->get(), 'public');
 
-        return Storage::disk($disk)->url($filename);
+        return $this->resolveStoredPath($filename);
+    }
+
+    public function publicUrl(string $pathOrUrl): string
+    {
+        $path = $this->normalizePath($pathOrUrl);
+        $disk = $this->disk();
+        $baseUrl = config("filesystems.disks.{$disk}.url");
+
+        if ($baseUrl) {
+            return Storage::disk($disk)->url($path);
+        }
+
+        // Railway Bucket (private): presigned URL khi trả API
+        return Storage::disk($disk)->temporaryUrl($path, now()->addDays(7));
+    }
+
+    private function resolveStoredPath(string $filename): string
+    {
+        $disk = $this->disk();
+        $baseUrl = config("filesystems.disks.{$disk}.url");
+
+        if ($baseUrl) {
+            return Storage::disk($disk)->url($filename);
+        }
+
+        return $filename;
+    }
+
+    private function normalizePath(string $pathOrUrl): string
+    {
+        if (! str_starts_with($pathOrUrl, 'http://') && ! str_starts_with($pathOrUrl, 'https://')) {
+            return $pathOrUrl;
+        }
+
+        if (preg_match('#/products/\d+/[^/?]+#', $pathOrUrl, $m)) {
+            return ltrim($m[0], '/');
+        }
+
+        $disk = Storage::disk($this->disk());
+        $baseUrl = rtrim((string) config("filesystems.disks.{$this->disk()}.url"), '/');
+
+        if ($baseUrl !== '' && str_starts_with($pathOrUrl, $baseUrl)) {
+            return ltrim(substr($pathOrUrl, strlen($baseUrl)), '/');
+        }
+
+        return $pathOrUrl;
     }
 
     public function uploadFromUrl(string $url, int $productId): ?string
@@ -64,7 +110,7 @@ class ImageStorageService
 
             Storage::disk($disk)->put($filename, $body, 'public');
 
-            return Storage::disk($disk)->url($filename);
+            return $this->resolveStoredPath($filename);
         } catch (\Throwable $e) {
             Log::warning('Failed to import product image from URL', [
                 'product_id' => $productId,
@@ -98,13 +144,12 @@ class ImageStorageService
 
     private function pathFromUrl(string $url): ?string
     {
-        $disk = Storage::disk($this->disk());
-        $baseUrl = rtrim($disk->url(''), '/');
-
-        if (! str_starts_with($url, $baseUrl)) {
-            return null;
+        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+            return $url;
         }
 
-        return ltrim(substr($url, strlen($baseUrl)), '/');
+        $normalized = $this->normalizePath($url);
+
+        return $normalized !== $url ? $normalized : null;
     }
 }

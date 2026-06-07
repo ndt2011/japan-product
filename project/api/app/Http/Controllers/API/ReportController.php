@@ -1,0 +1,219 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Models\Inventory;
+use App\Models\Order;
+use App\Models\StockMovement;
+use App\Support\ApiResponse;
+use App\Support\AuthContext;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ReportController extends Controller
+{
+    public function inventory(Request $request): JsonResponse
+    {
+        $query = Inventory::query()
+            ->join('products', 'inventories.product_id', '=', 'products.id')
+            ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
+            ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoin('suppliers_jp', 'products.supplier_id', '=', 'suppliers_jp.id')
+            ->where('products.deleted_flag', false)
+            ->where('inventories.deleted_flag', false)
+            ->select([
+                'products.product_cd',
+                'products.product_name',
+                'product_categories.category_name',
+                'suppliers_jp.supplier_name',
+                'warehouses.warehouse_name',
+                'inventories.quantity',
+                'inventories.reserved_qty',
+                'inventories.actual_qty',
+                'inventories.last_check_date',
+                'products.price_vnd',
+                DB::raw('(inventories.quantity - inventories.reserved_qty) as available_qty'),
+                DB::raw('(inventories.quantity * products.price_vnd) as total_value_vnd'),
+            ]);
+
+        if ($warehouseId = $request->input('warehouse_id')) {
+            $query->where('inventories.warehouse_id', $warehouseId);
+        }
+
+        if ($categoryId = $request->input('category_id')) {
+            $query->where('products.product_category_id', $categoryId);
+        }
+
+        if ($request->boolean('low_stock_only')) {
+            $query->whereRaw('(inventories.quantity - inventories.reserved_qty) < 10');
+        }
+
+        $items = $query->get()->map(function ($row) {
+            $row->is_low_stock = (int) $row->available_qty < 10;
+
+            return $row;
+        });
+
+        return ApiResponse::success([
+            'generated_at' => now()->toIso8601String(),
+            'summary' => [
+                'total_products' => $items->count(),
+                'total_quantity' => (int) $items->sum('quantity'),
+                'low_stock_count' => $items->filter(fn ($i) => (int) $i->available_qty < 10)->count(),
+                'warehouses' => $items->pluck('warehouse_name')->unique()->count(),
+            ],
+            'items' => $items,
+        ], 'M1100');
+    }
+
+    public function stockMovements(Request $request): JsonResponse
+    {
+        $query = StockMovement::query()
+            ->with(['product', 'warehouse'])
+            ->orderByDesc('created');
+
+        if ($warehouseId = $request->input('warehouse_id')) {
+            $query->where('warehouse_id', $warehouseId);
+        }
+
+        if ($productId = $request->input('product_id')) {
+            $query->where('product_id', $productId);
+        }
+
+        if ($movementType = $request->input('movement_type')) {
+            $query->where('movement_type', $movementType);
+        }
+
+        if ($from = $request->input('from_date')) {
+            $query->whereDate('created', '>=', $from);
+        }
+
+        if ($to = $request->input('to_date')) {
+            $query->whereDate('created', '<=', $to);
+        }
+
+        $all = (clone $query)->get(['movement_type', 'quantity']);
+        $summary = [
+            'total_in' => (int) $all->where('movement_type', 'IN')->sum('quantity'),
+            'total_out' => (int) $all->where('movement_type', 'OUT')->sum('quantity'),
+            'total_adjust' => (int) $all->where('movement_type', 'ADJUST')->sum('quantity'),
+            'net_change' => (int) $all->where('movement_type', 'IN')->sum('quantity')
+                - (int) $all->where('movement_type', 'OUT')->sum('quantity'),
+        ];
+
+        $paginator = $query->paginate(min((int) $request->input('per_page', 50), 100));
+
+        return ApiResponse::success([
+            'summary' => $summary,
+            'items' => $paginator->items(),
+            'pagination' => [
+                'page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ], 'M1100');
+    }
+
+    public function orders(Request $request): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+
+        $query = Order::query()
+            ->active()
+            ->with(['company', 'details'])
+            ->orderByDesc('created');
+
+        if ($auth['type'] === 'company') {
+            $query->where('company_vn_id', $auth['id']);
+        } elseif ($companyId = $request->input('company_id')) {
+            $query->where('company_vn_id', $companyId);
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($from = $request->input('from_date')) {
+            $query->whereDate('created', '>=', $from);
+        }
+
+        if ($to = $request->input('to_date')) {
+            $query->whereDate('created', '<=', $to);
+        }
+
+        $orders = $query->get();
+
+        $items = $orders->map(function (Order $order) {
+            $totalQty = (int) $order->details->sum('quantity');
+            $totalValue = (int) $order->details->sum(fn ($d) => (int) $d->quantity * (int) ($d->price_vnd ?? 0));
+
+            return [
+                'order_no' => $order->order_no,
+                'company_name' => $order->company?->company_name,
+                'status' => $order->status,
+                'order_date' => $order->created?->format('Y-m-d'),
+                'items_count' => $order->details->count(),
+                'total_qty' => $totalQty,
+                'total_value_vnd' => $totalValue,
+                'exchange_rate_jpy' => $order->exchange_rate_jpy,
+            ];
+        });
+
+        $byStatus = $orders->groupBy('status')->map->count();
+
+        return ApiResponse::success([
+            'summary' => [
+                'total_orders' => $orders->count(),
+                'by_status' => $byStatus,
+                'total_value_vnd' => (int) $items->sum('total_value_vnd'),
+            ],
+            'items' => $items->values(),
+        ], 'M1100');
+    }
+
+    public function revenue(Request $request): JsonResponse
+    {
+        $period = $request->input('period', 'monthly');
+        $format = $period === 'yearly' ? '%Y' : ($period === 'daily' ? '%Y-%m-%d' : '%Y-%m');
+
+        $query = Order::query()
+            ->active()
+            ->whereIn('status', ['DELIVERED', 'CONFIRMED', 'PROCESSING', 'SHIPPED']);
+
+        if ($from = $request->input('from_date')) {
+            $query->whereDate('created', '>=', $from);
+        }
+
+        if ($to = $request->input('to_date')) {
+            $query->whereDate('created', '<=', $to);
+        }
+
+        $rows = $query
+            ->with('details')
+            ->get()
+            ->groupBy(fn (Order $o) => $o->created?->format(str_replace('%', '', $format)) ?? 'unknown');
+
+        $items = $rows->map(function ($group, $label) {
+            $delivered = $group->where('status', 'DELIVERED');
+
+            return [
+                'period_label' => $label,
+                'orders_count' => $group->count(),
+                'total_value_vnd' => (int) $group->sum(
+                    fn (Order $o) => $o->details->sum(fn ($d) => (int) $d->quantity * (int) ($d->price_vnd ?? 0)),
+                ),
+                'delivered_count' => $delivered->count(),
+                'delivered_value_vnd' => (int) $delivered->sum(
+                    fn (Order $o) => $o->details->sum(fn ($d) => (int) $d->quantity * (int) ($d->price_vnd ?? 0)),
+                ),
+            ];
+        })->values();
+
+        return ApiResponse::success([
+            'period' => $period,
+            'items' => $items,
+        ], 'M1100');
+    }
+}

@@ -12,6 +12,7 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
+import { usePermission } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
 import type { OrderItem } from "@/types/api";
 import Link from "next/link";
@@ -28,6 +29,7 @@ const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "
 };
 
 export function OrdersScreen() {
+  const canCreateOrder = usePermission("orders.create");
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,9 +77,11 @@ export function OrdersScreen() {
             <Button variant="secondary" size="sm" disabled>
               Xuất Excel
             </Button>
-            <Link href="/orders/new">
-              <Button size="sm">+ Tạo Đơn Hàng</Button>
-            </Link>
+            {canCreateOrder && (
+              <Link href="/orders/new">
+                <Button size="sm">+ Tạo Đơn Hàng</Button>
+              </Link>
+            )}
           </>
         }
       />

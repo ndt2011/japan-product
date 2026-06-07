@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\ImageStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,7 +32,9 @@ class ProductResource extends JsonResource
             'import_tax_rate' => $this->import_tax_rate,
             'description' => $this->description,
             'description_vi' => $this->description_vi,
-            'image_path' => $this->image_path,
+            'image_path' => $this->image_path
+                ? app(ImageStorageService::class)->publicUrl($this->image_path)
+                : null,
             'images' => $this->whenLoaded('images', function () {
                 return ProductImageResource::collection($this->images);
             }),

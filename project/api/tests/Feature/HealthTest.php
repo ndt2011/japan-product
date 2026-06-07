@@ -19,6 +19,8 @@ class HealthTest extends TestCase
                     'openai_configured',
                     'queue_connection',
                     'ai_search_result_limit',
+                    'product_image_disk',
+                    'r2_configured',
                 ],
             ]);
     }

@@ -1,0 +1,79 @@
+"use client";
+
+import { useAuthStore } from "@/stores/useAuthStore";
+import type { AuthUser } from "@/types/api";
+
+export type Permission =
+  | "products.create"
+  | "products.edit"
+  | "products.delete"
+  | "orders.create"
+  | "orders.confirm"
+  | "orders.viewAll"
+  | "warehouse.access"
+  | "ai.candidates"
+  | "shipments.create"
+  | "admin.panel"
+  | "reports.all"
+  | "reports.orders";
+
+const ADMIN_PERMISSIONS: Permission[] = [
+  "products.create",
+  "products.edit",
+  "products.delete",
+  "orders.confirm",
+  "orders.viewAll",
+  "warehouse.access",
+  "ai.candidates",
+  "shipments.create",
+  "admin.panel",
+  "reports.all",
+  "reports.orders",
+];
+
+const COMPANY_PERMISSIONS: Permission[] = [
+  "orders.create",
+  "reports.orders",
+];
+
+export function usePermission(permission: Permission): boolean {
+  const userType = useAuthStore((s) => s.user?.user_type);
+  if (!userType) return false;
+  if (userType === "admin") return ADMIN_PERMISSIONS.includes(permission);
+  return COMPANY_PERMISSIONS.includes(permission);
+}
+
+export function useIsAdmin(): boolean {
+  return useAuthStore((s) => s.user?.user_type) === "admin";
+}
+
+export function useIsCompany(): boolean {
+  return useAuthStore((s) => s.user?.user_type) === "company";
+}
+
+export function canAccessRoute(user: AuthUser | null, pathname: string): boolean {
+  if (!user) return false;
+
+  const adminOnlyPrefixes = [
+    "/products/new",
+    "/admin",
+    "/stock-in",
+    "/stock-out",
+    "/inventory",
+    "/shipments/new",
+    "/agents",
+    "/debts",
+  ];
+
+  const companyOnlyPrefixes = ["/orders/new"];
+
+  if (user.user_type === "company") {
+    if (adminOnlyPrefixes.some((p) => pathname.startsWith(p))) return false;
+    if (/\/products\/\d+\/edit/.test(pathname)) return false;
+    return true;
+  }
+
+  if (companyOnlyPrefixes.some((p) => pathname.startsWith(p))) return false;
+
+  return true;
+}

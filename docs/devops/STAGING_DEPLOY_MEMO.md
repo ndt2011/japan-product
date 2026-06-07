@@ -258,6 +258,7 @@ SANCTUM_STATEFUL_DOMAINS=THAY-BANG-VERCEL-DOMAIN.vercel.app
 
 FILESYSTEM_DISK=local
 PRODUCT_IMAGE_DISK=public
+# Ảnh persistent trên Railway → PRODUCT_IMAGE_DISK=r2 + R2_* (xem r2-cloudflare-setup.md)
 
 MAIL_MAILER=log
 MAIL_FROM_ADDRESS=noreply@staging.local
@@ -499,7 +500,8 @@ GitHub repo → **Settings** → **Branches** → Add rule `main`:
 | API 502 | Logs Railway; `APP_KEY`, DB |
 | FE 503 | `API_URL` trên Vercel; redeploy FE sau đổi env |
 | FE 401 | `db:seed` trên Railway |
-| Ảnh SP không hiện | Staging dùng `PRODUCT_IMAGE_DISK=public` — upload mới trên staging |
+| Ảnh SP mất sau redeploy | Bật R2: `PRODUCT_IMAGE_DISK=r2` — [r2-cloudflare-setup.md](./r2-cloudflare-setup.md) |
+| Ảnh SP không hiện | Kiểm tra `GET /api/health` → `r2_configured`; upload lại sau khi bật R2 |
 | Email không gửi | Staging dùng `MAIL_MAILER=log` — xem Railway logs |
 | AI M0206 — IP Rakuten | Railway Shell: `curl -s https://api.ipify.org` → thêm IP vào Rakuten Developers |
 | AI M0207 — Origin | `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` trên Railway |
@@ -522,6 +524,32 @@ Chi tiết: [rakuten-api-setup.md](./rakuten-api-setup.md)
 
 ---
 
+## Bước 5c — Cloudflare R2 (ảnh sản phẩm persistent)
+
+Chi tiết: [r2-cloudflare-setup.md](./r2-cloudflare-setup.md)
+
+1. Cloudflare → R2 → tạo bucket + API Token + bật **R2.dev public URL**
+2. Railway → Variables:
+
+```env
+PRODUCT_IMAGE_DISK=r2
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_DEFAULT_REGION=auto
+R2_BUCKET=tt-product-images
+R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://pub-xxxxxxxx.r2.dev
+```
+
+3. **Redeploy** API
+4. `GET /api/health` → `r2_configured: true`, `product_image_disk: "r2"`
+5. Upload ảnh SP trên staging → URL bắt đầu bằng `R2_PUBLIC_URL`
+6. Redeploy lại → ảnh vẫn hiển thị
+
+- [ ] Ảnh không mất sau Railway redeploy
+
+---
+
 ## Liên kết tài liệu liên quan
 
 | File | Nội dung |
@@ -531,6 +559,7 @@ Chi tiết: [rakuten-api-setup.md](./rakuten-api-setup.md)
 | [../tasks/STATUS.md](../tasks/STATUS.md) | Tiến độ dự án |
 | [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md) | OpenAI key staging |
 | [rakuten-api-setup.md](./rakuten-api-setup.md) | Rakuten IP + env Railway/Vercel |
+| [r2-cloudflare-setup.md](./r2-cloudflare-setup.md) | Cloudflare R2 ảnh SP trên Railway |
 | [../../project/api/README.md](../../project/api/README.md) | API local + login |
 | [../../project/api/railway.toml](../../project/api/railway.toml) | Start command Railway |
 

@@ -1,6 +1,8 @@
 "use client";
 
+import { ProductImagePicker } from "@/components/ProductImagePicker";
 import { ProductImageUpload } from "@/components/ProductImageUpload";
+import { usePermission } from "@/hooks/usePermission";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import type { CategoryOption, ProductFormData, ProductItem, SupplierOption } from "@/types/api";
@@ -62,6 +64,8 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const canUpload = usePermission("products.create");
 
   useEffect(() => {
     async function loadMaster() {
@@ -125,30 +129,57 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
     setError("");
     setSaving(true);
 
-    const payload = {
-      product_category_id: Number(form.product_category_id),
-      product_cd: form.product_cd || null,
-      product_name: form.product_name,
-      product_name_jp: form.product_name_jp || null,
-      supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
-      spec: form.spec || null,
-      unit: form.unit || null,
-      cost_jpy: form.cost_jpy !== "" ? Number(form.cost_jpy) : null,
-      price_vnd: form.price_vnd !== "" ? Number(form.price_vnd) : null,
-      import_tax_rate: form.import_tax_rate !== "" ? Number(form.import_tax_rate) : null,
-      origin: form.origin || null,
-      description: form.description || null,
-      memo: form.memo || null,
-      disabled_flag: form.disabled_flag,
-    };
-
     try {
       const url = mode === "create" ? "/api/proxy/products" : `/api/proxy/products/${productId}`;
-      const res = await fetch(url, {
-        method: mode === "create" ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res: Response;
+
+      if (mode === "create" && imageFiles.length > 0) {
+        const body = new FormData();
+        body.append("product_category_id", String(Number(form.product_category_id)));
+        if (form.product_cd) body.append("product_cd", form.product_cd);
+        body.append("product_name", form.product_name);
+        if (form.product_name_jp) body.append("product_name_jp", form.product_name_jp);
+        if (form.name_vi) body.append("name_vi", form.name_vi);
+        if (form.description_vi) body.append("description_vi", form.description_vi);
+        if (form.supplier_id) body.append("supplier_id", String(Number(form.supplier_id)));
+        if (form.spec) body.append("spec", form.spec);
+        if (form.unit) body.append("unit", form.unit);
+        if (form.cost_jpy !== "") body.append("cost_jpy", String(form.cost_jpy));
+        if (form.price_vnd !== "") body.append("price_vnd", String(form.price_vnd));
+        if (form.import_tax_rate !== "") body.append("import_tax_rate", String(form.import_tax_rate));
+        if (form.origin) body.append("origin", form.origin);
+        if (form.description) body.append("description", form.description);
+        if (form.memo) body.append("memo", form.memo);
+        body.append("disabled_flag", form.disabled_flag ? "1" : "0");
+        imageFiles.forEach((file) => body.append("images[]", file));
+
+        res = await fetch(url, { method: "POST", body });
+      } else {
+        const payload = {
+          product_category_id: Number(form.product_category_id),
+          product_cd: form.product_cd || null,
+          product_name: form.product_name,
+          product_name_jp: form.product_name_jp || null,
+          name_vi: form.name_vi || null,
+          description_vi: form.description_vi || null,
+          supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
+          spec: form.spec || null,
+          unit: form.unit || null,
+          cost_jpy: form.cost_jpy !== "" ? Number(form.cost_jpy) : null,
+          price_vnd: form.price_vnd !== "" ? Number(form.price_vnd) : null,
+          import_tax_rate: form.import_tax_rate !== "" ? Number(form.import_tax_rate) : null,
+          origin: form.origin || null,
+          description: form.description || null,
+          memo: form.memo || null,
+          disabled_flag: form.disabled_flag,
+        };
+
+        res = await fetch(url, {
+          method: mode === "create" ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -310,6 +341,13 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
             value={form.memo}
             onChange={(e) => updateField("memo", e.target.value)}
           />
+
+          {mode === "create" && canUpload && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-text-body">Ảnh sản phẩm</label>
+              <ProductImagePicker files={imageFiles} onChange={setImageFiles} />
+            </div>
+          )}
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input

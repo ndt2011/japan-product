@@ -33,6 +33,18 @@ class ProductImageController extends Controller
     public function store(StoreProductImageRequest $request, int $productId): JsonResponse
     {
         try {
+            if ($request->hasFile('images')) {
+                $uploaded = $this->productImageService->uploadMany(
+                    $productId,
+                    $request->file('images'),
+                    true,
+                );
+
+                return ApiResponse::success([
+                    'items' => ProductImageResource::collection(collect($uploaded)),
+                ], 'M0301', 201);
+            }
+
             $image = $this->productImageService->store(
                 $productId,
                 $request->file('image'),
@@ -45,6 +57,32 @@ class ProductImageController extends Controller
         return ApiResponse::success([
             'image' => new ProductImageResource($image),
         ], 'M0301', 201);
+    }
+
+    public function setPrimary(int $productId, int $imageId): JsonResponse
+    {
+        try {
+            $image = $this->productImageService->setPrimary($productId, $imageId);
+        } catch (ProductException $e) {
+            return ApiResponse::error($e->messageCode, null, $e->status);
+        }
+
+        return ApiResponse::success([
+            'image' => new ProductImageResource($image),
+        ], 'M0301');
+    }
+
+    public function reorder(int $productId, \Illuminate\Http\Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => ['required', 'array']]);
+
+        try {
+            $this->productImageService->reorder($productId, $data['ids']);
+        } catch (ProductException $e) {
+            return ApiResponse::error($e->messageCode, null, $e->status);
+        }
+
+        return ApiResponse::success(null, 'M0301');
     }
 
     public function update(UpdateProductImageRequest $request, int $productId, int $imageId): JsonResponse

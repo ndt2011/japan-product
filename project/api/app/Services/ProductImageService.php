@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
 
 class ProductImageService
 {
+    private const MAX_IMAGES = 8;
+
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly ProductImageRepository $productImageRepository,
@@ -22,6 +24,68 @@ class ProductImageService
         $this->assertProductExists($productId);
 
         return $this->productImageRepository->listByProduct($productId);
+    }
+
+    /**
+     * @param  list<UploadedFile>  $files
+     * @return list<ProductImage>
+     */
+    public function uploadMany(int $productId, array $files, bool $firstIsPrimary = true): array
+    {
+        $product = $this->assertProductExists($productId);
+        $currentCount = $this->productImageRepository->listByProduct($productId)->count();
+        $canUpload = self::MAX_IMAGES - $currentCount;
+
+        if ($canUpload <= 0) {
+            throw new ProductException('M0305', 409);
+        }
+
+        $files = array_slice($files, 0, $canUpload);
+        $result = [];
+        $hasPrimary = $this->productImageRepository->listByProduct($productId)
+            ->contains(fn (ProductImage $img) => $img->is_primary);
+
+        foreach ($files as $index => $file) {
+            $makePrimary = ! $hasPrimary && ($firstIsPrimary || $index === 0);
+            $image = $this->store($productId, $file, $makePrimary);
+            if ($makePrimary) {
+                $hasPrimary = true;
+            }
+            $result[] = $image;
+        }
+
+        return $result;
+    }
+
+    public function setPrimary(int $productId, int $imageId): ProductImage
+    {
+        $this->assertProductExists($productId);
+        $image = $this->productImageRepository->findForProduct($productId, $imageId);
+
+        if (! $image) {
+            throw new ProductException('M0002', 404);
+        }
+
+        $this->productImageRepository->clearPrimary($productId, $image->id);
+        $updated = $this->productImageRepository->update($image, ['is_primary' => true]);
+        $this->syncProductPrimaryImage($productId, $updated->image_path);
+
+        return $updated;
+    }
+
+    /**
+     * @param  list<int>  $orderedIds
+     */
+    public function reorder(int $productId, array $orderedIds): void
+    {
+        $this->assertProductExists($productId);
+
+        foreach ($orderedIds as $order => $id) {
+            $image = $this->productImageRepository->findForProduct($productId, (int) $id);
+            if ($image) {
+                $this->productImageRepository->update($image, ['order_no' => $order]);
+            }
+        }
     }
 
     public function store(int $productId, UploadedFile $file, bool $isPrimary = false): ProductImage

@@ -13,11 +13,13 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
+import { usePermission } from "@/hooks/usePermission";
 import type { CategoryOption, ProductItem } from "@/types/api";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 export function ProductsScreen() {
+  const canCreate = usePermission("products.create");
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,9 +82,11 @@ export function ProductsScreen() {
             <Button variant="secondary" size="sm" disabled>
               📤 Xuất Excel
             </Button>
-            <Link href="/products/new">
-              <Button size="sm">+ Thêm Hàng Hóa</Button>
-            </Link>
+            {canCreate && (
+              <Link href="/products/new">
+                <Button size="sm">+ Thêm Hàng Hóa</Button>
+              </Link>
+            )}
           </>
         }
       />

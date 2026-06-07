@@ -1,6 +1,6 @@
 "use client";
 
-import { NAV_ITEMS } from "@/lib/navigation";
+import { getNavForUser, type NavItem } from "@/lib/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { clsx } from "clsx";
 import Link from "next/link";
@@ -23,9 +23,10 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
-  const groups = Array.from(new Set(NAV_ITEMS.map((i) => i.group || ""))).filter(Boolean);
-  const topItems = NAV_ITEMS.filter((i) => !i.group);
-  const pageTitle = NAV_ITEMS.find((item) => pathname.startsWith(item.href))?.label ?? "SupplyFlow";
+  const navItems = getNavForUser(user?.user_type);
+  const groups = Array.from(new Set(navItems.map((i) => i.group || ""))).filter(Boolean);
+  const topItems = navItems.filter((i) => !i.group);
+  const pageTitle = navItems.find((item) => pathname.startsWith(item.href))?.label ?? "SupplyFlow";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -63,7 +64,7 @@ export function AppShell({ children }: AppShellProps) {
               {!collapsed && (
                 <p className="px-3 py-1 text-xs text-text-placeholder uppercase tracking-wider mb-1">{group}</p>
               )}
-              {NAV_ITEMS.filter((i) => i.group === group).map((item) => (
+              {navItems.filter((i) => i.group === group).map((item) => (
                 <NavLink key={item.id} item={item} active={pathname.startsWith(item.href)} collapsed={collapsed} />
               ))}
             </div>
@@ -126,7 +127,7 @@ function NavLink({
   active,
   collapsed,
 }: {
-  item: (typeof NAV_ITEMS)[number];
+  item: NavItem;
   active: boolean;
   collapsed: boolean;
 }) {

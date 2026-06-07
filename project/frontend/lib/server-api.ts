@@ -36,3 +36,40 @@ export async function proxyToApi<T>(
 export function jsonFromProxy<T>(result: ApiResponse<T>, status = 200) {
   return NextResponse.json(result, { status: result.success ? status : status === 200 ? 400 : status });
 }
+
+const API_URL = process.env.API_URL ?? "http://localhost:8000/api";
+
+export async function proxyFormToApi<T>(
+  path: string,
+  formData: FormData,
+): Promise<{ result: ApiResponse<T>; status: number }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    return {
+      result: { success: false, data: null, message: "M0101", errors: null },
+      status: 401,
+    };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+      cache: "no-store",
+    });
+
+    const result = (await response.json()) as ApiResponse<T>;
+
+    return { result, status: response.status };
+  } catch {
+    return {
+      result: { success: false, data: null, message: "API_OFFLINE", errors: null },
+      status: 503,
+    };
+  }
+}

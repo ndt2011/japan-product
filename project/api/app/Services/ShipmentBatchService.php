@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Exceptions\ShipmentBatchException;
+use App\Exceptions\WarehouseException;
 use App\Models\Admin;
 use App\Models\BatchOrderItem;
 use App\Models\CompanyVn;
 use App\Models\Order;
 use App\Models\ShipmentBatch;
 use App\Repositories\ShipmentBatchRepository;
+use App\Repositories\WarehouseRepository;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -18,6 +20,8 @@ class ShipmentBatchService
 {
     public function __construct(
         private readonly ShipmentBatchRepository $repository,
+        private readonly InventoryService $inventoryService,
+        private readonly WarehouseRepository $warehouseRepository,
     ) {}
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
@@ -150,14 +154,38 @@ class ShipmentBatchService
             ]);
 
             if ($newStatus === 'DELIVERED') {
+                $warehouse = $this->warehouseRepository->defaultWarehouse();
                 $orderIds = $updated->items->pluck('order_id');
-                Order::query()
+                $orders = Order::query()
+                    ->with('details')
                     ->whereIn('id', $orderIds)
-                    ->update([
+                    ->get();
+
+                foreach ($orders as $order) {
+                    if ($warehouse) {
+                        foreach ($order->details as $detail) {
+                            try {
+                                $this->inventoryService->stockOut(
+                                    (int) $detail->product_id,
+                                    (int) $warehouse->id,
+                                    (int) $detail->quantity,
+                                    $admin->id,
+                                    "Xuất theo đơn {$order->order_no}",
+                                    'order',
+                                    $order->id,
+                                );
+                            } catch (WarehouseException) {
+                                // Bỏ qua nếu chưa có tồn kho — vẫn cập nhật trạng thái đơn
+                            }
+                        }
+                    }
+
+                    $order->update([
                         'status' => 'DELIVERED',
                         'modified' => now(),
                         'modified_user_id' => $admin->id,
                     ]);
+                }
             }
 
             return $updated;

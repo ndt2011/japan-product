@@ -5,11 +5,15 @@ use App\Http\Controllers\API\AiProductSearchController;
 use App\Http\Controllers\API\AiSearchController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\HealthController;
+use App\Http\Controllers\API\InventoryController;
 use App\Http\Controllers\API\MasterDataController;
-use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\OrderController;
-use App\Http\Controllers\API\ShipmentBatchController;
+use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\ProductImageController;
+use App\Http\Controllers\API\ReportController;
+use App\Http\Controllers\API\ShipmentBatchController;
+use App\Http\Controllers\API\StockMovementController;
+use App\Http\Controllers\API\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -24,40 +28,70 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('products', ProductController::class);
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+        Route::post('/products/{product}/images', [ProductImageController::class, 'store']);
+        Route::put('/products/{product}/images/reorder', [ProductImageController::class, 'reorder']);
+        Route::put('/products/{product}/images/{image}/set-primary', [ProductImageController::class, 'setPrimary']);
+        Route::put('/products/{product}/images/{image}', [ProductImageController::class, 'update']);
+        Route::delete('/products/{product}/images/{image}', [ProductImageController::class, 'destroy']);
+
+        Route::put('/ai/candidates/{id}/approve', [AiProductCandidateController::class, 'approve']);
+        Route::put('/ai/candidates/{id}/reject', [AiProductCandidateController::class, 'reject']);
+
+        Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
+
+        Route::get('/shipment-batches/available-orders', [ShipmentBatchController::class, 'availableOrders']);
+        Route::post('/shipment-batches', [ShipmentBatchController::class, 'store']);
+        Route::put('/shipment-batches/{id}', [ShipmentBatchController::class, 'update']);
+        Route::put('/shipment-batches/{id}/status', [ShipmentBatchController::class, 'advanceStatus']);
+    });
 
     Route::get('/products/{product}/images', [ProductImageController::class, 'index']);
-    Route::post('/products/{product}/images', [ProductImageController::class, 'store']);
-    Route::put('/products/{product}/images/{image}', [ProductImageController::class, 'update']);
-    Route::delete('/products/{product}/images/{image}', [ProductImageController::class, 'destroy']);
 
     Route::get('/suppliers', [MasterDataController::class, 'suppliers']);
     Route::get('/product-categories', [MasterDataController::class, 'categories']);
     Route::get('/exchange-rates/current', [MasterDataController::class, 'currentExchangeRate']);
 
     Route::post('/ai/product-search', [AiProductSearchController::class, 'search']);
-
     Route::post('/ai/search', [AiSearchController::class, 'store']);
     Route::get('/ai/search/{id}', [AiSearchController::class, 'show']);
 
     Route::get('/ai/candidates', [AiProductCandidateController::class, 'index']);
     Route::post('/ai/candidates', [AiProductCandidateController::class, 'store']);
     Route::get('/ai/candidates/{id}', [AiProductCandidateController::class, 'show']);
-    Route::put('/ai/candidates/{id}/approve', [AiProductCandidateController::class, 'approve']);
-    Route::put('/ai/candidates/{id}/reject', [AiProductCandidateController::class, 'reject']);
 
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}', [OrderController::class, 'update']);
     Route::put('/orders/{id}/submit', [OrderController::class, 'submit']);
-    Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
-    Route::get('/shipment-batches/available-orders', [ShipmentBatchController::class, 'availableOrders']);
     Route::get('/shipment-batches', [ShipmentBatchController::class, 'index']);
-    Route::post('/shipment-batches', [ShipmentBatchController::class, 'store']);
     Route::get('/shipment-batches/{id}', [ShipmentBatchController::class, 'show']);
-    Route::put('/shipment-batches/{id}', [ShipmentBatchController::class, 'update']);
-    Route::put('/shipment-batches/{id}/status', [ShipmentBatchController::class, 'advanceStatus']);
+
+    Route::get('/reports/orders', [ReportController::class, 'orders']);
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/warehouses', [WarehouseController::class, 'index']);
+        Route::post('/warehouses', [WarehouseController::class, 'store']);
+        Route::get('/warehouses/{id}', [WarehouseController::class, 'show']);
+
+        Route::get('/inventories', [InventoryController::class, 'index']);
+        Route::post('/inventory-checks', [InventoryController::class, 'check']);
+
+        Route::get('/stock-movements', [StockMovementController::class, 'index']);
+        Route::post('/stock-movements', [StockMovementController::class, 'store']);
+
+        Route::get('/reports/inventory', [ReportController::class, 'inventory']);
+        Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
+        Route::get('/reports/revenue', [ReportController::class, 'revenue']);
+    });
 });
