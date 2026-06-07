@@ -19,7 +19,7 @@ class ProductRepository
     {
         return Product::query()
             ->active()
-            ->with(['category', 'supplier', 'inventories'])
+            ->with(['category', 'supplier', 'inventories', 'images'])
             ->find($id);
     }
 

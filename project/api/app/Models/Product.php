@@ -63,6 +63,14 @@ class Product extends Model
         return $this->belongsTo(SupplierJp::class, 'supplier_id');
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class, 'product_id')
+            ->where('deleted_flag', false)
+            ->orderBy('order_no')
+            ->orderBy('id');
+    }
+
     public function inventories(): HasMany
     {
         return $this->hasMany(Inventory::class, 'product_id');

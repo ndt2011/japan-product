@@ -158,6 +158,28 @@
 
 **Response 200** (`M0303`) | **409** (`M0304`) có đơn hàng liên quan
 
+### GET `/products/{id}/images`
+
+**Response 200**: `{ items: [{ id, product_id, image_path, is_primary, order_no }] }`
+
+### POST `/products/{id}/images`
+
+**Body** (multipart): `image` (file, max 5MB, jpeg/png/webp), `is_primary` (optional boolean)
+
+**Response 201** (`M0301`)
+
+### PUT `/products/{id}/images/{imageId}`
+
+**Body**: `{ is_primary?: boolean, order_no?: number }`
+
+**Response 200** (`M0301`)
+
+### DELETE `/products/{id}/images/{imageId}`
+
+**Response 200** (`M0303`) — soft delete + sync `products.image_path`
+
+**Storage**: `PRODUCT_IMAGE_DISK=public` (local) | `r2` (Cloudflare R2 staging/prod)
+
 ---
 
 ## Module 2 — Master data (hỗ trợ form)

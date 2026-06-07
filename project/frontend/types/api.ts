@@ -24,6 +24,14 @@ export interface LoginData {
   expires_at?: string;
 }
 
+export interface ProductImageItem {
+  id: number;
+  product_id: number;
+  image_path: string;
+  is_primary: boolean;
+  order_no: number;
+}
+
 export interface ProductItem {
   id: number;
   product_category_id?: number | null;
@@ -41,6 +49,7 @@ export interface ProductItem {
   import_tax_rate?: number | null;
   description?: string | null;
   image_path?: string | null;
+  images?: ProductImageItem[];
   memo?: string | null;
   disabled_flag: boolean;
   inventory_total?: number | null;

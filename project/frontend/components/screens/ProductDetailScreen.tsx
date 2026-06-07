@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductImageUpload } from "@/components/ProductImageUpload";
 import { Badge, Button, Card, PageHeader } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import type { ProductItem } from "@/types/api";
@@ -13,6 +14,7 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [primaryImage, setPrimaryImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -21,6 +23,7 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
         const data = await res.json();
         if (data.success && data.data?.product) {
           setProduct(data.data.product);
+          setPrimaryImage(data.data.product.image_path ?? null);
         } else {
           setError(translateMessage(data.message ?? "M0002"));
         }
@@ -103,6 +106,19 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
           </>
         }
       />
+
+      {primaryImage && (
+        <Card className="p-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={primaryImage}
+            alt={product.product_name}
+            className="w-full max-h-64 object-contain rounded-xl"
+          />
+        </Card>
+      )}
+
+      <ProductImageUpload productId={productId} onPrimaryChange={setPrimaryImage} />
 
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-6">

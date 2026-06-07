@@ -32,9 +32,9 @@
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
 | BE-009 | Migration: categories, suppliers, products, inventories, warehouses | P0 | BE-001 | 0.5d | ✅ Thiếu `product_images` |
-| BE-009b | Migration `product_images` | P0 | BE-009 | 2h | 📋 Chờ SA schema |
-| BE-010 | Cloudflare R2 upload ảnh | P0 | BE-009b | 1d | 📋 |
-| BE-011 | CRUD `/products` + soft delete + images endpoints | P0 | BE-009 | 1.5d | 🔄 CRUD cơ bản ✅ · images 📋 |
+| BE-009b | Migration `product_images` | P0 | BE-009 | 2h | ✅ |
+| BE-010 | Cloudflare R2 upload ảnh | P0 | BE-009b | 1d | ✅ Local `public` · R2 config sẵn |
+| BE-011 | CRUD `/products` + soft delete + images endpoints | P0 | BE-009 | 1.5d | ✅ |
 | BE-011b | `GET /products` filter + pagination đầy đủ | P0 | BE-011 | 3h | ✅ |
 
 ---

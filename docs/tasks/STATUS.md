@@ -11,7 +11,7 @@
 | Sprint | Mục tiêu | Tiến độ | Blocker chính |
 |--------|----------|---------|---------------|
 | **S1** Auth & RBAC | Login, Remember Me, RBAC | **~65%** | REQ-003 (schema RBAC), REQ-007 (M0104 lockout) |
-| **S2** Sản phẩm | CRUD + ảnh R2 | **~65%** | Thiếu `product_images`, R2 upload |
+| **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
 | **UI shell** | 12 màn theo demothietke | **~70%** | Chờ docs SA cho 8 màn placeholder |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
 | **S3–S7** AI, Order, Batch | Chưa bắt đầu API | **0%** | Phụ thuộc S1–S2 |
@@ -25,7 +25,7 @@
 - 13 migrations CSDL (admins, companies_vn, products, orders, …)
 - Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
 - Products: CRUD + master data (`/suppliers`, `/product-categories`, `/exchange-rates/current`)
-- PHPUnit: **11 tests pass**
+- PHPUnit: **16 tests pass** (auth, products, product images, health)
 
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (12 route từ `demothietke`)
@@ -76,6 +76,8 @@
 | ~~DEV-09~~ | FE `/products/new`, `/products/[id]/edit` | Frontend | ✅ |
 | ~~DEV-10~~ | FE `/products/[id]` chi tiết + xóa mềm | Frontend | ✅ |
 | ~~DEV-11~~ | Soft delete products (API có sẵn) | Backend | ✅ |
+| ~~DEV-19~~ | API `product_images` + upload (public/R2) | Backend | ✅ |
+| ~~DEV-20~~ | FE drag-drop upload ảnh sản phẩm | Frontend | ✅ |
 
 ### Ưu tiên P1 — DevOps
 

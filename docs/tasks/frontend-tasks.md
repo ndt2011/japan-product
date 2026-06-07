@@ -42,7 +42,7 @@
 | FE-101 | `/products` — list, search, filter, pagination | P0 | BE-011 | 1.5d | ✅ |
 | FE-102 | `/products/new`, `/products/[id]/edit` — form `2-001` | P0 | BE-011 | 2d | ✅ |
 | FE-103 | `/products/[id]` — chi tiết + xóa mềm | P0 | FE-101 | 1d | ✅ |
-| FE-104 | Upload ảnh drag & drop | P0 | BE-010 | 1d | 📋 |
+| FE-104 | Upload ảnh drag & drop | P0 | BE-010 | 1d | ✅ |
 
 ---
 

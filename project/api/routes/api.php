@@ -4,6 +4,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\MasterDataController;
 use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\ProductImageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -19,6 +20,11 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('products', ProductController::class);
+
+    Route::get('/products/{product}/images', [ProductImageController::class, 'index']);
+    Route::post('/products/{product}/images', [ProductImageController::class, 'store']);
+    Route::put('/products/{product}/images/{image}', [ProductImageController::class, 'update']);
+    Route::delete('/products/{product}/images/{image}', [ProductImageController::class, 'destroy']);
 
     Route::get('/suppliers', [MasterDataController::class, 'suppliers']);
     Route::get('/product-categories', [MasterDataController::class, 'categories']);

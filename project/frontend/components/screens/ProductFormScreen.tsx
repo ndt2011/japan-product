@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductImageUpload } from "@/components/ProductImageUpload";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import type { CategoryOption, ProductFormData, ProductItem, SupplierOption } from "@/types/api";
@@ -311,6 +312,10 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
           </div>
         </Card>
       </form>
+
+      {mode === "edit" && productId && (
+        <ProductImageUpload productId={productId} />
+      )}
     </div>
   );
 }

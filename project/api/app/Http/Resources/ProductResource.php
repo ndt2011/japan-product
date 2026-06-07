@@ -30,6 +30,9 @@ class ProductResource extends JsonResource
             'import_tax_rate' => $this->import_tax_rate,
             'description' => $this->description,
             'image_path' => $this->image_path,
+            'images' => $this->whenLoaded('images', function () {
+                return ProductImageResource::collection($this->images);
+            }),
             'memo' => $this->memo,
             'disabled_flag' => $this->disabled_flag,
             'inventory_total' => $inventoryTotal,
