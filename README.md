@@ -26,7 +26,7 @@ Hệ thống có **hai luồng AI** (tách biệt):
 | Luồng | Mô tả | API | Code |
 |-------|-------|-----|------|
 | **A — Khám phá SP mới** | Tìm trên web → chọn → gửi duyệt → thêm catalog | `/ai/search`, `/ai/candidates` | ✅ |
-| **B — Tìm catalog nội bộ** | Embedding OpenAI + cosine similarity | `/ai/product-search` | 📋 Có tài liệu |
+| **B — Tìm catalog nội bộ** | Embedding OpenAI + cosine similarity | `/ai/product-search` | ✅ API (keyword fallback local) |
 
 - FE: `/ai-center` · `/admin/ai-candidates`
 - Docs: [docs/sa/04_API_Contract.md](docs/sa/04_API_Contract.md) Module 3 · [docs/sa/AI_Search_Implementation.md](docs/sa/AI_Search_Implementation.md)

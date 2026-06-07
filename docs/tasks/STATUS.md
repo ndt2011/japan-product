@@ -14,7 +14,7 @@
 | **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
 | **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory/Debts/Reports demo |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
-| **S3** AI Search | Luồng A: tìm web + duyệt catalog | **~75%** | Luồng B embedding 📋 · Scraper thật chờ |
+| **S3** AI Search | Luồng A + B semantic search API | **~85%** | Scraper thật · FE luồng B chưa có |
 | **S4** Đơn hàng | CRUD + confirm + reserve | **~70%** | Email notify chưa có |
 | **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
 | **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
@@ -28,10 +28,10 @@
 - 16+ migrations (admins, products, ai_*, orders, shipment_batches, …)
 - Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
 - Products: CRUD + images + master data
-- **AI Search (luồng A)**: `/ai/search` poll, `/ai/candidates` approve/reject (mock catalog local)
+- **AI Search**: luồng A `/ai/search` + duyệt; luồng B `POST /ai/product-search` + `products:embed`
 - Orders: CRUD + submit/confirm/cancel + inventory reserve
 - Shipments: gom đơn CONFIRMED, status flow đến DELIVERED
-- PHPUnit: **33 tests pass** (auth, products, images, AI, orders, shipments, health)
+- PHPUnit: **37 tests pass** (auth, products, images, AI A+B, orders, shipments, health)
 
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (13+ route)

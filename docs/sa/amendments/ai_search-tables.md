@@ -9,7 +9,7 @@
 | Luồng | Bảng / cột | API | Code |
 |-------|------------|-----|------|
 | **A — Khám phá SP mới** | `ai_search_sessions`, `ai_product_candidates` | `/ai/search`, `/ai/candidates` | ✅ `project/api` |
-| **B — Tìm catalog nội bộ** | `products.embedding` (JSON) | `POST /ai/product-search` | 📋 Xem `../AI_Search_Implementation.md` |
+| **B — Tìm catalog nội bộ** | `products.embedding` (JSON) | `POST /ai/product-search` | ✅ `ProductEmbeddingService` |
 
 ## `ai_search_sessions`
 

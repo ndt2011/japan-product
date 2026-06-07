@@ -30,6 +30,8 @@ class Product extends Model
         'description',
         'image_path',
         'memo',
+        'embedding',
+        'embedding_updated_at',
         'disabled_flag',
         'created',
         'created_user_id',
@@ -39,12 +41,18 @@ class Product extends Model
         'deleted_flag',
     ];
 
+    protected $hidden = [
+        'embedding',
+    ];
+
     protected function casts(): array
     {
         return [
             'cost_jpy' => 'integer',
             'price_vnd' => 'integer',
             'import_tax_rate' => 'decimal:2',
+            'embedding' => 'array',
+            'embedding_updated_at' => 'datetime',
             'disabled_flag' => 'boolean',
             'deleted_flag' => 'boolean',
             'created' => 'datetime',

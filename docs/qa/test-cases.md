@@ -46,10 +46,9 @@
 | TC-AI-005 | Duyệt sản phẩm | JP Agency duyệt 1 candidate | Record tạo trong products, candidate.status=APPROVED | P0 |
 | TC-AI-006 | Từ chối không có lý do | Từ chối không nhập lý do | HTTP 422, validation error | P0 |
 | TC-AI-007 | Từ chối có lý do | Nhập lý do tối thiểu 10 ký tự | HTTP 200, candidate.status=REJECTED | P0 |
-| TC-AI-008 | Semantic search catalog | `POST /ai/product-search` query hợp lệ | HTTP 200, 10–15 items từ DB + `image_url` | P1 *(luồng B — chưa code)* |
+| TC-AI-008 | Semantic search catalog | `POST /ai/product-search` query hợp lệ | HTTP 200, items từ DB + `image_url` | P1 |
 
-> **Luồng A** (TC-AI-001~007): PHPUnit `AiSearchTest` — 6 tests pass  
-> **Luồng B**: Xem `docs/sa/AI_Search_Implementation.md`
+> **Luồng A**: `AiSearchTest` — 6 tests · **Luồng B**: `AiProductSearchTest` — 4 tests
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Stack**: Laravel + OpenAI Embeddings + MySQL (không cần Pinecone cho catalog nhỏ)  
 > **Kết quả**: Tìm kiếm ngữ nghĩa trong catalog nội bộ, trả về 10–20 sản phẩm kèm hình ảnh  
-> **Trạng thái code**: 📋 **Chưa triển khai** — tài liệu hướng dẫn cho task BE-016b  
+> **Trạng thái code**: ✅ **Đã triển khai** (BE-016b) — local không có `OPENAI_API_KEY` dùng keyword fallback  
 > **Đã có sẵn (luồng A)**: `POST/GET /ai/search` + duyệt candidates — xem `04_API_Contract.md` Module 3, `amendments/ai_search-tables.md`
 
 ---
