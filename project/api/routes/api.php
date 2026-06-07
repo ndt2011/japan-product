@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\MasterDataController;
 use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ProductImageController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,4 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ai/candidates/{id}', [AiProductCandidateController::class, 'show']);
     Route::put('/ai/candidates/{id}/approve', [AiProductCandidateController::class, 'approve']);
     Route::put('/ai/candidates/{id}/reject', [AiProductCandidateController::class, 'reject']);
+
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::put('/orders/{id}', [OrderController::class, 'update']);
+    Route::put('/orders/{id}/submit', [OrderController::class, 'submit']);
+    Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
+    Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 });

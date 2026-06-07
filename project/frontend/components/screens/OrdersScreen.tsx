@@ -12,54 +12,79 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
-import { useState } from "react";
+import { translateMessage } from "@/lib/messages";
+import type { OrderItem } from "@/types/api";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "warning" | "success" | "danger" }> = {
-  Draft: { label: "Nháp", variant: "gray" },
-  Confirmed: { label: "Xác nhận", variant: "primary" },
-  Shipping: { label: "Đang giao", variant: "warning" },
-  Delivered: { label: "Đã giao", variant: "success" },
-  Cancelled: { label: "Hủy bỏ", variant: "danger" },
+  DRAFT: { label: "Nháp", variant: "gray" },
+  PENDING: { label: "Chờ xác nhận", variant: "warning" },
+  CONFIRMED: { label: "Đã xác nhận", variant: "primary" },
+  PROCESSING: { label: "Đang xử lý", variant: "warning" },
+  SHIPPED: { label: "Đang giao", variant: "primary" },
+  DELIVERED: { label: "Đã giao", variant: "success" },
+  CANCELLED: { label: "Hủy", variant: "danger" },
 };
 
-const ordersData = [
-  { id: "ĐH-2026-0891", agent: "Đại Lý Miền Nam", date: "2026-06-05", items: 4, total: "124.500.000đ", status: "Shipping", payment: "Chưa TT" },
-  { id: "ĐH-2026-0890", agent: "Công ty ABC VN", date: "2026-06-04", items: 2, total: "89.200.000đ", status: "Confirmed", payment: "Đã TT" },
-  { id: "ĐH-2026-0889", agent: "Công ty Demo VN", date: "2026-06-03", items: 6, total: "205.800.000đ", status: "Delivered", payment: "Đã TT" },
-  { id: "ĐH-2026-0888", agent: "Siêu Thị Điện Máy", date: "2026-06-02", items: 1, total: "76.400.000đ", status: "Draft", payment: "Chưa TT" },
-  { id: "ĐH-2026-0887", agent: "CellphoneS", date: "2026-06-01", items: 3, total: "98.700.000đ", status: "Cancelled", payment: "Hoàn tiền" },
-];
-
 export function OrdersScreen() {
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const filtered = ordersData.filter((o) => {
-    const matchSearch =
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.agent.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = !statusFilter || o.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      if (statusFilter) params.set("status", statusFilter);
+      const res = await fetch(`/api/proxy/orders?${params}`);
+      const data = await res.json();
+      if (data.success && data.data?.items) {
+        setOrders(data.data.items);
+      } else {
+        setError(translateMessage(data.message ?? "M0001"));
+      }
+    } catch {
+      setError("API_OFFLINE");
+    } finally {
+      setLoading(false);
+    }
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    const timer = setTimeout(loadOrders, search ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [loadOrders, search]);
+
+  const counts = orders.reduce<Record<string, number>>((acc, o) => {
+    acc[o.status] = (acc[o.status] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Đơn Đặt Hàng"
-        subtitle={`${ordersData.length} đơn hàng · Dữ liệu demo`}
+        subtitle={loading ? "Đang tải..." : `${orders.length} đơn hàng`}
         actions={
           <>
             <Button variant="secondary" size="sm" disabled>
-              📤 Xuất Excel
+              Xuất Excel
             </Button>
-            <Button size="sm" disabled>
-              + Tạo Đơn Hàng
-            </Button>
+            <Link href="/orders/new">
+              <Button size="sm">+ Tạo Đơn Hàng</Button>
+            </Link>
           </>
         }
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {error && <Card className="p-4 text-sm text-danger">{error}</Card>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {Object.entries(statusMap).map(([key, s]) => (
           <Card
             key={key}
@@ -67,60 +92,72 @@ export function OrdersScreen() {
             onClick={() => setStatusFilter(key === statusFilter ? "" : key)}
           >
             <p className="text-xs text-text-muted">{s.label}</p>
-            <p className="text-lg text-text-primary mt-0.5">{ordersData.filter((o) => o.status === key).length}</p>
+            <p className="text-lg text-text-primary mt-0.5">{counts[key] ?? 0}</p>
           </Card>
         ))}
       </div>
 
       <Card className="p-4">
-        <div className="flex gap-3 flex-wrap">
-          <SearchInput placeholder="Tìm đơn hàng, đại lý..." value={search} onChange={setSearch} className="flex-1 min-w-52" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-border text-sm bg-white text-text-body"
-          >
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(statusMap).map(([k, s]) => (
-              <option key={k} value={k}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SearchInput
+          placeholder="Tìm mã đơn, công ty..."
+          value={search}
+          onChange={setSearch}
+          className="max-w-md"
+        />
       </Card>
 
       <Card>
         <Table>
           <Thead>
             <tr>
-              <Th>Mã ĐH</Th>
-              <Th>Đại Lý</Th>
+              <Th>Mã đơn</Th>
+              <Th>Công ty VN</Th>
               <Th>Ngày</Th>
-              <Th>SP</Th>
-              <Th>Tổng tiền</Th>
-              <Th>Thanh toán</Th>
+              <Th>Tổng VND</Th>
               <Th>Trạng thái</Th>
+              <Th>Thao tác</Th>
             </tr>
           </Thead>
           <tbody>
-            {filtered.map((o) => (
-              <Tr key={o.id}>
-                <Td className="font-medium text-brand">{o.id}</Td>
-                <Td>{o.agent}</Td>
-                <Td className="text-text-muted">{o.date}</Td>
-                <Td>{o.items}</Td>
-                <Td>{o.total}</Td>
-                <Td>
-                  <Badge variant={o.payment === "Đã TT" ? "success" : "warning"}>{o.payment}</Badge>
-                </Td>
-                <Td>
-                  <Badge variant={statusMap[o.status]?.variant ?? "gray"}>
-                    {statusMap[o.status]?.label ?? o.status}
-                  </Badge>
+            {loading ? (
+              <Tr>
+                <Td colSpan={6} className="text-center text-text-muted py-8">
+                  Đang tải...
                 </Td>
               </Tr>
-            ))}
+            ) : orders.length === 0 ? (
+              <Tr>
+                <Td colSpan={6} className="text-center text-text-muted py-8">
+                  Chưa có đơn hàng
+                </Td>
+              </Tr>
+            ) : (
+              orders.map((o) => {
+                const s = statusMap[o.status] ?? { label: o.status, variant: "gray" as const };
+                return (
+                  <Tr key={o.id}>
+                    <Td>
+                      <span className="text-brand text-xs font-medium">{o.order_no}</span>
+                    </Td>
+                    <Td className="text-xs">{o.company_name ?? "—"}</Td>
+                    <Td className="text-xs text-text-muted">{o.order_date ?? "—"}</Td>
+                    <Td className="text-xs">
+                      {o.total_vnd ? `${Number(o.total_vnd).toLocaleString("vi-VN")}đ` : "—"}
+                    </Td>
+                    <Td>
+                      <Badge variant={s.variant}>{s.label}</Badge>
+                    </Td>
+                    <Td>
+                      <Link href={`/orders/${o.id}`}>
+                        <Button variant="ghost" size="sm">
+                          Chi tiết
+                        </Button>
+                      </Link>
+                    </Td>
+                  </Tr>
+                );
+              })
+            )}
           </tbody>
         </Table>
       </Card>

@@ -60,9 +60,9 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| FE-301 | `/orders/new` — tạo đơn + tỷ giá real-time | P0 | BE-019 | 2.5d | 📋 |
-| FE-302 | `/orders` — list filter (thay demo data) | P0 | BE-019 | 1.5d | 🔄 UI demo |
-| FE-303 | `/orders/[id]` — chi tiết + confirm/cancel | P0 | FE-302 | 1.5d | 📋 |
+| FE-301 | `/orders/new` — tạo đơn + tỷ giá real-time | P0 | BE-019 | 2.5d | ✅ |
+| FE-302 | `/orders` — list filter (thay demo data) | P0 | BE-019 | 1.5d | ✅ |
+| FE-303 | `/orders/[id]` — chi tiết + confirm/cancel | P0 | FE-302 | 1.5d | ✅ |
 
 ---
 

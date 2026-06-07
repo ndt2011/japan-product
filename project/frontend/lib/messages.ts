@@ -13,6 +13,13 @@ const MESSAGE_MAP: Record<string, string> = {
   M0203: "Đã gửi sản phẩm chờ duyệt thành công.",
   M0204: "Duyệt sản phẩm AI thành công — đã thêm vào catalog.",
   M0205: "Đã từ chối sản phẩm AI.",
+  M0401: "Số lượng đặt vượt tồn kho khả dụng.",
+  M0402: "Không thể thực hiện ở trạng thái đơn hiện tại.",
+  M0403: "Lưu đơn hàng thành công.",
+  M0404: "Xác nhận đơn hàng thành công.",
+  M0405: "Gửi đơn hàng thành công.",
+  M0406: "Hủy đơn hàng thành công.",
+  M0407: "Bạn không có quyền thao tác đơn hàng này.",
   API_OFFLINE: "Không kết nối được API backend. Hãy chạy: cd project/api && php artisan serve",
 };
 

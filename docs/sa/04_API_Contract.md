@@ -220,6 +220,40 @@
 
 ---
 
+## Module 4 — Đơn hàng
+
+### GET `/orders`
+
+Query: `search`, `status`, `per_page` — Company chỉ thấy đơn của mình; Admin thấy tất cả
+
+### POST `/orders`
+
+**Body**: `{ items: [{ product_id, quantity, comment? }], biko?, submit?: boolean }`  
+**Role**: Company only  
+**Response 201** (`M0403`) — `submit=true` → `PENDING` + reserve tồn kho
+
+### GET `/orders/{id}`
+
+### PUT `/orders/{id}`
+
+Chỉ `DRAFT`, Company owner
+
+### PUT `/orders/{id}/submit`
+
+`DRAFT → PENDING`
+
+### PUT `/orders/{id}/confirm`
+
+`PENDING → CONFIRMED`, lock `exchange_rate` — Admin only (`M0404`)
+
+### PUT `/orders/{id}/cancel`
+
+`DRAFT|PENDING → CANCELLED`, release reserve (`M0406`)
+
+**Lỗi**: `M0401` vượt tồn kho · `M0407` IDOR
+
+---
+
 ## Module 2 — Master data (hỗ trợ form)
 
 ### GET `/suppliers`

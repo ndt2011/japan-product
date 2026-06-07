@@ -125,6 +125,45 @@ export interface AiCandidateItem {
   product_id?: number | null;
 }
 
+export interface OrderItem {
+  id: number;
+  order_no: string;
+  company_vn_id: number;
+  company_name?: string | null;
+  status: string;
+  order_date?: string | null;
+  total_jpy?: string | null;
+  total_vnd?: string | null;
+  exchange_rate?: number | null;
+  items_count?: number;
+  details?: OrderLineItem[];
+}
+
+export interface OrderLineItem {
+  id: number;
+  product_id: number;
+  product_name?: string | null;
+  product_cd?: string | null;
+  quantity: number;
+  unit_price_jpy?: number | null;
+  unit_price_vnd?: string | null;
+  subtotal_vnd?: string | null;
+}
+
+export interface OrderListData {
+  items: OrderItem[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+export interface OrderDetailData {
+  order: OrderItem;
+}
+
 export interface ProductListData {
   items: ProductItem[];
   pagination: {

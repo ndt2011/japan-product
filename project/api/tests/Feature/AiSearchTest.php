@@ -11,18 +11,21 @@ class AiSearchTest extends TestCase
 {
     use RefreshDatabase;
 
+    private array $authHeaders = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         config(['queue.default' => 'sync']);
+
+        $admin = Admin::factory()->create();
+        $token = $admin->createToken('test')->plainTextToken;
+        $this->authHeaders = ['Authorization' => "Bearer {$token}"];
     }
 
     private function authHeaders(): array
     {
-        $admin = Admin::factory()->create();
-        $token = $admin->createToken('test')->plainTextToken;
-
-        return ['Authorization' => "Bearer {$token}"];
+        return $this->authHeaders;
     }
 
     public function test_search_returns_products_for_collagen_keyword(): void
