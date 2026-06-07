@@ -18,11 +18,13 @@ class AiProductSearchController extends Controller
         $query = $request->validated('query');
         $limit = $request->validated('limit');
 
-        $items = $this->embeddingService->search($query, $limit);
+        $meta = $this->embeddingService->searchWithMeta($query, $limit);
+        $items = $meta['items'];
 
         if ($items === []) {
             return ApiResponse::success([
                 'query' => $query,
+                'expanded_query' => $meta['expanded_query'],
                 'count' => 0,
                 'items' => [],
             ], 'M0201');
@@ -30,6 +32,7 @@ class AiProductSearchController extends Controller
 
         return ApiResponse::success([
             'query' => $query,
+            'expanded_query' => $meta['expanded_query'],
             'count' => count($items),
             'items' => $items,
         ]);

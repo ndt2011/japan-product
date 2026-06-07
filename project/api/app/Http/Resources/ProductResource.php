@@ -20,6 +20,7 @@ class ProductResource extends JsonResource
             'product_cd' => $this->product_cd,
             'product_name' => $this->product_name,
             'product_name_jp' => $this->product_name_jp,
+            'name_vi' => $this->name_vi,
             'spec' => $this->spec,
             'unit' => $this->unit,
             'cost_jpy' => $this->cost_jpy,
@@ -29,6 +30,7 @@ class ProductResource extends JsonResource
             'origin' => $this->origin,
             'import_tax_rate' => $this->import_tax_rate,
             'description' => $this->description,
+            'description_vi' => $this->description_vi,
             'image_path' => $this->image_path,
             'images' => $this->whenLoaded('images', function () {
                 return ProductImageResource::collection($this->images);

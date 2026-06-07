@@ -20,6 +20,7 @@ export function AICatalogSearchPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastQuery, setLastQuery] = useState("");
+  const [expandedQuery, setExpandedQuery] = useState("");
 
   async function search(text?: string) {
     const q = (text ?? query).trim();
@@ -45,6 +46,7 @@ export function AICatalogSearchPanel() {
       }
 
       const items = (data.data?.items ?? []) as AiCatalogSearchItem[];
+      setExpandedQuery((data.data?.expanded_query as string) ?? "");
       setResults(items);
 
       if (data.message === "M0201" || items.length === 0) {
@@ -103,9 +105,14 @@ export function AICatalogSearchPanel() {
         )}
 
         {lastQuery && !loading && results.length > 0 && (
-          <p className="text-xs text-text-muted mb-2 px-1">
-            {results.length} kết quả cho &quot;{lastQuery}&quot;
-          </p>
+          <div className="text-xs text-text-muted mb-2 px-1 space-y-1">
+            <p>
+              {results.length} kết quả cho &quot;{lastQuery}&quot;
+            </p>
+            {expandedQuery && expandedQuery !== lastQuery && (
+              <p className="line-clamp-2">GPT mở rộng: {expandedQuery}</p>
+            )}
+          </div>
         )}
 
         <Card className="flex-1 overflow-y-auto p-4 min-h-0">
@@ -135,7 +142,9 @@ export function AICatalogSearchPanel() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">{item.product_name}</p>
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {item.name_vi || item.product_name}
+                    </p>
                     {item.product_name_jp && (
                       <p className="text-xs text-text-muted truncate">{item.product_name_jp}</p>
                     )}

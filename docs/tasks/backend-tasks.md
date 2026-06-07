@@ -49,6 +49,8 @@
 | BE-015 | Queue `AiProductSearchJob` + poll status API | P0 | BE-013 | 1d | ✅ |
 | BE-016 | API: `/ai/search`, candidates approve/reject | P0 | BE-015 | 1d | ✅ |
 | BE-016b | `POST /ai/product-search` — embedding semantic search | P1 | BE-011 | 2d | ✅ + `products:embed` |
+| BE-016c | Catalog VN: name_vi + QueryExpansion (amendment Ph1–2) | P1 | BE-016b | 1d | ✅ |
+| BE-030 | Hybrid FULLTEXT search (amendment Phase 3) | P2 | BE-016c | 3d | 📋 |
 
 ---
 

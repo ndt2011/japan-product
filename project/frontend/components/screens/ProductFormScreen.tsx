@@ -13,6 +13,8 @@ const emptyForm: ProductFormData = {
   product_cd: "",
   product_name: "",
   product_name_jp: "",
+  name_vi: "",
+  description_vi: "",
   supplier_id: "",
   spec: "",
   unit: "",
@@ -31,6 +33,8 @@ function productToForm(product: ProductItem): ProductFormData {
     product_cd: product.product_cd ?? "",
     product_name: product.product_name,
     product_name_jp: product.product_name_jp ?? "",
+    name_vi: product.name_vi ?? "",
+    description_vi: product.description_vi ?? "",
     supplier_id: product.supplier_id ?? "",
     spec: product.spec ?? "",
     unit: product.unit ?? "",
@@ -212,6 +216,12 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               value={form.product_name_jp}
               onChange={(e) => updateField("product_name_jp", e.target.value)}
             />
+            <Input
+              label="Tên VN (AI search)"
+              value={form.name_vi}
+              onChange={(e) => updateField("name_vi", e.target.value)}
+              placeholder="VD: Viên uống bổ gan Orihiro"
+            />
             <Select
               label="Nhà cung cấp"
               value={form.supplier_id}
@@ -280,6 +290,17 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               rows={3}
+              className="w-full px-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-text-body">Mô tả VN (AI search)</label>
+            <textarea
+              value={form.description_vi}
+              onChange={(e) => updateField("description_vi", e.target.value)}
+              rows={2}
+              placeholder="Công dụng, đối tượng dùng — giúp tìm catalog tiếng Việt"
               className="w-full px-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
           </div>

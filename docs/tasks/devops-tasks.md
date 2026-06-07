@@ -12,8 +12,8 @@
 
 | ID | Mô tả | P | Est | Trạng thái |
 |----|-------|---|-----|------------|
-| DO-001 | Railway: Laravel API + MySQL 8 + Redis 7 | P0 | 0.5d | 📋 **[STAGING_DEPLOY_MEMO.md](../devops/STAGING_DEPLOY_MEMO.md)** Bước 1–3 |
-| DO-002 | Vercel: import repo, `API_URL` → Railway | P0 | 0.5d | 📋 Memo **Bước 4–5** · `vercel.json` sẵn |
+| DO-001 | Railway: Laravel API + MySQL 8 + Redis 7 | P0 | 0.5d | ✅ Staging live |
+| DO-002 | Vercel: import repo, `API_URL` → Railway | P0 | 0.5d | ✅ japan-product.vercel.app |
 | DO-003 | GitHub Actions CI/CD | P0 | 1d | 🔄 `ci.yml` ✅ · `railway.toml` ✅ |
 | DO-004 | Branch protection `main` (PR + review) | P1 | 0.5d | 📋 DEV-15 |
 | DO-005 | Git repo monorepo trên GitHub | P0 | — | ✅ `ndt2011/japan-product` |

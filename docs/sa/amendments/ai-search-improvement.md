@@ -589,21 +589,21 @@ Response thêm trường:
 
 ```
 Phase 1:
-[ ] Migration thêm name_vi, description_vi
-[ ] Cập nhật Product $fillable + validation
-[ ] Cập nhật buildProductText() thêm name_vi
-[ ] Cập nhật ProductController: trả name_vi trong response
-[ ] Thêm field "Tên tiếng Việt" vào form tạo/sửa SP (FE)
-[ ] Artisan: products:generate-vi (tự động dịch bằng GPT)
-[ ] Chạy: products:generate-vi → products:embed --force
-[ ] Test: tìm "vitamin c" → ra đúng SP
+[x] Migration thêm name_vi, description_vi — `2026_06_08_100020_add_vietnamese_fields_to_products.php`
+[x] Cập nhật Product $fillable + validation
+[x] Cập nhật buildProductText() thêm name_vi
+[x] Cập nhật ProductResource: trả name_vi trong response
+[x] Thêm field "Tên VN (AI search)" vào form tạo/sửa SP (FE)
+[x] Artisan: `products:generate-vi` (tự động dịch bằng GPT)
+[ ] Chạy trên staging: `products:generate-vi` → `products:embed --force`
+[x] Test: tìm "bổ gan" → match name_vi
 
 Phase 2:
-[ ] Tạo QueryExpansionService
-[ ] Đăng ký trong AppServiceProvider (DI)
-[ ] Inject vào ProductEmbeddingService::search()
-[ ] Thêm expanded_query vào API response
-[ ] Test: tìm "gan" → query mở rộng → kết quả tốt hơn
+[x] Tạo QueryExpansionService
+[x] Inject vào ProductEmbeddingService (constructor DI)
+[x] Inject vào ProductEmbeddingService::searchWithMeta()
+[x] Thêm expanded_query vào API response + FE catalog panel
+[x] Test: expanded_query trong response
 
 Phase 3 (nếu cần):
 [ ] Migration FULLTEXT index

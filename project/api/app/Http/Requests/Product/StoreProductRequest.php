@@ -21,6 +21,8 @@ class StoreProductRequest extends FormRequest
             'product_cd' => ['nullable', 'string', 'max:50'],
             'product_name' => ['required', 'string', 'max:255'],
             'product_name_jp' => ['nullable', 'string', 'max:255'],
+            'name_vi' => ['nullable', 'string', 'max:300'],
+            'description_vi' => ['nullable', 'string', 'max:2000'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers_jp,id'],
             'spec' => ['nullable', 'string', 'max:255'],
             'unit' => ['nullable', 'string', 'max:20'],

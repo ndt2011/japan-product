@@ -38,6 +38,8 @@ export interface ProductItem {
   product_cd: string | null;
   product_name: string;
   product_name_jp: string | null;
+  name_vi?: string | null;
+  description_vi?: string | null;
   spec?: string | null;
   unit?: string | null;
   cost_jpy: number | null;
@@ -80,6 +82,8 @@ export interface ProductFormData {
   product_cd: string;
   product_name: string;
   product_name_jp: string;
+  name_vi: string;
+  description_vi: string;
   supplier_id: number | "";
   spec: string;
   unit: string;
@@ -97,6 +101,9 @@ export interface AiCatalogSearchItem {
   product_cd: string | null;
   product_name: string;
   product_name_jp: string | null;
+  name_vi?: string | null;
+  description_vi?: string | null;
+  ai_score?: number;
   spec?: string | null;
   unit?: string | null;
   cost_jpy?: number | null;

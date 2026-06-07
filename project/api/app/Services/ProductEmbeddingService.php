@@ -11,8 +11,9 @@ class ProductEmbeddingService
 {
     private int $limit;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly QueryExpansionService $queryExpansion,
+    ) {
         $this->limit = (int) config('services.ai_search.limit', 15);
     }
 
@@ -21,9 +22,11 @@ class ProductEmbeddingService
         $product->loadMissing(['category', 'supplier']);
 
         return implode(' | ', array_filter([
-            $product->product_name,
             $product->product_name_jp,
+            $product->product_name,
             $product->product_cd,
+            $product->name_vi ?: $product->product_name,
+            $product->description_vi,
             $product->spec,
             $product->description,
             $product->origin,
@@ -75,14 +78,18 @@ class ProductEmbeddingService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return array{items: list<array<string, mixed>>, expanded_query: string}
      */
-    public function search(string $query, ?int $limit = null): array
+    public function searchWithMeta(string $query, ?int $limit = null): array
     {
         $limit = min(max($limit ?? $this->limit, 1), 20);
+        $expandedQuery = $this->queryExpansion->expand($query);
 
         if (! config('services.openai.api_key')) {
-            return $this->searchByKeyword($query, $limit);
+            return [
+                'items' => $this->searchByKeyword($expandedQuery, $limit),
+                'expanded_query' => $expandedQuery,
+            ];
         }
 
         $embeddedCount = Product::query()
@@ -94,15 +101,21 @@ class ProductEmbeddingService
         if ($embeddedCount === 0) {
             Log::info('No product embeddings found, using keyword fallback');
 
-            return $this->searchByKeyword($query, $limit);
+            return [
+                'items' => $this->searchByKeyword($expandedQuery, $limit),
+                'expanded_query' => $expandedQuery,
+            ];
         }
 
         try {
-            $queryVector = $this->getEmbedding($query);
+            $queryVector = $this->getEmbedding($expandedQuery);
         } catch (\Throwable $e) {
             Log::warning('Embedding search failed, using keyword fallback', ['error' => $e->getMessage()]);
 
-            return $this->searchByKeyword($query, $limit);
+            return [
+                'items' => $this->searchByKeyword($expandedQuery, $limit),
+                'expanded_query' => $expandedQuery,
+            ];
         }
 
         $products = Product::query()
@@ -119,7 +132,7 @@ class ProductEmbeddingService
             ->get();
 
         if ($products->isEmpty()) {
-            return [];
+            return ['items' => [], 'expanded_query' => $expandedQuery];
         }
 
         $scored = $products->map(function (Product $product) use ($queryVector) {
@@ -131,12 +144,22 @@ class ProductEmbeddingService
             ];
         });
 
-        return $scored
+        $items = $scored
             ->sortByDesc('similarity')
             ->take($limit)
             ->values()
             ->map(fn (array $item) => $this->formatProduct($item['product'], $item['similarity']))
             ->all();
+
+        return ['items' => $items, 'expanded_query' => $expandedQuery];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function search(string $query, ?int $limit = null): array
+    {
+        return $this->searchWithMeta($query, $limit)['items'];
     }
 
     /**
@@ -162,6 +185,8 @@ class ProductEmbeddingService
                         $like = '%'.$term.'%';
                         $q->orWhereRaw('LOWER(product_name) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(product_name_jp) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(name_vi) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(description_vi) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(product_cd) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(description) LIKE ?', [$like]);
                     }
@@ -190,6 +215,8 @@ class ProductEmbeddingService
             'product_cd' => $product->product_cd,
             'product_name' => $product->product_name,
             'product_name_jp' => $product->product_name_jp,
+            'name_vi' => $product->name_vi,
+            'description_vi' => $product->description_vi,
             'spec' => $product->spec,
             'unit' => $product->unit,
             'cost_jpy' => $product->cost_jpy,
@@ -199,6 +226,7 @@ class ProductEmbeddingService
             'category' => $product->category?->category_name,
             'supplier' => $product->supplier?->supplier_name,
             'image_url' => $primaryImageUrl,
+            'ai_score' => round($similarity, 4),
             'images' => $product->images->map(fn ($img) => [
                 'url' => $img->image_path,
                 'is_primary' => (bool) $img->is_primary,

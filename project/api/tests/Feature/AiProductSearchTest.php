@@ -13,6 +13,12 @@ class AiProductSearchTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['services.openai.api_key' => '']);
+    }
+
     private function authHeaders(): array
     {
         $admin = Admin::factory()->create();
@@ -62,7 +68,27 @@ class AiProductSearchTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.count', 1)
-            ->assertJsonPath('data.items.0.product_cd', 'COL-01');
+            ->assertJsonPath('data.items.0.product_cd', 'COL-01')
+            ->assertJsonPath('data.expanded_query', 'collagen');
+    }
+
+    public function test_keyword_search_matches_name_vi_field(): void
+    {
+        $product = $this->seedProduct('LIV-01', 'Liver Support', '肝臓サポート');
+        $product->update([
+            'name_vi' => 'Viên uống bổ gan Orihiro',
+            'description_vi' => 'Hỗ trợ chức năng gan, giải độc',
+        ]);
+
+        $response = $this->postJson('/api/ai/product-search', [
+            'query' => 'bổ gan',
+            'limit' => 10,
+        ], $this->authHeaders());
+
+        $response->assertOk()
+            ->assertJsonPath('data.count', 1)
+            ->assertJsonPath('data.items.0.product_cd', 'LIV-01')
+            ->assertJsonPath('data.items.0.name_vi', 'Viên uống bổ gan Orihiro');
     }
 
     public function test_empty_results_return_m0201(): void

@@ -81,14 +81,20 @@ POST /ai/search → session processing → job (afterResponse)
 
 ---
 
-## 5. Luồng B — Catalog embedding
+## 5. Luồng B — Catalog embedding + tìm tiếng Việt
 
 ```bash
 cd project/api
 php artisan migrate
-php artisan products:embed        # Cần OPENAI_API_KEY
-php artisan products:embed --id=1
+
+# Phase 1: sinh tên/mô tả VN cho SP (amendment ai-search-improvement)
+php artisan products:generate-vi
+
+# Embed lại sau khi có name_vi
+php artisan products:embed --force
 ```
+
+Luồng B tự **mở rộng query** (QueryExpansionService) trước khi embed/search — response có `expanded_query`.
 
 Test: tab **Tìm catalog nội bộ** hoặc `POST /api/ai/product-search`.
 
