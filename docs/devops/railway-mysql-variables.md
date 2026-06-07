@@ -12,6 +12,23 @@ Biến trên MySQL chỉ dùng cho container MySQL, **không** tự sang `produc
 
 ---
 
+## Healthcheck failure (deploy đỏ)
+
+Triệu chứng: Build/Deploy OK nhưng **Network > Healthcheck Failed** ~5 phút.
+
+**Nguyên nhân:** `php artisan migrate` lỗi (MySQL sai `DB_URL`) → server không chạy → `/api/health` không trả lời.
+
+**Cách xử lý:**
+
+1. Mở tab **Deploy Logs** — tìm `[start] WARN: migrate FAILED` hoặc lỗi SQL
+2. Sửa **Variables** trên `product` (xem bên dưới `DB_URL`)
+3. **Redeploy**
+4. Sau deploy Success → **Console**: `php artisan migrate --force && php artisan db:seed --force`
+
+Code mới: server **vẫn start** khi migrate fail (staging) để healthcheck pass.
+
+---
+
 ## Vẫn sqlite sau Redeploy? — Fix chắc chắn
 
 ### Bước A — Xóa biến DB cũ trên `product`
