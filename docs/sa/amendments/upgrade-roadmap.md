@@ -73,7 +73,9 @@ Order CONFIRMED
 
 ### T1-002: Dashboard Analytics (Thống kê thực)
 
-**Tại sao critical**: Dashboard hiện là UI demo, không có dữ liệu thật → không đưa cho khách hàng được.
+**Trạng thái** (2026-06-08): ✅ Triển khai — `GET /dashboard/stats`, `GET /dashboard/charts/orders`, FE DashboardScreen.
+
+**Tại sao critical**: Dashboard cần dữ liệu thật để demo khách hàng.
 
 **API cần thêm**:
 ```

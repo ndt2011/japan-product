@@ -57,7 +57,7 @@
 | Module | Route | Docs SA | Code |
 |--------|-------|---------|------|
 | Đăng nhập | `/login` | `1-001_Đăng_nhập.xlsx` | ✅ BE+FE |
-| Dashboard | `/dashboard` | — | 🔄 UI demo |
+| Dashboard | `/dashboard` | upgrade-roadmap T1-002 | ✅ Stats API + FE |
 | Hàng hóa | `/products` | `2-001_Thông_tin_hàng_hóa.xlsx` | ✅ BE+FE |
 | AI Center | `/ai-center` | `2-101` (chờ xlsx) | ✅ Luồng A API+FE |
 | AI Duyệt | `/admin/ai-candidates` | amendment | ✅ BE+FE |

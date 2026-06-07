@@ -605,10 +605,11 @@ Phase 2:
 [x] Thêm expanded_query vào API response + FE catalog panel
 [x] Test: expanded_query trong response
 
-Phase 3 (nếu cần):
-[ ] Migration FULLTEXT index
-[ ] Viết keywordSearch() và mergeResults()
-[ ] A/B test: hybrid vs semantic only
+Phase 3 (hybrid — 2026-06-08):
+[x] mergeResults() semantic 70% + keyword 30% trong ProductEmbeddingService
+[x] search_mode: hybrid | keyword trong API response
+[x] Env: AI_SEARCH_HYBRID_ENABLED=true (default)
+[ ] Migration FULLTEXT MySQL (tùy chọn — hiện dùng LIKE keyword)
 
 Phase 4 (tùy chọn):
 [ ] Thêm rerankWithGPT() sau hybrid search

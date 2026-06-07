@@ -10,6 +10,7 @@ use App\Repositories\AdminRepository;
 use App\Repositories\BranchUserRepository;
 use App\Repositories\CompanyVnRepository;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,11 @@ class AuthService
      */
     public function login(string $loginId, string $password, string $ip, bool $rememberMe = false): array
     {
+        $lockKey = $this->lockoutKey($ip, $loginId);
+        if ((int) Cache::get($lockKey, 0) >= 5) {
+            throw new AuthException('M0106', 429);
+        }
+
         $admin = $this->adminRepository->findActiveByLoginId($loginId);
 
         if ($admin && Hash::check($password, $admin->password)) {
@@ -44,6 +50,7 @@ class AuthService
             return $this->issueToken($branchUser, $branchUser->user_type, $loginId, $ip, $rememberMe);
         }
 
+        $this->recordFailedAttempt($lockKey);
         $this->logAttempt($ip, $loginId, 'Failure');
 
         throw new AuthException('M0101', 401);
@@ -76,6 +83,7 @@ class AuthService
 
         /** @var Admin|CompanyVn $user */
         $accessToken = $user->createToken('api-token', ['*'], $expiresAt);
+        Cache::forget($this->lockoutKey($ip, $loginId));
         $this->logAttempt($ip, $loginId, 'Success');
 
         return [
@@ -84,6 +92,17 @@ class AuthService
             'token' => $accessToken->plainTextToken,
             'expires_at' => $expiresAt->toIso8601String(),
         ];
+    }
+
+    private function lockoutKey(string $ip, string $loginId): string
+    {
+        return 'login_attempts:'.md5($ip.'|'.$loginId);
+    }
+
+    private function recordFailedAttempt(string $lockKey): void
+    {
+        $attempts = (int) Cache::get($lockKey, 0) + 1;
+        Cache::put($lockKey, $attempts, now()->addMinutes(30));
     }
 
     private function logAttempt(string $ip, string $loginId, string $result): void

@@ -7,6 +7,7 @@ use App\Http\Controllers\API\AdminUserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BranchController;
 use App\Http\Controllers\API\CompanyUserController;
+use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\BranchUserManagementController;
 use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\InventoryController;
@@ -32,6 +33,9 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/charts/orders', [DashboardController::class, 'orderChart']);
+
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
 

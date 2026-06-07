@@ -76,6 +76,8 @@
 | FE-403 | `/admin` — tạo Admin + Công ty VN | P0 | BE-008 | 1.5d | ✅ |
 | FE-404 | `/admin/branches` + `/my-branch` | P0 | branch-system | 2d | ✅ |
 | FE-405 | `/products/{id}` tab Theo chi nhánh | P1 | branch-stats API | 0.5d | ✅ |
+| FE-406 | Dashboard stats từ `/dashboard/stats` | P0 | Dashboard API | 1d | ✅ |
+| FE-407 | `/agents` — list đại lý (company-users) | P1 | BE-008 | 0.5d | ✅ |
 
 ---
 

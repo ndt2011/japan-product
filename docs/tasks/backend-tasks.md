@@ -18,7 +18,7 @@
 | BE-003 | Seeder: admin + company + branch users | P0 | BE-002 | 0.5d | ✅ BranchSeeder ✅ |
 | BE-004 | `POST /auth/login` — `login_id`, `password`, `remember_me` (24h/30d) | P0 | BE-001 | 1d | ✅ |
 | BE-005 | `POST /auth/logout` — revoke token | P0 | BE-004 | 0.5d | ✅ |
-| BE-006 | Account lockout: Redis 5 lần fail → khóa 30 phút | P0 | BE-004 | 1d | 📋 (chưa implement) |
+| BE-006 | Account lockout: Cache 5 lần fail → khóa 30 phút (M0106) | P0 | BE-004 | 1d | ✅ |
 | BE-007 | Middleware `RoleMiddleware` (admin/company/branch) | P0 | BE-002 | 1d | ✅ via `rbac-req003.md` |
 | BE-008 | API CRUD: AdminManagement + CompanyManagement + BranchManagement | P0 | BE-007 | 1d | ✅ |
 | BE-008b | `GET /health` — health check monitoring | P1 | BE-001 | 0.5h | ✅ |

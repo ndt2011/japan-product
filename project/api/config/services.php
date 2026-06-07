@@ -39,6 +39,7 @@ return [
 
     'ai_search' => [
         'limit' => (int) env('AI_SEARCH_LIMIT', 15),
+        'hybrid_enabled' => env('AI_SEARCH_HYBRID_ENABLED', true),
     ],
 
     'rakuten' => [

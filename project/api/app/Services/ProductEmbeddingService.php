@@ -89,6 +89,7 @@ class ProductEmbeddingService
             return [
                 'items' => $this->searchByKeyword($expandedQuery, $limit),
                 'expanded_query' => $expandedQuery,
+                'search_mode' => 'keyword',
             ];
         }
 
@@ -104,6 +105,7 @@ class ProductEmbeddingService
             return [
                 'items' => $this->searchByKeyword($expandedQuery, $limit),
                 'expanded_query' => $expandedQuery,
+                'search_mode' => 'keyword',
             ];
         }
 
@@ -115,6 +117,7 @@ class ProductEmbeddingService
             return [
                 'items' => $this->searchByKeyword($expandedQuery, $limit),
                 'expanded_query' => $expandedQuery,
+                'search_mode' => 'keyword',
             ];
         }
 
@@ -132,7 +135,7 @@ class ProductEmbeddingService
             ->get();
 
         if ($products->isEmpty()) {
-            return ['items' => [], 'expanded_query' => $expandedQuery];
+            return ['items' => [], 'expanded_query' => $expandedQuery, 'search_mode' => 'hybrid'];
         }
 
         $scored = $products->map(function (Product $product) use ($queryVector) {
@@ -144,14 +147,91 @@ class ProductEmbeddingService
             ];
         });
 
-        $items = $scored
+        $semanticItems = $scored
             ->sortByDesc('similarity')
-            ->take($limit)
+            ->take($limit * 2)
             ->values()
-            ->map(fn (array $item) => $this->formatProduct($item['product'], $item['similarity']))
             ->all();
 
-        return ['items' => $items, 'expanded_query' => $expandedQuery];
+        if (config('services.ai_search.hybrid_enabled', true)) {
+            $keywordItems = $this->searchByKeywordScored($query, $limit * 2);
+            $items = $this->mergeHybridResults($semanticItems, $keywordItems, $limit);
+        } else {
+            $items = collect($semanticItems)
+                ->take($limit)
+                ->map(fn (array $item) => $this->formatProduct($item['product'], $item['similarity']))
+                ->all();
+        }
+
+        return ['items' => $items, 'expanded_query' => $expandedQuery, 'search_mode' => 'hybrid'];
+    }
+
+    /**
+     * @param  list<array{product: Product, similarity: float}>  $semantic
+     * @param  list<array{product: Product, score: float}>  $keyword
+     * @return list<array<string, mixed>>
+     */
+    private function mergeHybridResults(array $semantic, array $keyword, int $limit): array
+    {
+        $scores = [];
+
+        foreach ($semantic as $item) {
+            $pid = $item['product']->id;
+            $scores[$pid] = [
+                'product' => $item['product'],
+                'semantic_score' => $item['similarity'],
+                'keyword_score' => 0.0,
+            ];
+        }
+
+        $maxKeyword = max(array_map(fn ($k) => $k['score'], $keyword)) ?: 1.0;
+
+        foreach ($keyword as $item) {
+            $pid = $item['product']->id;
+            $kScore = $item['score'] / $maxKeyword;
+            if (isset($scores[$pid])) {
+                $scores[$pid]['keyword_score'] = $kScore;
+            } else {
+                $scores[$pid] = [
+                    'product' => $item['product'],
+                    'semantic_score' => 0.0,
+                    'keyword_score' => $kScore,
+                ];
+            }
+        }
+
+        return collect($scores)
+            ->map(function (array $item) {
+                $item['final_score'] = 0.7 * $item['semantic_score'] + 0.3 * $item['keyword_score'];
+
+                return $item;
+            })
+            ->sortByDesc('final_score')
+            ->take($limit)
+            ->values()
+            ->map(fn (array $item) => $this->formatProduct($item['product'], $item['final_score']))
+            ->all();
+    }
+
+    /**
+     * @return list<array{product: Product, score: float}>
+     */
+    private function searchByKeywordScored(string $query, int $limit): array
+    {
+        $formatted = $this->searchByKeyword($query, $limit);
+
+        return collect($formatted)
+            ->map(fn (array $row, int $index) => [
+                'product' => Product::query()->with([
+                    'category:id,category_name',
+                    'supplier:id,supplier_name',
+                    'images' => fn ($q) => $q->where('deleted_flag', false)->orderByDesc('is_primary')->orderBy('order_no'),
+                ])->find($row['id']),
+                'score' => (float) ($row['ai_score'] ?? max(0.1, 1 - $index * 0.05)),
+            ])
+            ->filter(fn ($item) => $item['product'] !== null)
+            ->values()
+            ->all();
     }
 
     /**
