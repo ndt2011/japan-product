@@ -298,7 +298,10 @@ php artisan route:list --path=api
 | `could not find driver` (SQLite) | Bật extension `pdo_sqlite` trong `php.ini` |
 | `could not find driver` (MySQL) | Bật extension `pdo_mysql` trong `php.ini` |
 | Composer block security advisory | `composer config audit.block-insecure false` rồi `composer install` |
-| Redis connection refused | Đổi `QUEUE_CONNECTION=database` trong `.env` |
+| Redis connection refused | Đổi `QUEUE_CONNECTION=sync` trong `.env` |
+| **Đăng nhập 401** sau khi chạy test | Chạy lại `php artisan db:seed` (test dùng `:memory:` riêng từ bản fix) |
+| **Đăng nhập 503 / API_OFFLINE** | Chưa chạy `php artisan serve` hoặc sai `API_URL` trong `.env.local` |
+| Mật khẩu demo không đúng | `php artisan db:seed --class=AdminSeeder` và `CompanyVnSeeder` |
 | Port 8000 đã dùng | `php artisan serve --port=8001` |
 | Login trả `M0101` (401) dù đúng MK | Chưa seed DB → `php artisan db:seed` |
 | Frontend báo lỗi kết nối / 500 | API chưa chạy → `php artisan serve` (port 8000) |

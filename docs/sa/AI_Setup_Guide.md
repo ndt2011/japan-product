@@ -159,6 +159,8 @@ Chi tiết: `docs/sa/devops/deploy_guide.md`
 | Triệu chứng | Nguyên nhân | Cách sửa |
 |-------------|-------------|----------|
 | AI Center "API_OFFLINE" | Backend không chạy | `php artisan serve` |
+| **Đăng nhập 401** | DB mất user sau `php artisan test` (cũ) | `php artisan db:seed` |
+| **Đăng nhập 503** | API không chạy | `php artisan serve` |
 | Login OK nhưng AI 401 | Cookie/token | Đăng nhập lại |
 | Catalog luôn M0201 | Không có SP khớp từ khóa | `php artisan db:seed` · thử `collagen` |
 | `products:embed` báo lỗi | Chưa có OPENAI_API_KEY | Thêm key vào `.env` |

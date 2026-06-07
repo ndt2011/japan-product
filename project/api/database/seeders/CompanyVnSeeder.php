@@ -9,11 +9,10 @@ class CompanyVnSeeder extends Seeder
 {
     public function run(): void
     {
-        CompanyVn::query()->updateOrCreate(
+        $company = CompanyVn::query()->updateOrCreate(
             ['login_id' => 'vn_company01'],
             [
                 'company_cd' => 'VN001',
-                'password' => 'Company@123',
                 'company_name' => 'Công ty Demo Việt Nam',
                 'email' => 'demo@company.vn',
                 'contact_name' => 'Nguyễn Văn A',
@@ -22,5 +21,8 @@ class CompanyVnSeeder extends Seeder
                 'created' => now(),
             ],
         );
+
+        $company->password = 'Company@123';
+        $company->save();
     }
 }
