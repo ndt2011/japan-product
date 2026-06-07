@@ -1,8 +1,8 @@
 # Môi trường Staging (Cloud) — Tổng hợp DevOps
 
-> **Cập nhật**: 2026-06-07  
+> **Cập nhật**: 2026-06-08  
 > **Repo**: https://github.com/ndt2011/japan-product (branch `main`)  
-> **Trạng thái**: ✅ Railway API + MySQL · ✅ Vercel FE · Login staging OK
+> **Trạng thái**: ✅ Railway API + MySQL · ✅ Vercel FE · ✅ Login · ✅ AI Rakuten search
 
 Tài liệu **một file** ghi lại toàn bộ quá trình deploy staging, cấu hình hiện tại, vận hành và xử lý sự cố.
 
@@ -50,7 +50,8 @@ Frontend **không** gọi Railway trực tiếp từ browser.
 | **MySQL** | Service `MySQL` trên Railway |
 | **Redis** | Service `Redis` trên Railway |
 | **Vercel Project** | `japan-product` |
-| **Vercel URL** | `https://japan-product-*.vercel.app` (đổi domain: Settings → Domains) |
+| **Vercel URL** | https://japan-product.vercel.app |
+| **Rakuten Origin** | `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` (Railway Variables) |
 | **GitHub** | `ndt2011/japan-product` |
 
 ---
@@ -137,9 +138,17 @@ RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app
 PRODUCT_MARKUP_PERCENT=30
 ```
 
-> Copy từ `project/api/.env` local → Railway Variables (service **product**).  
-> Trên [Rakuten Developers](https://webservice.rakuten.co.jp/) cần whitelist **IP Railway** + URL `https://japan-product.vercel.app`.  
-> Chi tiết: [rakuten-api-setup.md](./rakuten-api-setup.md)
+> Copy từ `project/api/.env` local → Railway **Variables → RAW Editor** (service **product**).  
+> **Không** tạo file `.env` trong Railway Shell — `php artisan key:generate` chạy trên **máy local**: `php artisan key:generate --show`  
+> Trên [Rakuten Developers](https://webservice.rakuten.co.jp/) bắt buộc whitelist **IP outbound Railway** + URL Vercel.  
+> Chi tiết từng bước: [rakuten-api-setup.md](./rakuten-api-setup.md)
+
+**Lấy IP Railway để whitelist Rakuten:**
+
+```bash
+# Railway Shell (service product)
+curl -s https://api.ipify.org
+```
 
 ### 4.3 Kiểm tra health
 
@@ -217,6 +226,9 @@ Mở: `https://<vercel-domain>/login` → `admin` / `Admin@123`
 | 6 | Seed / migrate lộn xộn | `migrate:fresh` + `AuthOnlySeeder` |
 | 7 | Vercel `npm ci` fail | Đổi `npm install` — commit `8b250c1` |
 | 8 | Vercel deploy + `API_URL` | Login UI staging OK |
+| 9 | Rakuten + OpenAI env trên Railway | Variables RAW Editor |
+| 10 | Rakuten whitelist IP Railway | Fix M0206 |
+| 11 | AI Khám phá web — sản phẩm + ảnh Rakuten | ✅ OK |
 
 ---
 
@@ -256,6 +268,27 @@ Mở: `https://<vercel-domain>/login` → `admin` / `Admin@123`
 
 - `installCommand`: `npm install` trong `vercel.json`
 
+### 7.8 AI Rakuten — M0206 (IP chưa cho phép)
+
+- Triệu chứng: *"Rakuten API chưa cho phép IP máy bạn"*
+- Nguyên nhân: IP **outbound Railway** chưa có trong Rakuten **許可IPアドレス**
+- Fix: Railway Shell → `curl -s https://api.ipify.org` → thêm IP vào Rakuten Developers → Lưu (không cần redeploy)
+
+### 7.9 AI Rakuten — M0207 (Origin sai)
+
+- `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` trên Railway
+- Khớp **許可されたWebサイト** trên Rakuten
+
+### 7.10 AI — M0202 (quá thời gian)
+
+- Đảm bảo `QUEUE_CONNECTION=sync` trên Railway
+- Poll frontend chờ tối đa ~90s (Rakuten + GPT enrichment)
+
+### 7.11 `php artisan key:generate` lỗi trong Railway Shell
+
+- Container không có `/app/.env` — bình thường
+- Tạo key trên máy dev → dán `APP_KEY` vào Railway Variables
+
 ---
 
 ## 8. Test nhanh (PowerShell — máy dev)
@@ -292,6 +325,7 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 | [railway-mysql-variables.md](./railway-mysql-variables.md) | Gắn MySQL + reset DB |
 | [staging-env-railway.template.env](./staging-env-railway.template.env) | Template env Railway |
 | [staging-env-vercel.template.env](./staging-env-vercel.template.env) | Template env Vercel |
+| [rakuten-api-setup.md](./rakuten-api-setup.md) | Rakuten IP + env staging/local |
 | `Dockerfile` | Build API monorepo |
 | `project/frontend/vercel.json` | Build FE |
 
@@ -305,3 +339,5 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 | 2026-06-07 | MySQL `DB_URL`, health `db:mysql` |
 | 2026-06-07 | Vercel build + login UI |
 | 2026-06-07 | `AuthOnlySeeder` — DB sạch chỉ account |
+| 2026-06-08 | Rakuten AI search staging OK — IP Railway whitelist |
+| 2026-06-08 | Railway Variables: RAKUTEN_*, OPENAI, QUEUE_CONNECTION=sync |

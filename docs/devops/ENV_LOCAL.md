@@ -94,8 +94,14 @@ QUEUE_CONNECTION=sync
 CACHE_STORE=database
 SESSION_DRIVER=file
 
-# AI — để trống = mock
+# AI + Rakuten (docs/devops/rakuten-api-setup.md)
 OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+AI_SEARCH_LIMIT=15
+RAKUTEN_APPLICATION_ID=
+RAKUTEN_ACCESS_KEY=
+RAKUTEN_ORIGIN_URL=http://localhost:3000
+PRODUCT_MARKUP_PERCENT=30
 ```
 
 **MySQL (giống staging hơn):**

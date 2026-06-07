@@ -1,8 +1,30 @@
-# Rakuten Ichiba API — Cấu hình local
+# Rakuten Ichiba API — Cấu hình (Local + Staging)
 
-> Sau khi đăng ký app tại https://webservice.rakuten.co.jp/
+> **Cập nhật**: 2026-06-08 · Đã xác nhận OK trên staging Railway + Vercel  
+> Đăng ký app: https://webservice.rakuten.co.jp/
 
-## 1. Lấy key từ dashboard
+---
+
+## 1. Tổng quan
+
+Luồng **AI Center → Khám phá web**:
+
+```
+Browser (Vercel) → Railway API → Rakuten Ichiba API (ảnh + link thật)
+                              → OpenAI GPT (enrich: tên VN, category, cách dùng)
+```
+
+| Thành phần | Vai trò |
+|------------|---------|
+| **Rakuten API** | Tìm sản phẩm, giá JPY, ảnh, link `item.rakuten.co.jp` |
+| **OpenAI** | Bổ sung mô tả tiếng Việt — **không** tạo link/ảnh giả |
+| **Railway API** | Gọi Rakuten — cần whitelist **IP outbound Railway** |
+
+`RAKUTEN_ORIGIN_URL` đặt trên **backend API** (`project/api/.env` hoặc Railway Variables), **không** đặt trên Vercel.
+
+---
+
+## 2. Lấy key từ Rakuten Developers
 
 | Key | Vị trí |
 |-----|--------|
@@ -10,80 +32,161 @@
 | **Access Key** | App detail → Access Key (`pk_...`) |
 | **Affiliate ID** | Tùy chọn |
 
-## 2. Bắt buộc: Đăng ký IP + URL trên Rakuten
+---
 
-Rakuten API **2026** chỉ chấp nhận request từ IP và website đã đăng ký.
+## 3. Đăng ký trên Rakuten (bắt buộc)
 
-### Bước A — IP public
+Rakuten API **2026** chỉ chấp nhận request từ **IP** và **website** đã đăng ký.
 
-1. Mở https://webservice.rakuten.co.jp/ → đăng nhập → chọn app
-2. Tìm mục **許可IPアドレス** (Allowed IP addresses)
-3. Lấy IP public máy bạn:
+### 3.1 Website / Application URL
 
-```powershell
-(Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
-```
+Trong app settings trên https://webservice.rakuten.co.jp/:
 
-4. Dán IP vào danh sách → Lưu
+| Mục (tiếng Nhật) | Giá trị staging |
+|------------------|-----------------|
+| **Application URL** | `https://japan-product.vercel.app/` |
+| **許可されたWebサイト** (Allowed website) | `https://japan-product.vercel.app` |
 
-> Mỗi lần đổi mạng WiFi / 4G, IP có thể đổi → cần cập nhật lại.
-
-### Bước B — Website đã cho phép
-
-Trong app settings, mục **許可されたWebサイト** (Allowed website):
+Local dev thêm:
 
 ```
 http://localhost:3000
 ```
 
-(hoặc domain Vercel staging nếu test trên cloud)
+### 3.2 IP public (許可IPアドレス)
 
-## 3. Thêm vào `project/api/.env`
+**Staging Railway** — lấy IP outbound của container API:
 
-```env
-RAKUTEN_APPLICATION_ID=your_application_id
-RAKUTEN_ACCESS_KEY=your_access_key
-RAKUTEN_AFFILIATE_ID=
-RAKUTEN_ORIGIN_URL=http://localhost:3000
+```bash
+# Railway → service product → Shell
+curl -s https://api.ipify.org
 ```
 
-> **Không commit** `.env` lên Git.
+Copy IP → Rakuten Developers → **許可IPアドレス** → Thêm → Lưu.
 
-## 4. Restart API
+> IP Railway có thể **đổi** sau redeploy. Nếu lại lỗi M0206 → lấy IP mới và cập nhật Rakuten.  
+> Muốn IP cố định: Railway **Pro** → Static Outbound IP.
+
+**Local dev** — lấy IP máy bạn:
+
+```powershell
+(Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing).Content
+```
+
+> Mỗi lần đổi WiFi / 4G, IP local có thể đổi.
+
+---
+
+## 4. Biến môi trường
+
+### 4.1 Local — `project/api/.env`
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+AI_SEARCH_LIMIT=15
+
+RAKUTEN_APPLICATION_ID=your_application_id
+RAKUTEN_ACCESS_KEY=pk_...
+# RAKUTEN_AFFILIATE_ID=
+RAKUTEN_ORIGIN_URL=http://localhost:3000
+
+PRODUCT_MARKUP_PERCENT=30
+QUEUE_CONNECTION=sync
+```
+
+> **Không commit** `.env` lên Git. Tham chiếu: `project/api/.env.example`
+
+Restart API sau khi sửa:
 
 ```powershell
 cd project\api
 php artisan serve
 ```
 
-## 5. Test
+### 4.2 Staging — Railway Variables (RAW Editor)
 
-1. http://localhost:3000 → AI Center → **Khám phá web**
-2. Gõ `コラーゲン`
-3. Kết quả có:
-   - Ảnh sản phẩm
-   - Badge **Rakuten (giá thật)**
-   - Link `item.rakuten.co.jp` mở được
+Railway → service **`product`** (API Laravel) → **Variables** → tab **ENV** → dán thêm sau block DB:
 
-## 6. Luồng hiện tại
+```env
+APP_KEY="base64:..."   # Tạo LOCAL: php artisan key:generate --show (KHÔNG chạy trong Railway Shell — container không có .env)
 
+CACHE_STORE="database"
+QUEUE_CONNECTION="sync"
+SESSION_DRIVER="database"
+LOG_CHANNEL="stderr"
+
+SANCTUM_STATEFUL_DOMAINS="japan-product.vercel.app"
+
+OPENAI_API_KEY="sk-..."
+OPENAI_MODEL="gpt-4o-mini"
+OPENAI_EMBEDDING_MODEL="text-embedding-3-small"
+AI_SEARCH_LIMIT="15"
+
+RAKUTEN_APPLICATION_ID="..."
+RAKUTEN_ACCESS_KEY="pk_..."
+RAKUTEN_ORIGIN_URL="https://japan-product.vercel.app"
+PRODUCT_MARKUP_PERCENT="30"
 ```
-Rakuten API (ảnh + link thật)
-    ↓
-GPT enrichment (tên VN, category, cách dùng) — không tạo link giả
-```
 
-Nếu Rakuten lỗi IP → hiển thị **M0206**, **không** trả link/ảnh giả từ GPT.
+Copy `OPENAI_API_KEY`, `RAKUTEN_*` từ `project/api/.env` local.
 
-## 7. Lỗi thường gặp
+→ **Update Variables** → **Redeploy** service API.
 
-| Mã / lỗi | Nguyên nhân | Cách sửa |
-|----------|-------------|----------|
-| **M0206** / `CLIENT_IP_NOT_ALLOWED` | IP chưa đăng ký Rakuten | Thêm IP public vào app settings |
-| **M0207** | Origin/Referer sai | `RAKUTEN_ORIGIN_URL` = URL đã đăng ký |
-| Không có ảnh | Rakuten fail → GPT fallback cũ | Sửa IP → Rakuten trả ảnh thật |
-| Link sai / example | GPT đoán URL | Đã tắt — chỉ Rakuten có link |
+Template đầy đủ: [staging-env-railway.template.env](./staging-env-railway.template.env)
 
-## 8. Staging Railway
+---
 
-Thêm variables trên service `product` + **đăng ký IP outbound của Railway** (hoặc IP cố định proxy).
+## 5. Kiểm tra sau cấu hình
+
+### Staging
+
+1. https://japan-product.vercel.app/login → `admin` / `Admin@123`
+2. **AI Center** → tab **Khám phá web (Rakuten/Amazon)**
+3. Gõ từ khóa tiếng Nhật: `コラーゲン`, `オメガ3`, `ビタミンC`
+4. Đợi ~30–60 giây
+
+**Kết quả OK:**
+
+- Danh sách sản phẩm có **ảnh**
+- Badge **Rakuten (giá thật)**
+- Link `item.rakuten.co.jp` mở được
+- Giá ¥ hiển thị
+
+### Local
+
+1. http://localhost:3000 → AI Center → Khám phá web
+2. Cùng từ khóa như trên
+
+---
+
+## 6. Mã lỗi & xử lý
+
+| Mã UI | Rakuten / nguyên nhân | Cách sửa |
+|-------|----------------------|----------|
+| **M0206** | `CLIENT_IP_NOT_ALLOWED` — IP server chưa whitelist | Shell Railway: `curl api.ipify.org` → thêm IP vào Rakuten |
+| **M0207** | Origin/Referer sai | `RAKUTEN_ORIGIN_URL` khớp **許可されたWebサイト** |
+| **M0202** | Job AI quá thời gian | Kiểm tra `QUEUE_CONNECTION=sync`; đợi tối đa 90s |
+| **M0201** | Không có kết quả | Đổi từ khóa tiếng Nhật; kiểm tra key Rakuten |
+| Không ảnh / link giả | Rakuten fail, GPT fallback cũ | Đã tắt — chỉ Rakuten trả ảnh/link thật |
+
+---
+
+## 7. Checklist nhanh (staging đã chạy OK)
+
+- [x] Railway Variables: `RAKUTEN_*`, `OPENAI_API_KEY`, `QUEUE_CONNECTION=sync`
+- [x] Rakuten: URL `https://japan-product.vercel.app` đã đăng ký
+- [x] Rakuten: IP outbound Railway đã whitelist
+- [x] Redeploy API sau khi đổi Variables
+- [x] Test AI Center — có sản phẩm Rakuten + ảnh
+
+---
+
+## 8. File liên quan
+
+| File | Nội dung |
+|------|----------|
+| [ENV_STAGING.md](./ENV_STAGING.md) | Tổng hợp staging |
+| [staging-env-railway.template.env](./staging-env-railway.template.env) | Template copy Railway |
+| [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md) | OpenAI + queue |
+| `project/api/config/services.php` | Đọc `RAKUTEN_ORIGIN_URL` |

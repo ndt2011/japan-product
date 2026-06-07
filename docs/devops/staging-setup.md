@@ -24,6 +24,7 @@
 | 3 | `php artisan db:seed --force` | Railway Shell / CLI |
 | 4 | Deploy FE — Root `project/frontend`, `API_URL` | Vercel |
 | 5 | Login staging `admin` / `Admin@123` | Browser |
+| 6 | Cấu hình Rakuten AI + whitelist IP Railway | Railway Variables + Rakuten Developers |
 
 ---
 
@@ -35,8 +36,11 @@
 4. Variables: xem template [staging-env-railway.template.env](./staging-env-railway.template.env)
    - **Rakuten AI:** `RAKUTEN_APPLICATION_ID`, `RAKUTEN_ACCESS_KEY`, `RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app` (copy từ `project/api/.env` local)
    - Hướng dẫn: [rakuten-api-setup.md](./rakuten-api-setup.md)
-5. `APP_KEY`: `php artisan key:generate --show` (chạy local)
+5. `APP_KEY`: `php artisan key:generate --show` (**chạy trên máy local**, không Railway Shell)
 6. Health: `GET https://<api>/api/health`
+7. **Rakuten** (bước 6): xem [rakuten-api-setup.md](./rakuten-api-setup.md)
+   - Railway RAW Editor: `RAKUTEN_*`, `OPENAI_API_KEY`, `QUEUE_CONNECTION=sync`
+   - Rakuten Developers: whitelist IP (`curl api.ipify.org` trong Railway Shell)
 
 Start command (đã có trong `project/api/railway.toml`):
 
@@ -63,6 +67,7 @@ Template: [staging-env-vercel.template.env](./staging-env-vercel.template.env)
 | Health | `GET /api/health` |
 | Login API | `POST /api/auth/login` body `admin` / `Admin@123` |
 | Login UI | `https://<vercel>/login` |
+| AI Rakuten | `/ai-center` → Khám phá web → `コラーゲン` (có ảnh + badge Rakuten) |
 
 ---
 
