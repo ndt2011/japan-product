@@ -4,8 +4,10 @@ import {
   Badge,
   Button,
   Card,
+  EmptyState,
   Input,
   PageHeader,
+  SearchInput,
   Table,
   Td,
   Th,
@@ -13,18 +15,37 @@ import {
   Tr,
 } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
-import type { AdminUserItem, CompanyUserItem } from "@/types/api";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import type { AdminUserItem, BranchItem, CompanyUserItem } from "@/types/api";
+import Link from "next/link";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
-type UserRoleTab = "admin" | "company";
+type UserRoleTab = "admin" | "company" | "branch";
+
+function formatApiError(data: {
+  message?: string;
+  errors?: Record<string, string[]> | null;
+}): string {
+  if (data.errors) {
+    const first = Object.values(data.errors).flat()[0];
+    if (first) return first;
+  }
+  return translateMessage(data.message ?? "M0001");
+}
+
+function matchesSearch(text: string, q: string) {
+  return text.toLowerCase().includes(q.toLowerCase());
+}
 
 export function AdminScreen() {
   const [tab, setTab] = useState<"users" | "permissions">("users");
   const [roleTab, setRoleTab] = useState<UserRoleTab>("admin");
+  const [search, setSearch] = useState("");
   const [admins, setAdmins] = useState<AdminUserItem[]>([]);
   const [companies, setCompanies] = useState<CompanyUserItem[]>([]);
+  const [branches, setBranches] = useState<BranchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [adminForm, setAdminForm] = useState({
@@ -46,17 +67,25 @@ export function AdminScreen() {
     setLoading(true);
     setError("");
     try {
-      const [aRes, cRes] = await Promise.all([
+      const [aRes, cRes, bRes] = await Promise.all([
         fetch("/api/proxy/admin-users"),
         fetch("/api/proxy/company-users"),
+        fetch("/api/proxy/branches"),
       ]);
       const aData = await aRes.json();
       const cData = await cRes.json();
+      const bData = await bRes.json();
+
+      let err = "";
       if (aData.success && aData.data?.items) setAdmins(aData.data.items);
+      else if (!aData.success) err = formatApiError(aData);
+
       if (cData.success && cData.data?.items) setCompanies(cData.data.items);
-      if (!aData.success && !cData.success) {
-        setError(translateMessage(aData.message ?? "M0001"));
-      }
+      else if (!cData.success) err = err || formatApiError(cData);
+
+      if (bData.success && bData.data?.items) setBranches(bData.data.items);
+
+      if (err) setError(err);
     } catch {
       setError("API_OFFLINE");
     } finally {
@@ -68,10 +97,45 @@ export function AdminScreen() {
     if (tab === "users") loadUsers();
   }, [tab, loadUsers]);
 
+  const filteredAdmins = useMemo(() => {
+    const q = search.trim();
+    if (!q) return admins;
+    return admins.filter(
+      (u) =>
+        matchesSearch(u.login_id, q) ||
+        matchesSearch(u.full_name, q) ||
+        matchesSearch(u.email ?? "", q),
+    );
+  }, [admins, search]);
+
+  const filteredCompanies = useMemo(() => {
+    const q = search.trim();
+    if (!q) return companies;
+    return companies.filter(
+      (u) =>
+        matchesSearch(u.login_id, q) ||
+        matchesSearch(u.company_name, q) ||
+        matchesSearch(u.company_cd ?? "", q) ||
+        matchesSearch(u.contact_name ?? "", q),
+    );
+  }, [companies, search]);
+
+  const filteredBranches = useMemo(() => {
+    const q = search.trim();
+    if (!q) return branches;
+    return branches.filter(
+      (b) =>
+        matchesSearch(b.branch_cd, q) ||
+        matchesSearch(b.branch_name, q) ||
+        matchesSearch(b.province, q),
+    );
+  }, [branches, search]);
+
   async function handleCreateAdmin(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setSuccess("");
     try {
       const res = await fetch("/api/proxy/admin-users", {
         method: "POST",
@@ -80,9 +144,10 @@ export function AdminScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        setError(formatApiError(data));
         return;
       }
+      setSuccess(translateMessage("M0110"));
       setShowForm(false);
       setAdminForm({ login_id: "", password: "", full_name: "", email: "" });
       await loadUsers();
@@ -97,6 +162,7 @@ export function AdminScreen() {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setSuccess("");
     try {
       const res = await fetch("/api/proxy/company-users", {
         method: "POST",
@@ -105,9 +171,10 @@ export function AdminScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        setError(formatApiError(data));
         return;
       }
+      setSuccess(translateMessage("M0111"));
       setShowForm(false);
       setCompanyForm({
         login_id: "",
@@ -129,24 +196,37 @@ export function AdminScreen() {
     const res = await fetch(`/api/proxy/admin-users/${id}/toggle`, { method: "PUT" });
     const data = await res.json();
     if (data.success) await loadUsers();
+    else setError(formatApiError(data));
   }
 
   async function toggleCompany(id: number) {
     const res = await fetch(`/api/proxy/company-users/${id}/toggle`, { method: "PUT" });
     const data = await res.json();
     if (data.success) await loadUsers();
+    else setError(formatApiError(data));
   }
+
+  const listCount =
+    roleTab === "admin"
+      ? filteredAdmins.length
+      : roleTab === "company"
+        ? filteredCompanies.length
+        : filteredBranches.length;
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Quản Trị Hệ Thống"
-        subtitle="Tạo tài khoản Admin hoặc Công ty VN (đại lý)"
+        subtitle="Quản lý người dùng và phân quyền theo vai trò"
         actions={
-          tab === "users" ? (
-            <Button size="sm" onClick={() => setShowForm((v) => !v)}>
+          tab === "users" && roleTab !== "branch" ? (
+            <Button size="sm" onClick={() => { setShowForm((v) => !v); setSuccess(""); }}>
               {showForm ? "Đóng form" : "+ Thêm người dùng"}
             </Button>
+          ) : roleTab === "branch" ? (
+            <Link href="/admin/branches">
+              <Button size="sm">+ Tạo chi nhánh</Button>
+            </Link>
           ) : undefined
         }
       />
@@ -168,32 +248,56 @@ export function AdminScreen() {
 
       {tab === "users" && (
         <>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => { setRoleTab("admin"); setShowForm(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm ${
-                roleTab === "admin" ? "bg-brand/10 text-brand font-medium" : "text-text-muted"
-              }`}
-            >
-              Admin (JP)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRoleTab("company"); setShowForm(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm ${
-                roleTab === "company" ? "bg-brand/10 text-brand font-medium" : "text-text-muted"
-              }`}
-            >
-              Công ty VN / Đại lý
-            </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            {(
+              [
+                { id: "admin" as const, label: "Admin (JP)", icon: "🛡️" },
+                { id: "company" as const, label: "Công ty VN / Đại lý", icon: "🏪" },
+                { id: "branch" as const, label: "Chi nhánh", icon: "🏢" },
+              ] as const
+            ).map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => {
+                  setRoleTab(r.id);
+                  setShowForm(false);
+                  setSearch("");
+                  setSuccess("");
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm ${
+                  roleTab === r.id ? "bg-brand/10 text-brand font-medium" : "text-text-muted hover:text-text-body"
+                }`}
+              >
+                {r.icon} {r.label}
+              </button>
+            ))}
           </div>
+
+          <Card className="p-4">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder={
+                roleTab === "admin"
+                  ? "Tìm login, họ tên, email..."
+                  : roleTab === "company"
+                    ? "Tìm login, tên công ty, mã CT..."
+                    : "Tìm mã CN, tên chi nhánh, tỉnh..."
+              }
+            />
+            <p className="text-xs text-text-muted mt-2">
+              {loading ? "Đang tải..." : `${listCount} bản ghi`}
+              {roleTab === "branch" && " — nhân viên CN tạo trong từng chi nhánh"}
+            </p>
+          </Card>
 
           {showForm && roleTab === "admin" && (
             <Card>
+              <p className="text-sm font-medium text-text-primary mb-3">Tạo tài khoản Admin (JP)</p>
               <form onSubmit={handleCreateAdmin} className="grid gap-4 md:grid-cols-2">
                 <Input label="Login ID" value={adminForm.login_id} onChange={(e) => setAdminForm({ ...adminForm, login_id: e.target.value })} required />
-                <Input label="Mật khẩu" type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} required />
+                <Input label="Mật khẩu (tối thiểu 8 ký tự)" type="password" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} required minLength={8} />
                 <Input label="Họ tên" value={adminForm.full_name} onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })} required />
                 <Input label="Email" type="email" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
                 <div className="md:col-span-2">
@@ -205,9 +309,10 @@ export function AdminScreen() {
 
           {showForm && roleTab === "company" && (
             <Card>
+              <p className="text-sm font-medium text-text-primary mb-3">Tạo tài khoản Công ty VN (đại lý B2B)</p>
               <form onSubmit={handleCreateCompany} className="grid gap-4 md:grid-cols-2">
                 <Input label="Login ID" value={companyForm.login_id} onChange={(e) => setCompanyForm({ ...companyForm, login_id: e.target.value })} required />
-                <Input label="Mật khẩu" type="password" value={companyForm.password} onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })} required />
+                <Input label="Mật khẩu (tối thiểu 8 ký tự)" type="password" value={companyForm.password} onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })} required minLength={8} />
                 <Input label="Mã công ty" value={companyForm.company_cd} onChange={(e) => setCompanyForm({ ...companyForm, company_cd: e.target.value })} />
                 <Input label="Tên công ty" value={companyForm.company_name} onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })} required />
                 <Input label="Người liên hệ" value={companyForm.contact_name} onChange={(e) => setCompanyForm({ ...companyForm, contact_name: e.target.value })} />
@@ -219,70 +324,135 @@ export function AdminScreen() {
             </Card>
           )}
 
-          {error && <p className="text-sm text-red-600">{translateMessage(error)}</p>}
+          {error && (
+            <Card className="p-3 border-danger/30 bg-danger/5">
+              <p className="text-sm text-danger">{translateMessage(error) === error ? error : translateMessage(error)}</p>
+            </Card>
+          )}
+          {success && (
+            <Card className="p-3 border-green-200 bg-green-50">
+              <p className="text-sm text-green-700">{success}</p>
+            </Card>
+          )}
 
           <Card>
             {loading ? (
-              <p className="text-sm text-gray-500">Đang tải...</p>
+              <EmptyState message="Đang tải danh sách người dùng..." icon="⏳" />
             ) : roleTab === "admin" ? (
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Login</Th>
-                    <Th>Họ tên</Th>
-                    <Th>Email</Th>
-                    <Th>Trạng thái</Th>
-                    <Th />
-                  </Tr>
-                </Thead>
-                <tbody>
-                  {admins.map((u) => (
-                    <Tr key={u.id}>
-                      <Td>{u.login_id}</Td>
-                      <Td>{u.full_name}</Td>
-                      <Td>{u.email ?? "—"}</Td>
-                      <Td>
-                        <Badge variant={u.disabled_flag ? "danger" : "success"}>
-                          {u.disabled_flag ? "Tắt" : "Hoạt động"}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <Button variant="secondary" size="sm" onClick={() => toggleAdmin(u.id)}>
-                          {u.disabled_flag ? "Bật" : "Tắt"}
-                        </Button>
-                      </Td>
+              filteredAdmins.length === 0 ? (
+                <EmptyState
+                  message={search ? "Không tìm thấy admin phù hợp." : "Chưa có admin. Bấm + Thêm người dùng để tạo."}
+                  icon="👤"
+                />
+              ) : (
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Login</Th>
+                      <Th>Họ tên</Th>
+                      <Th>Email</Th>
+                      <Th>Vai trò</Th>
+                      <Th>Trạng thái</Th>
+                      <Th />
                     </Tr>
-                  ))}
-                </tbody>
-              </Table>
+                  </Thead>
+                  <tbody>
+                    {filteredAdmins.map((u) => (
+                      <Tr key={u.id}>
+                        <Td className="font-medium">{u.login_id}</Td>
+                        <Td>{u.full_name}</Td>
+                        <Td>{u.email ?? "—"}</Td>
+                        <Td><Badge variant="primary">Admin</Badge></Td>
+                        <Td>
+                          <Badge variant={u.disabled_flag ? "danger" : "success"}>
+                            {u.disabled_flag ? "Tắt" : "Hoạt động"}
+                          </Badge>
+                        </Td>
+                        <Td>
+                          <Button variant="secondary" size="sm" onClick={() => toggleAdmin(u.id)}>
+                            {u.disabled_flag ? "Bật" : "Tắt"}
+                          </Button>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )
+            ) : roleTab === "company" ? (
+              filteredCompanies.length === 0 ? (
+                <EmptyState
+                  message={search ? "Không tìm thấy công ty phù hợp." : "Chưa có công ty VN. Bấm + Thêm người dùng để tạo đại lý."}
+                  icon="🏪"
+                />
+              ) : (
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Login</Th>
+                      <Th>Mã CT</Th>
+                      <Th>Tên công ty</Th>
+                      <Th>Liên hệ</Th>
+                      <Th>Vai trò</Th>
+                      <Th>Trạng thái</Th>
+                      <Th />
+                    </Tr>
+                  </Thead>
+                  <tbody>
+                    {filteredCompanies.map((u) => (
+                      <Tr key={u.id}>
+                        <Td className="font-medium">{u.login_id}</Td>
+                        <Td>{u.company_cd ?? "—"}</Td>
+                        <Td>{u.company_name}</Td>
+                        <Td>{u.contact_name ?? "—"}</Td>
+                        <Td><Badge variant="warning">Công ty VN</Badge></Td>
+                        <Td>
+                          <Badge variant={u.disabled_flag ? "danger" : "success"}>
+                            {u.disabled_flag ? "Tắt" : "Hoạt động"}
+                          </Badge>
+                        </Td>
+                        <Td>
+                          <Button variant="secondary" size="sm" onClick={() => toggleCompany(u.id)}>
+                            {u.disabled_flag ? "Bật" : "Tắt"}
+                          </Button>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )
+            ) : filteredBranches.length === 0 ? (
+              <EmptyState
+                message={search ? "Không tìm thấy chi nhánh." : "Chưa có chi nhánh. Tạo chi nhánh trước, sau đó thêm manager/staff."}
+                icon="🏢"
+              />
             ) : (
               <Table>
                 <Thead>
                   <Tr>
-                    <Th>Login</Th>
-                    <Th>Mã CT</Th>
-                    <Th>Tên công ty</Th>
-                    <Th>Liên hệ</Th>
+                    <Th>Mã CN</Th>
+                    <Th>Tên chi nhánh</Th>
+                    <Th>Khu vực</Th>
+                    <Th>Nhân viên</Th>
                     <Th>Trạng thái</Th>
                     <Th />
                   </Tr>
                 </Thead>
                 <tbody>
-                  {companies.map((u) => (
-                    <Tr key={u.id}>
-                      <Td>{u.login_id}</Td>
-                      <Td>{u.company_cd ?? "—"}</Td>
-                      <Td>{u.company_name}</Td>
-                      <Td>{u.contact_name ?? "—"}</Td>
+                  {filteredBranches.map((b) => (
+                    <Tr key={b.id}>
+                      <Td className="font-medium">{b.branch_cd}</Td>
+                      <Td>{b.branch_name}</Td>
+                      <Td>{b.region} · {b.province}</Td>
+                      <Td>{b.users_count ?? 0}</Td>
                       <Td>
-                        <Badge variant={u.disabled_flag ? "danger" : "success"}>
-                          {u.disabled_flag ? "Tắt" : "Hoạt động"}
+                        <Badge variant={b.disabled_flag ? "danger" : "success"}>
+                          {b.disabled_flag ? "Tắt" : "Hoạt động"}
                         </Badge>
                       </Td>
                       <Td>
-                        <Button variant="secondary" size="sm" onClick={() => toggleCompany(u.id)}>
-                          {u.disabled_flag ? "Bật" : "Tắt"}
-                        </Button>
+                        <Link href={`/admin/branches/${b.id}/users`} className="text-brand text-sm">
+                          Quản lý NV →
+                        </Link>
                       </Td>
                     </Tr>
                   ))}
@@ -290,10 +460,6 @@ export function AdminScreen() {
               </Table>
             )}
           </Card>
-
-          <p className="text-xs text-text-muted">
-            User chi nhánh: tạo tại menu <strong>Chi Nhánh</strong> → Nhân viên. Menu Đại lý (`/agents`) chưa triển khai — dùng tab Công ty VN ở trên.
-          </p>
         </>
       )}
 

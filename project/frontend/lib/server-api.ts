@@ -21,7 +21,11 @@ export async function proxyToApi<T>(
   }
 
   try {
-    const result = await apiFetch<T>(path, options, token);
+    const raw = await apiFetch<T>(path, options, token);
+    const result =
+      raw.success === undefined && (raw as { errors?: unknown }).errors
+        ? ({ ...raw, success: false } as ApiResponse<T>)
+        : raw;
     const status = result.success ? 200 : 400;
 
     return { result, status };
