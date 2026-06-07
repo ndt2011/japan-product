@@ -26,6 +26,9 @@ fi
 echo "[start] env DB_CONNECTION=${DB_CONNECTION:-unset}"
 echo "[start] env DB_HOST=${DB_HOST:-unset}"
 echo "[start] env MYSQLHOST=${MYSQLHOST:-unset}"
+echo "[start] env MYSQL_URL=${MYSQL_URL:+set}"
+echo "[start] env keys DB/MYSQL:"
+printenv | grep -E '^(DB_|MYSQL)' | sed 's/\(PASSWORD\|PASS\)=.*/\1=***/' || true
 
 php artisan config:clear
 

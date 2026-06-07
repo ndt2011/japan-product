@@ -12,6 +12,36 @@ Biến trên MySQL chỉ dùng cho container MySQL, **không** tự sang `produc
 
 ---
 
+## Vẫn sqlite sau Redeploy? — Fix chắc chắn
+
+### Bước A — Xóa biến DB cũ trên `product`
+
+Variables → xóa hết: `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `DB_URL`
+
+### Bước B — Chỉ dùng 2 biến (copy giá trị THẬT từ MySQL)
+
+Trên service **MySQL** → Variables → bấm **Reveal** / copy:
+
+| Trên `product` | Giá trị |
+|----------------|---------|
+| `DB_CONNECTION` | `mysql` (gõ tay) |
+| `DB_URL` | dán **nguyên** giá trị `MYSQL_URL` từ MySQL |
+
+`MYSQL_URL` dạng: `mysql://root:xxx@mysql.railway.internal:3306/railway`
+
+**Không** dùng `${{MySQL.MYSQL_URL}}` gõ tay — phải **copy chuỗi thật** hoặc Add Reference đúng.
+
+### Bước C — Redeploy + kiểm tra health
+
+```json
+"mysql_env_keys": ["DB_CONNECTION", "DB_URL", ...],
+"db": "mysql"
+```
+
+Nếu `mysql_env_keys` **rỗng `[]`** → Railway không inject env vào container (liên hệ support hoặc tạo service mới).
+
+---
+
 ## Cách fix — Copy tay (5 phút)
 
 ### 1. Lấy giá trị từ MySQL
