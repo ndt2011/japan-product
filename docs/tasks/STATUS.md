@@ -12,7 +12,7 @@
 |--------|----------|---------|---------------|
 | **S1** Auth & RBAC | Login, Remember Me, RBAC | **~65%** | REQ-003 (schema RBAC), REQ-007 (M0104 lockout) |
 | **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
-| **UI shell** | 12 màn theo demothietke | **~70%** | Chờ docs SA cho 8 màn placeholder |
+| **UI shell** | 12 màn theo demothietke | **~80%** | StockIn/Inventory/Debts demo · còn Orders/AI/Reports |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
 | **S3–S7** AI, Order, Batch | Chưa bắt đầu API | **0%** | Phụ thuộc S1–S2 |
 
@@ -92,7 +92,7 @@
 
 | ID | Việc | Ghi chú |
 |----|------|---------|
-| **DEV-16** | Port đầy đủ `StockIn`, `Inventory`, `Debts` từ demothietke | Placeholder → UI demo |
+| ~~DEV-16~~ | Port đầy đủ `StockIn`, `Inventory`, `Debts` từ demothietke | ✅ UI demo |
 | **DEV-17** | `next-intl` VI/JP (FE i18n HANDOFF §5) | P1 backlog |
 | **DEV-18** | Kết nối `/ai-center` API khi BE-016 xong | Blocked S3 |
 
