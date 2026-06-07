@@ -1,6 +1,6 @@
 # Tài liệu tổng quan hệ thống — TT Product Japan
 
-> **Cập nhật**: 2026-06-07 | **Trạng thái**: Đang phát triển (Phase 1)
+> **Cập nhật**: 2026-06-08 | **Trạng thái**: Đang phát triển (Phase 1 — staging live)
 
 ---
 
@@ -14,6 +14,7 @@
 |---------|-------|---------|
 | **Admin (JP)** | Quản lý toàn hệ thống, xác nhận đơn, xử lý thông quan | `admins` |
 | **Công ty VN** | Đặt hàng sản phẩm Nhật, theo dõi đơn hàng | `companies_vn` |
+| **Branch Manager / Staff** | Chi nhánh độc lập — đặt hàng, xem catalog | `branch_users` → `branches` |
 
 ### Tech Stack
 
@@ -62,11 +63,9 @@
 | AI Duyệt | `/admin/ai-candidates` | amendment | ✅ BE+FE |
 | Đơn hàng | `/orders` | `3-001` (chờ xlsx) | ✅ BE+FE |
 | Chuyến hàng | `/shipments` | `4-001` (chờ xlsx) | ✅ BE+FE |
-| Kho hàng | `/warehouse` | amendment ✅ | 📋 Code sau RBAC |
-| Nhập kho | `/warehouse/stock-in` | amendment ✅ | 📋 |
-| Xuất kho | `/warehouse/stock-out` | amendment ✅ | 📋 |
-| Kiểm kê | `/warehouse/inventory-check` | amendment ✅ | 📋 |
-| Báo cáo | `/reports` | amendment ✅ | 📋 Code sau kho |
+| Kho / Nhập / Xuất / Kiểm kê | `/stock-in` … `/inventory` | `warehouse-operations.md` | ✅ BE+FE (admin) |
+| Báo cáo | `/reports` | `reports-module.md` | ✅ BE+FE |
+| Chi nhánh | `/admin/branches`, `/my-branch` | `branch-system.md` | 🔄 Phase 1 BE+FE |
 | Nhà cung cấp | `/suppliers` | — | 🔄 UI demo |
 | Quản trị | `/admin` | `5-001` | 🔄 UI demo |
 
@@ -225,6 +224,9 @@ Mọi bảng đều có các cột audit:
 | `rbac-ui-permissions.md` | 2026-06-07 | UI permission matrix + FE hooks + sidebar | ✅ |
 | `warehouse-operations.md` | 2026-06-07 | Nhập/Xuất/Kiểm kê kho + `stock_movements` + InventoryService | ✅ |
 | `reports-module.md` | 2026-06-07 | Báo cáo tồn kho / đơn hàng / xuất nhập / doanh thu | ✅ |
+| `branch-system.md` | 2026-06-07 | Chi nhánh + BranchUser auth + OrderController branch_id | ✅ |
+| `upgrade-roadmap.md` | 2026-06-07 | Lộ trình 3 tier: Invoice, Dashboard, Auto Price, Notifications… | 📋 Kế hoạch |
+| `ui-improvements.md` | 2026-06-07 | Phân tích UI cần sửa — 13 điểm, từng màn hình cụ thể | 📋 Kế hoạch |
 
 ---
 
@@ -305,9 +307,18 @@ Verify nhanh bằng Tinker (xem cuối `rbac-req003.md`).
 3. **FE RBAC** — sidebar filter + ProtectedRoute + usePermission hook  
    Docs: `amendments/rbac-ui-permissions.md`
 
-4. **Chưa bắt đầu**:
+4. **UI sửa gấp** (đợt 1 ngay sau RBAC):
+   - Sidebar filter theo role (`amendments/ui-improvements.md` → UI-008)
+   - Product Form thêm `name_vi` + image upload (UI-004)
+   - Product List hiển thị ảnh + filter (UI-005)
+
+5. **Phase 2 nâng cấp** (xem chi tiết `amendments/upgrade-roadmap.md`):
+   - T1-001 Invoice & Payment
+   - T1-002 Dashboard Analytics thật
+   - T1-003 Auto Price Calculation
+
+6. **Chưa bắt đầu**:
    - Scraper Rakuten/Amazon thật (luồng A production)
-   - Dashboard stats API
    - Suppliers CRUD API hoàn chỉnh
    - SA màn hình xlsx: `2-101`, `3-001`, `4-001`, `5-001`
 

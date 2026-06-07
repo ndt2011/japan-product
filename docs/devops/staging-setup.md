@@ -62,14 +62,28 @@ Template: [staging-env-vercel.template.env](./staging-env-vercel.template.env)
 
 ---
 
-## Sau deploy
+## Sau deploy (commit `ecba6d1` trở lên)
+
+**Railway Shell** — chạy sau khi deploy API xong:
+
+```bash
+php artisan migrate:status          # tất cả Ran (không migrate thủ công nếu đã auto)
+php artisan db:seed --class=BranchSeeder   # user chi nhánh demo
+php artisan products:generate-vi
+php artisan products:embed --force
+```
 
 | Kiểm tra | Lệnh / URL |
 |----------|------------|
-| Health | `GET /api/health` |
-| Login API | `POST /api/auth/login` body `admin` / `Admin@123` |
+| Health + R2 | `GET /api/health` → `r2_configured: true`, `product_image_disk: "r2"` |
+| Login API | `POST /api/auth/login` — `admin` / `Admin@123` |
+| Branch login | `hn_manager` / `Manager@123` |
 | Login UI | `https://<vercel>/login` |
-| AI Rakuten | `/ai-center` → Khám phá web → `コラーゲン` (có ảnh + badge Rakuten) |
+| Chi nhánh Admin | `/admin/branches` |
+| AI Rakuten | `/ai-center` → Khám phá web → `コラーゲン` |
+| AI catalog | tab Tìm catalog nội bộ (sau embed) |
+
+> Lỗi `stock_movements already exists` khi migrate thủ công = bình thường — `start.sh` đã chạy migrate trên deploy.
 
 ---
 

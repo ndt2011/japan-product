@@ -1,6 +1,6 @@
 # Amendment — Hệ thống Chi nhánh (Branch System)
 
-> **Ngày**: 2026-06-07 | **Trạng thái**: Thiết kế mới — chờ SA chính thức  
+> **Ngày**: 2026-06-07 | **Cập nhật**: 2026-06-08 | **Trạng thái**: Phase 1 triển khai (commit `ecba6d1`)  
 > **Phạm vi**: DB mới + RBAC mới + API mới + Admin dashboard
 
 ---
@@ -644,30 +644,30 @@ if ($user->user_type === 'admin') {
 
 ### Backend
 ```
-[ ] Migration branches
-[ ] Migration branch_users
-[ ] Migration orders: thêm branch_id
-[ ] Model Branch, BranchUser (HasApiTokens + getUserTypeAttribute)
-[ ] config/auth.php: thêm provider branch_users
-[ ] AuthService: thêm check branch_users (thứ 3, sau admin và company)
-[ ] RoleMiddleware: thêm wildcard 'branch'
-[ ] BranchController (Admin CRUD)
-[ ] BranchUserManagementController (Admin + Manager tạo user)
-[ ] ProductController::branchStats (Admin xem SP theo chi nhánh)
-[ ] OrderController::store: tự set branch_id nếu user là branch
-[ ] OrderController::index: filter theo branch_id
-[ ] Verify tinker: tạo branch → tạo branch_user → login → user_type đúng
+[x] Migration branches
+[x] Migration branch_users
+[x] Migration orders: thêm branch_id + company_vn_id nullable
+[x] Model Branch, BranchUser (HasApiTokens + getUserTypeAttribute)
+[ ] config/auth.php: thêm provider branch_users (không bắt buộc — Sanctum tokenable_type)
+[x] AuthService: thêm check branch_users (thứ 3, sau admin và company)
+[x] RoleMiddleware: thêm wildcard 'branch'
+[x] BranchController (Admin CRUD + myBranch)
+[x] BranchUserManagementController (Admin + Manager tạo user)
+[x] ProductController::branchStats (Admin xem SP theo chi nhánh) — API ✅, FE tab ⏳
+[x] OrderController::store: tự set branch_id nếu user là branch
+[x] OrderController::index: filter theo branch_id (OrderService)
+[x] BranchTest + BranchSeeder
 ```
 
 ### Frontend
 ```
-[ ] Thêm menu "Chi nhánh" vào Admin sidebar
-[ ] Trang /admin/branches: list + tạo + sửa chi nhánh
-[ ] Trang /admin/branches/{id}/users: quản lý user chi nhánh
-[ ] Trang /my-branch: Branch user thấy thông tin chi nhánh mình
-[ ] Sidebar branch_manager: ẩn menu Quản trị toàn hệ thống, hiện "Nhân viên chi nhánh"
+[x] Thêm menu "Chi nhánh" vào Admin sidebar
+[x] Trang /admin/branches: list + tạo chi nhánh
+[x] Trang /admin/branches/{id}/users: quản lý user chi nhánh
+[x] Trang /my-branch: Branch user thấy thông tin chi nhánh mình
+[x] Sidebar branch_manager: ẩn menu Quản trị toàn hệ thống; link quản lý NV từ /my-branch
 [ ] Trang product detail (Admin): thêm tab "Theo chi nhánh" hiển thị branchStats
-[ ] Filter đơn hàng: branch user tự động lọc theo chi nhánh
+[x] Filter đơn hàng: branch user tự động lọc theo chi nhánh (BE)
 ```
 
 ### Test Tinker
