@@ -62,6 +62,11 @@
 | AI Duyệt | `/admin/ai-candidates` | amendment | ✅ BE+FE |
 | Đơn hàng | `/orders` | `3-001` (chờ xlsx) | ✅ BE+FE |
 | Chuyến hàng | `/shipments` | `4-001` (chờ xlsx) | ✅ BE+FE |
+| Kho hàng | `/warehouse` | amendment ✅ | 📋 Code sau RBAC |
+| Nhập kho | `/warehouse/stock-in` | amendment ✅ | 📋 |
+| Xuất kho | `/warehouse/stock-out` | amendment ✅ | 📋 |
+| Kiểm kê | `/warehouse/inventory-check` | amendment ✅ | 📋 |
+| Báo cáo | `/reports` | amendment ✅ | 📋 Code sau kho |
 | Nhà cung cấp | `/suppliers` | — | 🔄 UI demo |
 | Quản trị | `/admin` | `5-001` | 🔄 UI demo |
 
@@ -155,9 +160,10 @@ Luồng B (chưa code) — Tìm trong catalog có sẵn
 | 16 | `ai_product_candidates` | Sản phẩm chờ duyệt từ AI ✅ |
 | 17 | `shipment_batches` | Chuyến hàng JP→VN ✅ |
 | 18 | `batch_order_items` | Đơn trong chuyến ✅ |
+| 19 | `stock_movements` | Lịch sử nhập/xuất/kiểm kê kho 📋 |
 | — | `products.embedding` | Vector semantic search (luồng B) 📋 |
 
-> Amendments: `product_images`, `ai_*`, `shipment_*`, `orders.status` — chờ sync `03_Thiết_kế_CSDL.xlsx`
+> Amendments: `product_images`, `ai_*`, `shipment_*`, `orders.status`, `stock_movements` — chờ sync `03_Thiết_kế_CSDL.xlsx`
 
 ### Quan hệ chính giữa các bảng
 
@@ -215,7 +221,10 @@ Mọi bảng đều có các cột audit:
 | `ai_search-tables.md` | 2026-06-07 | `ai_search_sessions`, `ai_product_candidates` | ✅ Luồng A |
 | `orders-status.md` | 2026-06-07 | `orders.status` varchar workflow | ✅ |
 | `shipment-batches-tables.md` | 2026-06-07 | `shipment_batches`, `batch_order_items` | ✅ |
-| `rbac-req003.md` | 2026-06-07 | RBAC tạm + permission matrix | ⏸ Chờ SA |
+| `rbac-req003.md` | 2026-06-07 | RBAC fix — model, controller, routes | ⏸ Chờ SA |
+| `rbac-ui-permissions.md` | 2026-06-07 | UI permission matrix + FE hooks + sidebar | ✅ |
+| `warehouse-operations.md` | 2026-06-07 | Nhập/Xuất/Kiểm kê kho + `stock_movements` + InventoryService | ✅ |
+| `reports-module.md` | 2026-06-07 | Báo cáo tồn kho / đơn hàng / xuất nhập / doanh thu | ✅ |
 
 ---
 
@@ -261,29 +270,57 @@ Mọi bảng đều có các cột audit:
 - FE: 13+ routes (thêm `/shipments`, `/admin/ai-candidates`)
 - PHPUnit **33 tests** pass · CI GitHub Actions
 
-### 🔄 Đang làm / tiếp theo
+### 🔴 Đang fix — Ưu tiên cao nhất
+
+**S1 RBAC** — Tạo user / phân quyền không hoạt động  
+Root cause + fix đầy đủ: **`amendments/rbac-req003.md`**
+
+3 điểm phải fix đúng thứ tự:
+1. Model `Admin` + `CompanyVn` thêm `HasApiTokens` + accessor `getUserTypeAttribute()`
+2. Password tạo user **dùng `Hash::make()`** — plain text thì không login được
+3. Routes bọc đúng `role:admin` / `role:company` middleware
+
+Verify nhanh bằng Tinker (xem cuối `rbac-req003.md`).
+
+---
+
+### 🔄 Trạng thái các ticket
 
 | Ticket | Mô tả | Trạng thái |
 |--------|-------|-----------|
-| **BE-016b** | `POST /ai/product-search` embedding (luồng B) | 📋 Có guide |
-| **BE-021** | Email đơn mới / confirm → `mail_histories` | ✅ |
-| **S1 RBAC** | Permission matrix | ⏸ REQ-003 |
-| **DevOps** | Railway + Vercel staging | 📋 Cuối |
+| **BE-021** | Email đơn mới / confirm → `mail_histories` | ✅ Done |
+| **DevOps** | Railway (BE) + Vercel (FE) | ✅ Done |
+| **BE-016b** | AI product-search embedding (luồng B) | ✅ Done (fallback keyword nếu no key) |
+| **S1 RBAC** | Tạo user + phân quyền Admin/Company | 🔴 Đang fix |
+| **QA** | Test cases Orders + Batch | 📋 Sau khi RBAC xong |
 
-### 📋 Chưa bắt đầu
-- Scraper Rakuten/Amazon thật (luồng A production)
-- Dashboard / Reports / Suppliers API
-- SA màn hình xlsx: `2-101`, `3-001`, `4-001`, `5-001`
+### 📋 Ưu tiên tiếp theo (sau RBAC)
 
-### 📁 Tài liệu bổ sung mới
+1. **Kho hàng** — migration `stock_movements` + WarehouseController + InventoryService + InventoryController  
+   Docs: `amendments/warehouse-operations.md`
+
+2. **Báo cáo** — ReportController (4 endpoints)  
+   Docs: `amendments/reports-module.md`
+
+3. **FE RBAC** — sidebar filter + ProtectedRoute + usePermission hook  
+   Docs: `amendments/rbac-ui-permissions.md`
+
+4. **Chưa bắt đầu**:
+   - Scraper Rakuten/Amazon thật (luồng A production)
+   - Dashboard stats API
+   - Suppliers CRUD API hoàn chỉnh
+   - SA màn hình xlsx: `2-101`, `3-001`, `4-001`, `5-001`
+
+### 📁 Tài liệu đầy đủ
+
 | File | Nội dung |
 |------|----------|
-| `amendments/rbac-req003.md` | RBAC tạm thời chờ SA |
-| `qa/QA_Orders_Batch.md` | Test cases Orders + Shipment Batch |
-| `devops/deploy_guide.md` | Deploy Railway + Vercel |
+| `amendments/rbac-req003.md` | **Fix RBAC** — model, controller, routes, tinker test |
+| `qa/QA_Orders_Batch.md` | 19 test cases Orders + Shipment Batch |
+| `devops/deploy_guide.md` | Deploy Railway + Vercel + GitHub Actions |
 | `migrations_guide.md` | 8 migration files + thứ tự chạy |
-| `AI_Search_Implementation.md` | Luồng B — embedding search (chưa code) |
-| `../README.md` | Mục lục toàn bộ docs |
+| `AI_Search_Implementation.md` | Code Laravel AI Search (Luồng B) |
+| `AI_Setup_Guide.md` | Cấu hình .env local + production |
 
 ---
 

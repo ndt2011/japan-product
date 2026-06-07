@@ -152,13 +152,23 @@ curl -s https://api.ipify.org
 
 ### 4.3 Kiểm tra health
 
-```json
+```bash
+# Cơ bản
 GET /api/health
+
+# Lấy IP outbound cho Rakuten whitelist
+GET /api/health?ip=1
+```
+
+```json
 {
-  "env": "staging",
+  "status": "ok",
   "db": "mysql",
-  "db_host_set": true,
-  "db_connection_env": "mysql"
+  "rakuten_configured": true,
+  "openai_configured": true,
+  "queue_connection": "sync",
+  "ai_search_result_limit": 10,
+  "outbound_ip": "34.xxx.xxx.xxx"
 }
 ```
 

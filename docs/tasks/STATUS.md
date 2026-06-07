@@ -1,155 +1,93 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-07  
+> **Cập nhật**: 2026-06-08  
 > **Repo**: https://github.com/ndt2011/japan-product  
-> **Nguồn**: Đối chiếu HANDOFF + code thực tế + `docs/communication/request.md`
+> **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app
 
 ---
 
 ## Tóm tắt nhanh
 
-| Sprint | Mục tiêu | Tiến độ | Blocker chính |
-|--------|----------|---------|---------------|
-| **S1** Auth & RBAC | Login, Remember Me, RBAC | **~65%** | REQ-003 (schema RBAC), REQ-007 (M0104 lockout) |
-| **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
-| **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory/Debts/Reports demo |
-| **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
-| **S3** AI Search | Luồng A + B (API + FE tab catalog) | **~90%** | Scraper Rakuten thật chờ production |
-| **S4** Đơn hàng | CRUD + confirm + email | **~85%** | Resend/SMTP production |
-| **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
+| Sprint | Mục tiêu | Tiến độ | Ghi chú |
+|--------|----------|---------|---------|
+| **S1** Auth & RBAC | Login, Remember Me, RBAC | **~65%** | REQ-003 RBAC schema |
+| **S2** Sản phẩm | CRUD + ảnh | **~85%** | R2 staging chưa deploy |
+| **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory demo |
+| **DevOps** | Railway + Vercel staging | **~80%** | ✅ Login + AI Rakuten OK |
+| **S3** AI Search | Luồng A Rakuten + B catalog | **~95%** | Amazon JP chưa có |
+| **S4** Đơn hàng | CRUD + confirm + email | **~85%** | Resend production |
+| **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch chưa có |
 | **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
 
 ---
 
-## ✅ Đã xong (code + test)
+## ✅ Đã xong (gần đây)
 
-### Backend (`project/api`)
-- Laravel 11 + Sanctum + Repository/Service pattern
-- 16+ migrations (admins, products, ai_*, orders, shipment_batches, …)
-- Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
-- Products: CRUD + images + master data
-- **AI Search**: luồng A `/ai/search` + duyệt; luồng B `POST /ai/product-search` + `products:embed`
-- Orders: CRUD + submit/confirm/cancel + inventory reserve
-- Shipments: gom đơn CONFIRMED, status flow đến DELIVERED
-- PHPUnit: **39 tests pass** (auth, products, images, AI A+B, orders+email, shipments, health)
+### AI Rakuten (2026-06-08)
+- `RakutenIchibaSearchService` — Item Search API, ảnh + link thật
+- `AiProductEnrichmentService` — GPT enrich (tên VN, category, cách dùng)
+- `ProductPricingService` — VND = JPY × tỷ giá × 1.30
+- Staging: Railway env + Rakuten IP whitelist → **tìm kiếm OK**
+- Timeout fix: job afterResponse, poll 90s, `QUEUE_CONNECTION=sync`
+- `GET /api/health?ip=1` — lấy outbound IP cho Rakuten whitelist
 
-### Frontend (`project/frontend`)
-- Next.js 14 + AppShell SupplyFlow (13+ route)
-- Login + Remember Me + httpOnly cookie
-- API thật: `/products`, `/ai-center` (web + catalog tab), `/admin/ai-candidates`, `/orders`, `/shipments`
-- Demo UI: stock-in, inventory, debts, reports, suppliers
-- Build production OK
+### Backend
+- PHPUnit: **45 tests** (auth, products, AI, Rakuten, orders, shipments, health)
+- Xóa mock catalog / MasterDataSeeder — dữ liệu thật qua API/UI
 
-### DevOps
-- `.github/workflows/ci.yml` — test API + build frontend
-- Git repo + push `main`
+### DevOps docs
+- [rakuten-api-setup.md](../devops/rakuten-api-setup.md) — local + staging đầy đủ
+- [ENV_STAGING.md](../devops/ENV_STAGING.md), [STAGING_DEPLOY_MEMO.md](../devops/STAGING_DEPLOY_MEMO.md)
 
-### Docs PM (local, chưa push hết)
-- `docs/pm/roadmap.md`, `sprint-planning.md`, `backlog.md`, `milestones.md`
+### Frontend
+- `/ai-center` — 2 tab (web Rakuten + catalog)
+- `/admin/ai-candidates` — duyệt + pricing preview
 
 ---
 
-## 🔴 Chờ SA/PM (không code được)
+## 🔴 Chờ SA/PM
 
-| REQ | Nội dung | Ảnh hưởng task |
-|-----|----------|----------------|
-| **REQ-003** | Schema RBAC: `users`, `roles`, `permissions`… | BE-002, BE-003, BE-007, BE-008, FE-004 menu, FE-005, FE-016 |
-| **REQ-007** | Mã lockout: M0103 (success) vs lockout conflict | BE-006, TC-AUTH-006 |
-| **REQ-005** | Sheet xlsx chưa sync amendments | `ai_*`, `shipment_*`, `product_images` đã code |
-| **REQ-002** | `04_API_Contract.xlsx` chính thức | Có `04_API_Contract.md` đủ module (tạm) |
-| **REQ-008** | Đồng bộ `login_id` vs `email` trong tasks/spec | Đã chọn `login_id` — SA cập nhật tasks |
+| REQ | Nội dung |
+|-----|----------|
+| **REQ-003** | Schema RBAC |
+| **REQ-007** | M0104 lockout |
+| **REQ-002** | API Contract xlsx chính thức |
 
 ---
 
-## 📋 Việc DEV làm tiếp (không cần chờ SA)
+## 📋 Việc DEV tiếp theo
 
-### Ưu tiên P0 — Sprint 1 hoàn thiện phần không blocked
-
-| ID | Việc | Role | Estimate |
-|----|------|------|----------|
-| ~~DEV-01~~ | `GET /health` endpoint | Backend | ✅ |
-| ~~DEV-02~~ | Commit + push | Dev | ✅ (mỗi milestone) |
-| ~~DEV-03~~ | Zustand `useAuthStore` + AuthProvider | Frontend | ✅ |
-| ~~DEV-04~~ | Middleware `auth_expires_at` + redirect | Frontend | ✅ |
-| ~~DEV-05~~ | QA guide Bruno auth tests | QA | ✅ `docs/qa/bruno-auth-collection.md` |
-| ~~DEV-06~~ | PHPUnit test logout revoke token | Backend | ✅ |
-
-### Ưu tiên P0 — Sprint 2 (song song khi chờ RBAC)
-
-| ID | Việc | Role | Estimate |
-|----|------|------|----------|
-| ~~DEV-07~~ | Migration `product_images` + amendment | Backend | ✅ |
-| ~~DEV-08~~ | `GET /products` phân trang + filter (API + FE) | Full-stack | ✅ |
-| ~~DEV-09~~ | FE `/products/new`, `/products/[id]/edit` | Frontend | ✅ |
-| ~~DEV-10~~ | FE `/products/[id]` chi tiết + xóa mềm | Frontend | ✅ |
-| ~~DEV-11~~ | Soft delete products (API có sẵn) | Backend | ✅ |
-| ~~DEV-19~~ | API `product_images` + upload (public/R2) | Backend | ✅ |
-| ~~DEV-20~~ | FE drag-drop upload ảnh sản phẩm | Frontend | ✅ |
-| ~~DEV-21~~ | Sprint 3 AI: migrations + API + job + tests | Backend | ✅ |
-| ~~DEV-22~~ | FE `/ai-center` + `/admin/ai-candidates` | Frontend | ✅ |
-| ~~DEV-23~~ | Sprint 4 Orders API + inventory reserve | Backend | ✅ |
-| ~~DEV-24~~ | FE `/orders`, `/orders/new`, `/orders/[id]` | Frontend | ✅ |
-| ~~DEV-25~~ | Sprint 5 Shipment batches API + tests | Backend | ✅ |
-| ~~DEV-26~~ | FE `/shipments`, `/shipments/new`, `/shipments/[id]` | Frontend | ✅ |
-
-### Ưu tiên P1 — DevOps (sau khi xong S1–S4)
-
-| ID | Việc | Role | Estimate |
-|----|------|------|----------|
-| **DEV-12** | Railway staging — **[STAGING_DEPLOY_MEMO.md](../devops/STAGING_DEPLOY_MEMO.md)** Bước 1–3 | DevOps | 0.5 ngày |
-| **DEV-13** | Vercel staging — memo **Bước 4–5** + `vercel.json` | DevOps | 0.5 ngày |
-| **DEV-14** | `deploy.yml` — deploy sau CI pass (optional staging) | DevOps | 1 ngày |
-| **DEV-15** | GitHub branch protection `main` | DevOps | 0.5h |
-
-### Ưu tiên P2 — UI (chờ docs SA)
+### P0 — Production ổn định Rakuten IP
 
 | ID | Việc | Ghi chú |
 |----|------|---------|
-| ~~DEV-16~~ | Port đầy đủ `StockIn`, `Inventory`, `Debts` từ demothietke | ✅ UI demo |
-| **DEV-17** | `next-intl` VI/JP (FE i18n HANDOFF §5) | P1 backlog |
-| ~~DEV-18~~ | Kết nối `/ai-center` API | Frontend | ✅ |
+| **DEV-27** | Railway Pro Static IP hoặc VPS ConoHa | Tránh M0206 sau redeploy |
+| **DEV-28** | Amazon JP PA-API integration | Chưa có — cần Associate account |
+
+### P1 — DevOps
+
+| ID | Việc | Trạng thái |
+|----|------|------------|
+| ~~DEV-12~~ | Railway staging | ✅ |
+| ~~DEV-13~~ | Vercel staging | ✅ |
+| **DEV-14** | Auto-deploy CI | 📋 |
+| **DEV-15** | Branch protection | 📋 |
+
+### P1 — UI thật (thay demo)
+
+| ID | Việc |
+|----|------|
+| **DEV-29** | Inventory / StockIn kết nối API thật |
+| **DEV-17** | next-intl VI/JP |
 
 ---
 
-## 📋 Việc SA/PM cần làm
-
-1. **Bổ sung sheet RBAC** vào `03_Thiết_kế_CSDL.xlsx` → unblock Sprint 1 RBAC
-2. **Chốt M0104** (hoặc mã khác) cho account lockout → cập nhật `06_Hằng_số_thông_báo.xlsx` + `test-cases.md`
-3. **Upload `04_API_Contract.xlsx`** đầy đủ module (AI, Order, Batch)
-4. **Sheet `product_images`** + xác nhận R2 bucket config
-5. **Đồng bộ** `backend-tasks` BE-004: `login_id` thay `email`
-6. **Màn hình SA** cho: `2-101` AI, `3-001` Order, stock modules (hiện dùng demothietke tạm)
-
----
-
-## Thứ tự đề xuất cho Developer
-
-```
-Tuần này (không blocked):
-  DEV-02 → DEV-06 → DEV-03 → DEV-08 → DEV-09
-
-Song song DevOps:
-  DEV-12 → DEV-13
-
-Khi SA trả lời REQ-003:
-  BE-002 → BE-003 → BE-007 → BE-008 → FE-004 (menu theo role)
-
-Khi SA trả lời REQ-007:
-  BE-006 (lockout Redis + locked_until)
-```
-
----
-
-## Liên kết tài liệu
+## Liên kết
 
 | File | Mục đích |
 |------|----------|
-| [backend-tasks.md](./backend-tasks.md) | Chi tiết task BE + trạng thái |
-| [frontend-tasks.md](./frontend-tasks.md) | Chi tiết task FE + trạng thái |
-| [qa-tasks.md](./qa-tasks.md) | Chi tiết task QA |
-| [devops-tasks.md](./devops-tasks.md) | Chi tiết task DevOps |
-| [../communication/request.md](../communication/request.md) | Blockers & yêu cầu SA |
-| [../sa/design-source-demothietke.md](../sa/design-source-demothietke.md) | Mapping UI prototype |
-| [../sa/AI_Search_Implementation.md](../sa/AI_Search_Implementation.md) | Luồng B embedding (chưa code) |
-| [../sa/amendments/ai_search-tables.md](../sa/amendments/ai_search-tables.md) | Schema AI luồng A |
-| [../README.md](../README.md) | Mục lục cấu trúc docs |
+| [backend-tasks.md](./backend-tasks.md) | Task BE |
+| [devops-tasks.md](./devops-tasks.md) | Task DevOps |
+| [../devops/rakuten-api-setup.md](../devops/rakuten-api-setup.md) | Rakuten + IP + quota |
+| [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md) | Cấu hình AI |
+| [../devops/ENV_STAGING.md](../devops/ENV_STAGING.md) | Staging tổng hợp |

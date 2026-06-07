@@ -55,17 +55,25 @@ http://localhost:3000
 
 ### 3.2 IP public (許可IPアドレス)
 
-**Staging Railway** — lấy IP outbound của container API:
+**Staging Railway** — lấy IP outbound:
+
+**Cách 1 (khuyến nghị):**
+
+```
+GET https://product-production-7e4e.up.railway.app/api/health?ip=1
+→ data.outbound_ip
+```
+
+**Cách 2 — Railway Shell:**
 
 ```bash
-# Railway → service product → Shell
 curl -s https://api.ipify.org
 ```
 
 Copy IP → Rakuten Developers → **許可IPアドレス** → Thêm → Lưu.
 
-> IP Railway có thể **đổi** sau redeploy. Nếu lại lỗi M0206 → lấy IP mới và cập nhật Rakuten.  
-> Muốn IP cố định: Railway **Pro** → Static Outbound IP.
+> **Tìm kiếm nhiều lần không đổi IP** — chỉ **redeploy/restart** mới có thể đổi (→ M0206).  
+> Muốn IP cố định: Railway **Pro** Static Outbound IP hoặc VPS production.
 
 **Local dev** — lấy IP máy bạn:
 
@@ -182,7 +190,19 @@ Template đầy đủ: [staging-env-railway.template.env](./staging-env-railway.
 
 ---
 
-## 8. File liên quan
+## 8. Hạn mức tìm kiếm (quota)
+
+| Lớp | Giới hạn | Reset |
+|-----|----------|-------|
+| **App** | Tối đa **10** SP / lần tìm; **không** giới hạn số lần/ngày | Mỗi lần bấm Tìm |
+| **Chờ kết quả** | Poll tối đa **~90 giây** / lần (M0202) | Tìm lại ngay |
+| **Rakuten API** | **1 request/giây** / Application ID | Quá nhanh → 429 → đợi ~1s |
+| **Rakuten theo ngày** | Không có quota ngày chính thức | — |
+| **OpenAI** | Theo tài khoản billing (credit + rate limit) | Xem platform.openai.com |
+
+---
+
+## 9. File liên quan
 
 | File | Nội dung |
 |------|----------|

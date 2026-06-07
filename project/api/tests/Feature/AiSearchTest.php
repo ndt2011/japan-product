@@ -78,6 +78,20 @@ class AiSearchTest extends TestCase
 
     public function test_search_empty_returns_m0201(): void
     {
+        config([
+            'services.openai.api_key' => 'test-key',
+            'services.rakuten.application_id' => '',
+            'services.rakuten.access_key' => '',
+        ]);
+
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => '[]']],
+                ],
+            ], 200),
+        ]);
+
         $start = $this->postJson('/api/ai/search', [
             'keyword' => 'xyzabc123none',
         ], $this->authHeaders());

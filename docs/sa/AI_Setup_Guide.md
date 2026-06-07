@@ -1,168 +1,140 @@
-# Hướng dẫn cấu hình AI — Local & Production
+# Hướng dẫn cấu hình AI — Local & Staging
 
-> **Cập nhật**: 2026-06-07  
-> **Luồng A (khám phá web)** cần `OPENAI_API_KEY` để trả kết quả. **Luồng B (catalog)** tìm trong DB — không cần key (fallback từ khóa).
-
----
-
-## 1. Hai luồng AI cần gì?
-
-| Luồng | Màn hình | API | Cần `OPENAI_API_KEY`? |
-|-------|----------|-----|------------------------|
-| **A — Khám phá web** | `/ai-center` tab *Khám phá web* | `POST /ai/search` | **Bắt buộc** — GPT gợi ý SP Rakuten/Amazon JP |
-| **B — Catalog nội bộ** | `/ai-center` tab *Tìm catalog* | `POST /ai/product-search` | Không bắt buộc (tìm theo từ khóa) · Có key + embed → semantic |
-
-**Frontend không cần OpenAI key** — chỉ gọi BFF → Laravel API.
+> **Cập nhật**: 2026-06-08  
+> **Luồng A** ưu tiên **Rakuten Ichiba API** (ảnh + link thật) → GPT enrich. **Luồng B** tìm catalog nội bộ (embedding/keyword).
 
 ---
 
-## 2. Local — File cần sửa
+## 1. Hai luồng AI
 
-### Backend (bắt buộc chạy API)
+| Luồng | Màn hình | API | Rakuten | OpenAI |
+|-------|----------|-----|---------|--------|
+| **A — Khám phá web** | `/ai-center` tab *Khám phá web* | `POST/GET /ai/search` | **Bắt buộc** (ảnh, giá, link) | Bắt buộc (enrich tên VN, category) |
+| **B — Catalog nội bộ** | `/ai-center` tab *Tìm catalog* | `POST /ai/product-search` | Không dùng | Tùy chọn (semantic); không key → keyword |
 
-**File**: `project/api/.env`
+Frontend **không** cần OpenAI/Rakuten key — chỉ gọi BFF → Laravel API.
+
+---
+
+## 2. Local — `project/api/.env`
 
 ```env
-# === AI (thêm vào cuối file) ===
-OPENAI_API_KEY=sk-proj-xxxxxxxx          # Bắt buộc cho luồng A; luồng B vẫn tìm keyword nếu trống
-OPENAI_MODEL=gpt-4o-mini                 # Luồng A — chat tìm SP
-OPENAI_EMBEDDING_MODEL=text-embedding-3-small   # Luồng B — vector
-AI_SEARCH_LIMIT=15
+QUEUE_CONNECTION=sync
 
-# Queue — luồng A chạy job tìm kiếm
-QUEUE_CONNECTION=sync                    # Đơn giản nhất local (job chạy ngay)
-# Hoặc: database + php artisan queue:work
-```
-
-| Giá trị `QUEUE_CONNECTION` | Khi nào dùng |
-|----------------------------|--------------|
-| `sync` | **Khuyến nghị local** — không cần Redis, job AI chạy đồng bộ |
-| `database` | Cần `php artisan queue:work` terminal riêng |
-| `redis` | Cần Redis chạy trên máy |
-
-### Frontend (chỉ URL API)
-
-**File**: `project/frontend/.env.local`
-
-```env
-API_URL=http://localhost:8000/api
-```
-
-Không có biến OpenAI ở frontend.
-
----
-
-## 3. Lấy OpenAI API Key
-
-1. Đăng nhập https://platform.openai.com  
-2. **API keys** → **Create new secret key**  
-3. Copy key dạng `sk-proj-...`  
-4. Dán vào `project/api/.env` → `OPENAI_API_KEY=sk-proj-...`  
-5. Restart API: `Ctrl+C` rồi `php artisan serve`
-
-> **Không commit** `.env` lên Git. Key chỉ nằm local hoặc Railway Secrets.
-
----
-
-## 4. Sau khi có key — Luồng B (semantic search)
-
-```bash
-cd project/api
-
-# 1. Migrate (cột embedding trên products)
-php artisan migrate
-
-# 2. Tạo vector cho toàn bộ sản phẩm (tốn ~$0.0001/SP)
-php artisan products:embed
-
-# 3. Embed lại 1 sản phẩm
-php artisan products:embed --id=1
-
-# 4. Embed lại tất cả
-php artisan products:embed --force
-```
-
-Test API:
-
-```bash
-# Lấy token sau login
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"login_id":"admin","password":"Admin@123"}'
-
-curl -X POST http://localhost:8000/api/ai/product-search \
-  -H "Authorization: Bearer {TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"query":"collagen nhật bản","limit":15}'
-```
-
----
-
-## 5. Luồng A — Khám phá web
-
-| `OPENAI_API_KEY` | Hành vi luồng A |
-|------------------|----------------|
-| Trống | Không có kết quả (M0201) |
-| Có key | Gọi GPT-4o-mini → trả danh sách SP gợi ý (JSON) |
-
-`QUEUE_CONNECTION=sync` → không cần `queue:work`.
-
-Test trên UI: http://localhost:3000/ai-center → tab **Khám phá web** → gõ `コラーゲン`.
-
----
-
-## 6. Production (Railway)
-
-**Railway** → project API → **Variables**:
-
-```
 OPENAI_API_KEY=sk-proj-...
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 AI_SEARCH_LIMIT=15
-QUEUE_CONNECTION=database   # hoặc redis
+
+RAKUTEN_APPLICATION_ID=...
+RAKUTEN_ACCESS_KEY=pk_...
+RAKUTEN_ORIGIN_URL=http://localhost:3000
+PRODUCT_MARKUP_PERCENT=30
 ```
 
-Sau deploy:
+**Rakuten local:** whitelist IP máy (`curl api.ipify.org`) + URL `http://localhost:3000` trên Rakuten Developers.
 
-```bash
-railway run php artisan migrate --force
-railway run php artisan products:embed
-```
-
-**Vercel** (frontend) chỉ cần:
-
-```
-API_URL=https://tt-api.railway.app/api
-```
-
-Chi tiết: `docs/sa/devops/deploy_guide.md`
+Chi tiết: [../devops/rakuten-api-setup.md](../devops/rakuten-api-setup.md)
 
 ---
 
-## 7. Checklist nhanh
+## 3. Staging — Railway Variables
+
+Service **`product`** → Variables → RAW Editor (không file `.env` trong container):
+
+```env
+QUEUE_CONNECTION=sync
+OPENAI_API_KEY=sk-...
+RAKUTEN_APPLICATION_ID=...
+RAKUTEN_ACCESS_KEY=pk_...
+RAKUTEN_ORIGIN_URL=https://japan-product.vercel.app
+PRODUCT_MARKUP_PERCENT=30
+```
+
+**Lấy IP whitelist Rakuten:**
 
 ```
-[ ] project/api/.env có APP_KEY (php artisan key:generate)
-[ ] DB migrate --seed
-[ ] php artisan serve → :8000
-[ ] project/frontend/.env.local → API_URL=http://localhost:8000/api
-[ ] npm run dev → :3000
-[ ] (Tùy chọn) OPENAI_API_KEY trong .env
-[ ] (Tùy chọn) php artisan products:embed
+GET https://product-production-7e4e.up.railway.app/api/health?ip=1
+→ data.outbound_ip
 ```
+
+Template: [../devops/staging-env-railway.template.env](../devops/staging-env-railway.template.env)
+
+---
+
+## 4. Luồng A — Kiến trúc
+
+```
+POST /ai/search → session processing → job (afterResponse)
+    → Rakuten Ichiba Search API (tối đa 10 SP)
+    → OpenAI enrich (tên VN, category, cách dùng, mô tả)
+    → GET /ai/search/{id} poll → completed
+```
+
+| Trường hợp | Kết quả |
+|------------|---------|
+| Rakuten OK | SP + ảnh + link + badge **Rakuten (giá thật)** |
+| Rakuten IP chưa whitelist | **M0206** — không trả link/ảnh giả |
+| Rakuten Origin sai | **M0207** |
+| Job > 90s | **M0202** |
+| Không có SP | **M0201** |
+
+---
+
+## 5. Luồng B — Catalog embedding
+
+```bash
+cd project/api
+php artisan migrate
+php artisan products:embed        # Cần OPENAI_API_KEY
+php artisan products:embed --id=1
+```
+
+Test: tab **Tìm catalog nội bộ** hoặc `POST /api/ai/product-search`.
+
+---
+
+## 6. Kiểm tra health / cấu hình AI
+
+```bash
+# Cơ bản
+curl https://<api>/api/health
+
+# + IP outbound (Rakuten whitelist)
+curl "https://<api>/api/health?ip=1"
+```
+
+Fields: `rakuten_configured`, `openai_configured`, `queue_connection`, `ai_search_result_limit`.
+
+---
+
+## 7. Hạn mức
+
+- **10** sản phẩm / lần tìm (luồng A)
+- **Không** giới hạn số lần tìm / ngày trong app
+- Rakuten: **1 req/giây** / Application ID
+- OpenAI: theo billing account
 
 ---
 
 ## 8. Lỗi thường gặp
 
-| Triệu chứng | Nguyên nhân | Cách sửa |
-|-------------|-------------|----------|
-| AI Center "API_OFFLINE" | Backend không chạy | `php artisan serve` |
-| **Đăng nhập 401** | DB mất user sau `php artisan test` (cũ) | `php artisan db:seed` |
-| **Đăng nhập 503** | API không chạy | `php artisan serve` |
-| Login OK nhưng AI 401 | Cookie/token | Đăng nhập lại |
-| Catalog luôn M0201 | Không có SP khớp từ khóa | `php artisan db:seed` · thử `collagen` |
-| `products:embed` báo lỗi | Chưa có OPENAI_API_KEY | Thêm key vào `.env` |
-| Luồng A treo "Đang tìm" | Queue database nhưng không có worker | Đổi `QUEUE_CONNECTION=sync` |
-| Embedding tốn tiền | Gọi embed nhiều lần | Chỉ `--force` khi cần |
+| Triệu chứng | Cách sửa |
+|-------------|----------|
+| M0206 | `/api/health?ip=1` → whitelist IP trên Rakuten |
+| M0207 | `RAKUTEN_ORIGIN_URL` khớp Vercel đã đăng ký |
+| M0202 | `QUEUE_CONNECTION=sync`; đợi 90s |
+| Treo processing | Queue database không worker → đổi `sync` |
+| Amazon JP | **Chưa triển khai** — chỉ Rakuten thật |
+
+---
+
+## 9. Checklist
+
+```
+[ ] OPENAI_API_KEY + RAKUTEN_* trong .env / Railway
+[ ] Rakuten: IP + URL đã đăng ký
+[ ] QUEUE_CONNECTION=sync
+[ ] /api/health?ip=1 → outbound_ip đã whitelist
+[ ] /ai-center → Khám phá web → コラーゲン → có ảnh Rakuten
+```

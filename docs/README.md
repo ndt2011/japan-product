@@ -1,6 +1,6 @@
 # Tài liệu dự án — TT Product Japan
 
-> **Cập nhật**: 2026-06-07 | **Repo**: https://github.com/ndt2011/japan-product
+> **Cập nhật**: 2026-06-08 | **Repo**: https://github.com/ndt2011/japan-product
 
 Tài liệu được tổ chức theo vai trò. **Nguồn sự thật cho dev** khi code đã triển khai: `tasks/STATUS.md` + code trong `project/`.
 
@@ -66,6 +66,7 @@ docs/
 │   ├── STAGING_DEPLOY_MEMO.md      Checklist deploy từng bước
 │   ├── railway-mysql-variables.md  MySQL + reset DB
 │   ├── staging-setup.md            Tóm tắt Railway + Vercel
+│   ├── rakuten-api-setup.md        ★ Rakuten AI + IP whitelist + quota
 │   ├── staging-env-railway.template.env
 │   └── staging-env-vercel.template.env
 │
@@ -79,7 +80,7 @@ docs/
 
 | Luồng | Mục đích | API | Trạng thái code |
 |-------|----------|-----|-----------------|
-| **A — Khám phá sản phẩm mới** | Tìm trên web (Rakuten/Amazon JP), gửi duyệt, thêm vào catalog | `POST/GET /ai/search`, `/ai/candidates` | ✅ Đã triển khai (mock khi không có OpenAI key) |
+| **A — Khám phá sản phẩm mới** | Rakuten Ichiba API + GPT enrich, gửi duyệt | `POST/GET /ai/search`, `/ai/candidates` | ✅ Rakuten staging OK · Amazon chưa có |
 | **B — Tìm trong catalog nội bộ** | Semantic search bằng OpenAI embedding + cosine similarity | `POST /ai/product-search` | ✅ API + tab `/ai-center` |
 
 **FE**: `/ai-center` (luồng A) · `/admin/ai-candidates` (duyệt)  
