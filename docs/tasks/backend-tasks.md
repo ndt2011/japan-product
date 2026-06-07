@@ -67,8 +67,8 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| BE-022 | Migration: `shipment_batches`, `batch_order_items` | P0 | — | 0.5d | 📋 |
-| BE-023 | API CRUD chuyến hàng | P0 | BE-022 | 2d | 📋 |
+| BE-022 | Migration: `shipment_batches`, `batch_order_items` | P0 | — | 0.5d | ✅ |
+| BE-023 | API CRUD chuyến hàng | P0 | BE-022 | 2d | ✅ |
 | BE-024 | API permission matrix | P1 | BE-007 | 1d | ⏸ REQ-003 |
 
 ---

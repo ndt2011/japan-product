@@ -8,6 +8,7 @@ export type NavPageId =
   | "stock-out"
   | "inventory"
   | "orders"
+  | "shipments"
   | "debts"
   | "reports"
   | "admin";
@@ -30,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "stock-out", label: "Xuất Kho", icon: "📤", href: "/stock-out", group: "Kho Hàng" },
   { id: "inventory", label: "Kiểm Kê Kho", icon: "🗂️", href: "/inventory", group: "Kho Hàng" },
   { id: "orders", label: "Đơn Đặt Hàng", icon: "🛒", href: "/orders", group: "Giao Dịch" },
+  { id: "shipments", label: "Chuyến Hàng", icon: "🚢", href: "/shipments", group: "Giao Dịch" },
   { id: "debts", label: "Công Nợ", icon: "💰", href: "/debts", group: "Giao Dịch" },
   { id: "reports", label: "Báo Cáo", icon: "📈", href: "/reports", group: "Phân Tích" },
   { id: "admin", label: "Quản Trị", icon: "⚙️", href: "/admin", group: "Hệ Thống" },

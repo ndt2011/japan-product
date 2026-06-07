@@ -164,6 +164,41 @@ export interface OrderDetailData {
   order: OrderItem;
 }
 
+export interface ShipmentBatchOrderRef {
+  id: number;
+  order_no: string;
+  company_name?: string | null;
+  status: string;
+  total_vnd?: string | null;
+}
+
+export interface ShipmentBatchItem {
+  id: number;
+  batch_no: string;
+  batch_name: string;
+  status: string;
+  logistics_partner?: string | null;
+  tracking_number?: string | null;
+  estimated_departure_date?: string | null;
+  created_admin_name?: string | null;
+  orders_count?: number;
+  orders?: ShipmentBatchOrderRef[];
+}
+
+export interface ShipmentBatchListData {
+  items: ShipmentBatchItem[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+export interface ShipmentBatchDetailData {
+  batch: ShipmentBatchItem;
+}
+
 export interface ProductListData {
   items: ProductItem[];
   pagination: {

@@ -16,7 +16,8 @@
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
 | **S3** AI Search | Tìm + duyệt sản phẩm | **~75%** | Scraper/Rakuten thật chờ SA |
 | **S4** Đơn hàng | CRUD + confirm + reserve | **~70%** | Email notify chưa có |
-| **S5–S7** Batch | Chưa bắt đầu | **0%** | REQ-002 |
+| **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
+| **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
 
 ---
 
@@ -27,7 +28,7 @@
 - 13 migrations CSDL (admins, companies_vn, products, orders, …)
 - Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
 - Products: CRUD + master data (`/suppliers`, `/product-categories`, `/exchange-rates/current`)
-- PHPUnit: **27 tests pass** (auth, products, images, AI, orders, health)
+- PHPUnit: **33 tests pass** (auth, products, images, AI, orders, shipments, health)
 
 ### Frontend (`project/frontend`)
 - Next.js 14 + AppShell SupplyFlow (12 route từ `demothietke`)
@@ -84,6 +85,8 @@
 | ~~DEV-22~~ | FE `/ai-center` + `/admin/ai-candidates` | Frontend | ✅ |
 | ~~DEV-23~~ | Sprint 4 Orders API + inventory reserve | Backend | ✅ |
 | ~~DEV-24~~ | FE `/orders`, `/orders/new`, `/orders/[id]` | Frontend | ✅ |
+| ~~DEV-25~~ | Sprint 5 Shipment batches API + tests | Backend | ✅ |
+| ~~DEV-26~~ | FE `/shipments`, `/shipments/new`, `/shipments/[id]` | Frontend | ✅ |
 
 ### Ưu tiên P1 — DevOps (sau khi xong S1–S4)
 

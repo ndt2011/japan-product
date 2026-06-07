@@ -70,7 +70,7 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| FE-401 | `/shipments` — quản lý batch | P0 | BE-023 | 2.5d | 📋 |
+| FE-401 | `/shipments` — quản lý batch | P0 | BE-023 | 2.5d | ✅ |
 | FE-402 | `/admin/permissions` — matrix toggle | P1 | BE-024 | 2d | ⏸ REQ-003 |
 
 ---

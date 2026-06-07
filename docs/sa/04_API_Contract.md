@@ -254,6 +254,36 @@ Chỉ `DRAFT`, Company owner
 
 ---
 
+## Module 5 — Chuyến hàng (Shipment Batches)
+
+### GET `/shipment-batches`
+
+Query: `search`, `status`, `per_page` — Company chỉ thấy chuyến có đơn của mình
+
+### GET `/shipment-batches/available-orders`
+
+Đơn `CONFIRMED` chưa gom — Admin only
+
+### POST `/shipment-batches`
+
+**Body**: `{ batch_name, order_ids[], logistics_partner?, tracking_number?, estimated_departure_date? }`  
+**Role**: Admin · **201** (`M0506`) — đơn → `PROCESSING`
+
+### GET `/shipment-batches/{id}`
+
+### PUT `/shipment-batches/{id}`
+
+Sửa metadata / danh sách đơn (chỉ khi status &lt; IN_TRANSIT)
+
+### PUT `/shipment-batches/{id}/status`
+
+**Body**: `{ status }` — luồng: PREPARING → CUSTOMS_JP → IN_TRANSIT → CUSTOMS_VN → DELIVERED  
+`DELIVERED` → tất cả đơn trong chuyến → `DELIVERED`
+
+**Lỗi**: `M0501`–`M0507`
+
+---
+
 ## Module 2 — Master data (hỗ trợ form)
 
 ### GET `/suppliers`

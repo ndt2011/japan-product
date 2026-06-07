@@ -7,6 +7,7 @@ use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\MasterDataController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\ShipmentBatchController;
 use App\Http\Controllers\API\ProductImageController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,4 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/orders/{id}/submit', [OrderController::class, 'submit']);
     Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+
+    Route::get('/shipment-batches/available-orders', [ShipmentBatchController::class, 'availableOrders']);
+    Route::get('/shipment-batches', [ShipmentBatchController::class, 'index']);
+    Route::post('/shipment-batches', [ShipmentBatchController::class, 'store']);
+    Route::get('/shipment-batches/{id}', [ShipmentBatchController::class, 'show']);
+    Route::put('/shipment-batches/{id}', [ShipmentBatchController::class, 'update']);
+    Route::put('/shipment-batches/{id}/status', [ShipmentBatchController::class, 'advanceStatus']);
 });

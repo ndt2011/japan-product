@@ -20,6 +20,13 @@ const MESSAGE_MAP: Record<string, string> = {
   M0405: "Gửi đơn hàng thành công.",
   M0406: "Hủy đơn hàng thành công.",
   M0407: "Bạn không có quyền thao tác đơn hàng này.",
+  M0501: "Chỉ đơn đã xác nhận mới được gom vào chuyến.",
+  M0502: "Đơn hàng đã thuộc chuyến khác.",
+  M0503: "Chuyến hàng phải có ít nhất một đơn.",
+  M0504: "Không thể sửa đơn khi chuyến đã vận chuyển.",
+  M0505: "Chuyển trạng thái chuyến không hợp lệ.",
+  M0506: "Lưu chuyến hàng thành công.",
+  M0507: "Bạn không có quyền truy cập chuyến hàng này.",
   API_OFFLINE: "Không kết nối được API backend. Hãy chạy: cd project/api && php artisan serve",
 };
 
