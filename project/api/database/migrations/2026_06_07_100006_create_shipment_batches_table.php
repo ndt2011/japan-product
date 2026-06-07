@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('logistics_partner', 255)->nullable();
             $table->string('tracking_number', 100)->nullable();
             $table->date('estimated_departure_date')->nullable();
-            $table->integer('created_admin_id');
+            $table->unsignedBigInteger('created_admin_id');
             $table->dateTime('created')->nullable();
             $table->dateTime('modified')->nullable();
             $table->boolean('deleted_flag')->default(false);
@@ -26,7 +26,7 @@ return new class extends Migration
         Schema::create('batch_order_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('shipment_batch_id');
-            $table->integer('order_id');
+            $table->unsignedBigInteger('order_id');
             $table->dateTime('created')->nullable();
             $table->foreign('shipment_batch_id', 'fk_batch_items_batch')->references('id')->on('shipment_batches');
             $table->foreign('order_id', 'fk_batch_items_order')->references('id')->on('orders');

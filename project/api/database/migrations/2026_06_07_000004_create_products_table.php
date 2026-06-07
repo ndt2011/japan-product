@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->integer("product_category_id")->nullable(false);
+            $table->unsignedBigInteger("product_category_id")->nullable(false);
             $table->string("product_cd", 50)->nullable();
             $table->string("product_name", 255)->nullable(false);
             $table->string("product_name_jp", 255)->nullable();
@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string("unit", 20)->nullable();
             $table->integer("cost_jpy")->nullable();
             $table->string("price_vnd", 255)->nullable();
-            $table->integer("supplier_id")->nullable();
+            $table->unsignedBigInteger("supplier_id")->nullable();
             $table->string("origin", 100)->nullable();
             $table->decimal("import_tax_rate", 5, 2)->nullable();
             $table->text("description")->nullable();

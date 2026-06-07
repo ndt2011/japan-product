@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
-            $table->integer("product_id")->nullable(false);
-            $table->integer("warehouse_id")->nullable(false);
+            $table->unsignedBigInteger("product_id")->nullable(false);
+            $table->unsignedBigInteger("warehouse_id")->nullable(false);
             $table->integer("quantity")->nullable()->default(0);
             $table->integer("reserved_qty")->nullable()->default(0);
             $table->integer("actual_qty")->nullable()->default(0);

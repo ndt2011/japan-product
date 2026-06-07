@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('order_details', function (Blueprint $table) {
             $table->id();
-            $table->integer("order_id")->nullable(false);
-            $table->integer("product_id")->nullable(false);
+            $table->unsignedBigInteger("order_id")->nullable(false);
+            $table->unsignedBigInteger("product_id")->nullable(false);
             $table->integer("quantity")->nullable();
             $table->integer("unit_price_jpy")->nullable();
             $table->string("unit_price_vnd", 255)->nullable();

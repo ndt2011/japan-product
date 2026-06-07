@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('import_declarations', function (Blueprint $table) {
             $table->id();
-            $table->integer("order_id")->nullable(false);
+            $table->unsignedBigInteger("order_id")->nullable(false);
             $table->string("declaration_no", 50)->nullable();
             $table->date("declaration_date")->nullable();
             $table->boolean("customs_status")->nullable()->default(false);

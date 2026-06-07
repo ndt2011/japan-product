@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->integer("company_vn_id")->nullable(false);
+            $table->unsignedBigInteger("company_vn_id")->nullable(false);
             $table->string("order_no", 50)->nullable(false);
             $table->boolean("order_status")->nullable()->default(false);
             $table->date("order_date")->nullable();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string("shipping_fee", 255)->nullable();
             $table->string("import_tax", 255)->nullable();
             $table->text("biko")->nullable();
-            $table->integer("handler_admin_id")->nullable();
+            $table->unsignedBigInteger("handler_admin_id")->nullable();
             $table->dateTime("created")->nullable();
             $table->integer("created_user_id")->nullable();
             $table->dateTime("modified")->nullable();
