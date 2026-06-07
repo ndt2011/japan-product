@@ -37,7 +37,7 @@ export function MyBranchScreen() {
     <div className="space-y-6">
       <PageHeader
         title="Chi Nhánh Của Tôi"
-        description={user?.full_name ? `Xin chào ${user.full_name}` : undefined}
+        subtitle={user?.full_name ? `Xin chào ${user.full_name}` : undefined}
       />
 
       {error && <p className="text-sm text-red-600">{translateMessage(error)}</p>}

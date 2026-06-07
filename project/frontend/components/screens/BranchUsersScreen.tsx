@@ -96,8 +96,8 @@ export function BranchUsersScreen({ branchId }: Props) {
     <div className="space-y-6">
       <PageHeader
         title="Nhân Viên Chi Nhánh"
-        description={`Chi nhánh #${branchId}`}
-        action={
+        subtitle={`Chi nhánh #${branchId}`}
+        actions={
           <Button onClick={() => setShowForm((v) => !v)}>
             {showForm ? "Đóng form" : "+ Thêm nhân viên"}
           </Button>
@@ -137,10 +137,11 @@ export function BranchUsersScreen({ branchId }: Props) {
                 label="Vai trò"
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value as "manager" | "staff" })}
-              >
-                <option value="staff">Staff</option>
-                <option value="manager">Manager</option>
-              </Select>
+                options={[
+                  { value: "staff", label: "Staff" },
+                  { value: "manager", label: "Manager" },
+                ]}
+              />
             )}
             <div className="md:col-span-2">
               <Button type="submit" disabled={saving}>

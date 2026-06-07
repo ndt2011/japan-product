@@ -99,8 +99,8 @@ export function BranchesScreen() {
     <div className="space-y-6">
       <PageHeader
         title="Quản Lý Chi Nhánh"
-        description="Tạo và quản lý chi nhánh độc lập trên toàn quốc."
-        action={
+        subtitle="Tạo và quản lý chi nhánh độc lập trên toàn quốc."
+        actions={
           <Button onClick={() => setShowForm((v) => !v)}>
             {showForm ? "Đóng form" : "+ Tạo chi nhánh"}
           </Button>
@@ -126,13 +126,8 @@ export function BranchesScreen() {
               label="Miền"
               value={form.region}
               onChange={(e) => setForm({ ...form, region: e.target.value })}
-            >
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </Select>
+              options={REGIONS.map((r) => ({ value: r, label: r }))}
+            />
             <Input
               label="Tỉnh/Thành"
               value={form.province}

@@ -41,8 +41,9 @@ const BRANCH_PERMISSIONS: Permission[] = [
   "reports.orders",
 ];
 
-export function usePermission(permission: Permission): boolean {
+export function usePermission(permission?: Permission): boolean {
   const userType = useAuthStore((s) => s.user?.user_type);
+  if (!permission) return true;
   if (!userType) return false;
   if (userType === "admin") return ADMIN_PERMISSIONS.includes(permission);
   if (userType === "company") return COMPANY_PERMISSIONS.includes(permission);

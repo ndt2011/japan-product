@@ -246,6 +246,8 @@ export interface OrderItem {
   order_no: string;
   company_vn_id: number;
   company_name?: string | null;
+  branch_id?: number | null;
+  branch_name?: string | null;
   status: string;
   order_date?: string | null;
   total_jpy?: string | null;

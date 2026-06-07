@@ -20,7 +20,7 @@ export function ProtectedRoute({
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const loaded = useAuthStore((s) => s.loaded);
-  const hasPermission = permission ? usePermission(permission) : true;
+  const hasPermission = usePermission(permission);
   const routeAllowed = canAccessRoute(user, pathname);
 
   useEffect(() => {
