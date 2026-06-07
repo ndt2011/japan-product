@@ -122,16 +122,38 @@ export function Input({
   className,
   label,
   error,
+  hint,
+  requiredMark,
+  optional,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label?: string; error?: string }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label?: string;
+  error?: string;
+  hint?: string;
+  requiredMark?: boolean;
+  optional?: boolean;
+}) {
+  const showRequired = requiredMark ?? props.required;
+
   return (
-    <div className="flex flex-col gap-1">
-      {label && <label className="text-sm text-text-body">{label}</label>}
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label className="text-sm font-medium text-text-body flex items-center gap-1.5 flex-wrap">
+          <span>{label}</span>
+          {showRequired && (
+            <span className="text-danger text-xs" title="Bắt buộc">
+              *
+            </span>
+          )}
+          {optional && <span className="text-xs font-normal text-text-muted">(tùy chọn)</span>}
+        </label>
+      )}
+      {hint && <p className="text-xs text-text-muted -mt-0.5 leading-relaxed">{hint}</p>}
       <input
         className={clsx(
-          "w-full px-3 py-2 rounded-xl border border-border bg-white text-text-primary text-sm",
-          "placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all",
-          error && "border-danger",
+          "w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-subtle/50 text-text-primary text-sm",
+          "placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand focus:bg-white transition-all",
+          error && "border-danger focus:ring-danger/20",
           className,
         )}
         {...props}
