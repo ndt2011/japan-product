@@ -14,11 +14,10 @@ class HealthController extends Controller
             'status' => 'ok',
             'service' => 'japan-product-api',
             'timestamp' => now()->toIso8601String(),
+            'env' => config('app.env'),
+            'db' => config('database.default'),
+            'db_host_set' => (bool) (env('DB_HOST') ?: env('MYSQLHOST')),
         ];
-
-        if (in_array(config('app.env'), ['staging', 'local'], true)) {
-            $payload['db'] = config('database.default');
-        }
 
         return ApiResponse::success($payload);
     }
