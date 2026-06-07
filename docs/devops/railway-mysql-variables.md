@@ -153,6 +153,26 @@ railway up --detach
 
 ---
 
+## Làm sạch DB — chỉ giữ tài khoản (staging)
+
+**Railway Console** (service `product`):
+
+```bash
+php artisan migrate:fresh --force
+php artisan db:seed --class=AuthOnlySeeder --force
+```
+
+Xóa toàn bộ dữ liệu cũ (đơn hàng, sản phẩm, AI…) và chỉ tạo:
+
+| Login ID | Mật khẩu | Loại |
+|----------|----------|------|
+| `admin` | `Admin@123` | Super Admin |
+| `vn_company01` | `Company@123` | Chi nhánh VN |
+
+Muốn thêm data demo (1 SP + kho): dùng `php artisan db:seed --force` (full `DatabaseSeeder`).
+
+---
+
 ## Sau khi `db: mysql`
 
 ```bash
