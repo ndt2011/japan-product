@@ -29,7 +29,8 @@ class AiSearchService
             'created' => now(),
         ]);
 
-        AiProductSearchJob::dispatch($session->id);
+        // Trả 202 ngay; job chạy sau response (Rakuten + GPT có thể 30–60s).
+        AiProductSearchJob::dispatch($session->id)->afterResponse();
 
         return $session;
     }
@@ -47,7 +48,15 @@ class AiSearchService
 
     public function resolveMessage(AiSearchSession $session): ?string
     {
+        if ($session->isProcessing() && $session->created->lt(now()->subSeconds(120))) {
+            return 'M0202';
+        }
+
         if ($session->status === 'timeout') {
+            return 'M0202';
+        }
+
+        if ($session->status === 'failed') {
             return 'M0202';
         }
 

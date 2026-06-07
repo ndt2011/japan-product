@@ -50,24 +50,24 @@ function WebSearchPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  async function pollSession(id: number, keyword: string, maxAttempts = 30) {
+  async function pollSession(id: number, keyword: string, maxAttempts = 90) {
     for (let i = 0; i < maxAttempts; i++) {
       const res = await fetch(`/api/proxy/ai/search/${id}`);
       const data = await res.json();
 
-      if (!data.success && !["M0201", "M0206", "M0207"].includes(data.message)) {
+      if (!data.success && !["M0201", "M0202", "M0206", "M0207"].includes(data.message)) {
         throw new Error(data.message ?? "M0001");
       }
 
       const session = data.data?.session;
       if (!session) throw new Error("M0002");
 
-      if (session.status === "processing") {
-        await new Promise((r) => setTimeout(r, 500));
+      if (session.status === "processing" && data.message !== "M0202") {
+        await new Promise((r) => setTimeout(r, 1000));
         continue;
       }
 
-      if (session.status === "timeout") {
+      if (session.status === "timeout" || session.status === "failed" || data.message === "M0202") {
         return { text: translateMessage("M0202"), products: [] as AiSearchItem[] };
       }
 

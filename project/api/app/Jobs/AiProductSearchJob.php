@@ -12,7 +12,7 @@ class AiProductSearchJob implements ShouldQueue
 {
     use Queueable;
 
-    public int $timeout = 30;
+    public int $timeout = 90;
 
     public function __construct(
         public readonly int $sessionId,
