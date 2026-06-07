@@ -5,7 +5,9 @@
 
 ---
 
-## WF-01: Quy trình thêm sản phẩm mới qua AI
+## WF-01: Quy trình thêm sản phẩm mới qua AI (Luồng A — đã triển khai)
+
+> **Luồng B** (tìm trong catalog có sẵn): `POST /ai/product-search` — chưa code, xem `docs/sa/AI_Search_Implementation.md`
 
 ```
 VN Branch Staff          Hệ thống (AI)              JP Agency Owner

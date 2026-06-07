@@ -1,7 +1,7 @@
 # Yêu cầu làm rõ — Developer → PM/SA
 
 > **Cập nhật**: 2026-06-07  
-> **Trạng thái tổng**: Sprint 1 ~55% — RBAC & lockout blocked  
+> **Trạng thái tổng**: S1–S5 core ~70% — RBAC & lockout blocked  
 > **Việc tiếp theo**: [docs/tasks/STATUS.md](../tasks/STATUS.md)
 
 ---
@@ -30,15 +30,16 @@
 **Conflict**: M0103 = login success (code) vs M0103 = account locked (QA)  
 **Đề xuất**: M0104 = tài khoản bị khóa (HTTP 423)
 
-### REQ-005: CSDL thiếu bảng chi tiết
+### REQ-005: CSDL thiếu sheet xlsx (đã có amendment + code)
 
-**Block**: `product_images`, `ai_*`, `shipment_*` migrations  
-**Cần**: Sheet đầy đủ trong `03_Thiết_kế_CSDL.xlsx`
+**Đã code**: `product_images`, `ai_search_sessions`, `ai_product_candidates`, `shipment_batches`  
+**Cần SA**: Sync amendments vào `03_Thiết_kế_CSDL.xlsx`  
+**Chưa code**: `products.embedding` (luồng B semantic search)
 
 ### REQ-002: API Contract xlsx
 
-**Block**: Module AI, Order, Batch API  
-**Hiện có**: `04_API_Contract.md` (Auth + Products only)
+**Đã có tạm**: `04_API_Contract.md` v2.0 — Auth, Products, AI (2 luồng), Orders, Shipments  
+**Cần SA**: Export/xác nhận `04_API_Contract.xlsx` chính thức
 
 ### REQ-008: login_id vs email
 
@@ -51,11 +52,9 @@
 
 | ID | Việc | File liên quan |
 |----|------|----------------|
-| DEV-01 | `GET /health` | `routes/api.php` |
-| DEV-03 | Zustand auth store | `project/frontend` |
-| DEV-08 | Products pagination/filter | `ProductController` |
-| DEV-09 | Form thêm/sửa sản phẩm | `2-001` xlsx |
-| DEV-12/13 | Railway + Vercel staging | DevOps |
+| BE-016b | AI embedding `/ai/product-search` | `sa/AI_Search_Implementation.md` |
+| BE-021 | Email đơn mới / confirm | `mail_histories` |
+| DEV-12/13 | Railway + Vercel staging | `devops/staging-setup.md` |
 
 ---
 

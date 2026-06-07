@@ -1,7 +1,15 @@
 # Amendment: Bảng AI Search
 
-> **Ngày**: 2026-06-07 | **Trạng thái**: Tạm áp dụng — chờ SA sync `03_Thiết_kế_CSDL.xlsx`  
+> **Ngày**: 2026-06-07 | **Trạng thái**: ✅ Migration + API đã triển khai (luồng A)  
+> **Chờ SA**: Sync vào `03_Thiết_kế_CSDL.xlsx`  
 > **Nguồn**: US-201, US-202, UC-201, UC-202, TC-AI-001~007
+
+## Hai luồng AI (tách biệt)
+
+| Luồng | Bảng / cột | API | Code |
+|-------|------------|-----|------|
+| **A — Khám phá SP mới** | `ai_search_sessions`, `ai_product_candidates` | `/ai/search`, `/ai/candidates` | ✅ `project/api` |
+| **B — Tìm catalog nội bộ** | `products.embedding` (JSON) | `POST /ai/product-search` | 📋 Xem `../AI_Search_Implementation.md` |
 
 ## `ai_search_sessions`
 

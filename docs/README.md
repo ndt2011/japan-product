@@ -1,0 +1,115 @@
+# Tài liệu dự án — TT Product Japan
+
+> **Cập nhật**: 2026-06-07 | **Repo**: https://github.com/ndt2011/japan-product
+
+Tài liệu được tổ chức theo vai trò. **Nguồn sự thật cho dev** khi code đã triển khai: `tasks/STATUS.md` + code trong `project/`.
+
+---
+
+## Cấu trúc thư mục
+
+```
+docs/
+├── README.md                 ← File này (mục lục tổng)
+│
+├── business/                 Mục tiêu & phạm vi
+│   └── vision.md
+│
+├── ba/                       Business Analysis
+│   ├── BRD.md
+│   ├── user-stories.md
+│   ├── use-cases.md
+│   ├── business-rules.md
+│   ├── workflow.md
+│   └── remember-me-spec.md
+│
+├── pm/                       Project Management
+│   ├── roadmap.md
+│   ├── milestones.md
+│   ├── sprint-planning.md
+│   └── backlog.md
+│
+├── sa/                       System Architecture
+│   ├── 00_System_Overview.md       Tổng quan hệ thống (đọc đầu tiên)
+│   ├── 04_API_Contract.md          API đầy đủ 9 module (markdown)
+│   ├── AI_Search_Implementation.md Hướng dẫn embedding search (Phase 2)
+│   ├── migrations_guide.md         Thứ tự migration + snippet
+│   ├── design-source-demothietke.md
+│   ├── _schema.json
+│   ├── amendments/                 Thay đổi tạm chờ sync xlsx
+│   │   ├── ai_search-tables.md
+│   │   ├── product_images-table.md
+│   │   ├── orders-status.md
+│   │   ├── shipment-batches-tables.md
+│   │   ├── rbac-req003.md
+│   │   └── companies_vn-auth-columns.md
+│   ├── qa/
+│   │   └── QA_Orders_Batch.md
+│   └── devops/
+│       └── deploy_guide.md
+│
+├── tasks/                    Task list & trạng thái dev
+│   ├── STATUS.md             ★ Trạng thái tổng — cập nhật thường xuyên
+│   ├── backend-tasks.md
+│   ├── frontend-tasks.md
+│   ├── qa-tasks.md
+│   └── devops-tasks.md
+│
+├── qa/                       Test cases & acceptance
+│   ├── test-cases.md
+│   ├── acceptance-criteria.md
+│   └── bruno-auth-collection.md
+│
+├── devops/
+│   └── staging-setup.md
+│
+└── communication/
+    └── request.md            Blockers dev → SA/PM
+```
+
+---
+
+## AI Product Search — Hai luồng
+
+| Luồng | Mục đích | API | Trạng thái code |
+|-------|----------|-----|-----------------|
+| **A — Khám phá sản phẩm mới** | Tìm trên web (Rakuten/Amazon JP), gửi duyệt, thêm vào catalog | `POST/GET /ai/search`, `/ai/candidates` | ✅ Đã triển khai (mock khi không có OpenAI key) |
+| **B — Tìm trong catalog nội bộ** | Semantic search bằng OpenAI embedding + cosine similarity | `POST /ai/product-search` | 📋 Chưa code — xem `sa/AI_Search_Implementation.md` |
+
+**FE**: `/ai-center` (luồng A) · `/admin/ai-candidates` (duyệt)  
+**Docs chi tiết**: `sa/04_API_Contract.md` Module 3 · `sa/amendments/ai_search-tables.md`
+
+---
+
+## Tiến độ phát triển (tóm tắt)
+
+| Sprint | Nội dung | Code |
+|--------|----------|------|
+| S1 Auth | Login, Remember Me | ~65% |
+| S2 Products | CRUD + ảnh | ~85% |
+| S3 AI | Luồng A (search + duyệt) | ~75% |
+| S4 Orders | CRUD + confirm + reserve | ~70% |
+| S5 Shipments | Gom đơn + status flow | ~75% |
+| DevOps | CI có · deploy cloud chưa | ~25% |
+
+Chi tiết: [tasks/STATUS.md](./tasks/STATUS.md)
+
+---
+
+## Đọc theo vai trò
+
+| Vai trò | Bắt đầu từ |
+|---------|------------|
+| PM | `business/vision.md` → `pm/roadmap.md` → `tasks/STATUS.md` |
+| BA | `ba/BRD.md` → `ba/user-stories.md` → `ba/workflow.md` |
+| SA | `sa/00_System_Overview.md` → `sa/04_API_Contract.md` → `sa/amendments/` |
+| Backend | `tasks/backend-tasks.md` → `sa/04_API_Contract.md` → `sa/migrations_guide.md` |
+| Frontend | `tasks/frontend-tasks.md` → `sa/design-source-demothietke.md` |
+| QA | `qa/test-cases.md` → `sa/qa/QA_Orders_Batch.md` |
+| DevOps | `devops/staging-setup.md` → `sa/devops/deploy_guide.md` |
+
+---
+
+## File xlsx (SA gốc)
+
+Các file `.xlsx` trong `docs/sa/` là thiết kế gốc. Khi chưa có sheet mới, dev dùng **amendments** + **04_API_Contract.md** làm nguồn tạm.

@@ -12,9 +12,9 @@
 |--------|----------|---------|---------------|
 | **S1** Auth & RBAC | Login, Remember Me, RBAC | **~65%** | REQ-003 (schema RBAC), REQ-007 (M0104 lockout) |
 | **S2** Sản phẩm | CRUD + ảnh R2 | **~85%** | R2 bucket staging chưa deploy |
-| **UI shell** | 12 màn theo demothietke | **~80%** | StockIn/Inventory/Debts demo · còn Orders/AI/Reports |
+| **UI shell** | 13+ route SupplyFlow | **~85%** | StockIn/Inventory/Debts/Reports demo |
 | **DevOps** | CI + Railway + Vercel | **~25%** | CI file có, chưa deploy cloud |
-| **S3** AI Search | Tìm + duyệt sản phẩm | **~75%** | Scraper/Rakuten thật chờ SA |
+| **S3** AI Search | Luồng A: tìm web + duyệt catalog | **~75%** | Luồng B embedding 📋 · Scraper thật chờ |
 | **S4** Đơn hàng | CRUD + confirm + reserve | **~70%** | Email notify chưa có |
 | **S5** Chuyến hàng | Gom đơn + status flow | **~75%** | Email batch notify chưa có |
 | **S6–S7** | Chưa bắt đầu | **0%** | REQ-002 |
@@ -25,15 +25,19 @@
 
 ### Backend (`project/api`)
 - Laravel 11 + Sanctum + Repository/Service pattern
-- 13 migrations CSDL (admins, companies_vn, products, orders, …)
+- 16+ migrations (admins, products, ai_*, orders, shipment_batches, …)
 - Auth: `POST/GET/POST logout` — `login_id` + `remember_me` (24h / 30 ngày)
-- Products: CRUD + master data (`/suppliers`, `/product-categories`, `/exchange-rates/current`)
+- Products: CRUD + images + master data
+- **AI Search (luồng A)**: `/ai/search` poll, `/ai/candidates` approve/reject (mock catalog local)
+- Orders: CRUD + submit/confirm/cancel + inventory reserve
+- Shipments: gom đơn CONFIRMED, status flow đến DELIVERED
 - PHPUnit: **33 tests pass** (auth, products, images, AI, orders, shipments, health)
 
 ### Frontend (`project/frontend`)
-- Next.js 14 + AppShell SupplyFlow (12 route từ `demothietke`)
-- Login brand + Remember Me checkbox + httpOnly cookie
-- `/products` kết nối API thật; các màn khác demo/placeholder
+- Next.js 14 + AppShell SupplyFlow (13+ route)
+- Login + Remember Me + httpOnly cookie
+- API thật: `/products`, `/ai-center`, `/admin/ai-candidates`, `/orders`, `/shipments`
+- Demo UI: stock-in, inventory, debts, reports, suppliers
 - Build production OK
 
 ### DevOps
@@ -51,8 +55,8 @@
 |-----|----------|----------------|
 | **REQ-003** | Schema RBAC: `users`, `roles`, `permissions`… | BE-002, BE-003, BE-007, BE-008, FE-004 menu, FE-005, FE-016 |
 | **REQ-007** | Mã lockout: M0103 (success) vs lockout conflict | BE-006, TC-AUTH-006 |
-| **REQ-005** | 11 bảng CSDL chưa có sheet chi tiết | AI, Batch, product_images… |
-| **REQ-002** | `04_API_Contract.xlsx` chính thức (chỉ có `.md`) | Module 3+ |
+| **REQ-005** | Sheet xlsx chưa sync amendments | `ai_*`, `shipment_*`, `product_images` đã code |
+| **REQ-002** | `04_API_Contract.xlsx` chính thức | Có `04_API_Contract.md` đủ module (tạm) |
 | **REQ-008** | Đồng bộ `login_id` vs `email` trong tasks/spec | Đã chọn `login_id` — SA cập nhật tasks |
 
 ---
@@ -146,3 +150,6 @@ Khi SA trả lời REQ-007:
 | [devops-tasks.md](./devops-tasks.md) | Chi tiết task DevOps |
 | [../communication/request.md](../communication/request.md) | Blockers & yêu cầu SA |
 | [../sa/design-source-demothietke.md](../sa/design-source-demothietke.md) | Mapping UI prototype |
+| [../sa/AI_Search_Implementation.md](../sa/AI_Search_Implementation.md) | Luồng B embedding (chưa code) |
+| [../sa/amendments/ai_search-tables.md](../sa/amendments/ai_search-tables.md) | Schema AI luồng A |
+| [../README.md](../README.md) | Mục lục cấu trúc docs |

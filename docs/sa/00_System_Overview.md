@@ -20,7 +20,7 @@
 | Tầng | Công nghệ |
 |------|-----------|
 | Backend API | Laravel (PHP) + Laravel Sanctum |
-| Frontend | React + Tailwind CSS |
+| Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
 | Database | MySQL |
 | UI Design | SupplyFlow ERP (Figma Make export) |
 | Auth | Bearer Token (24h / 30 ngày nếu remember_me) |
@@ -31,21 +31,21 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                      Frontend (React)                    │
-│  /login  /dashboard  /products  /suppliers  /orders      │
-│  /ai-center  /admin                                      │
+│                   Frontend (Next.js 14)                  │
+│  /login  /dashboard  /products  /orders  /shipments      │
+│  /ai-center  /admin/ai-candidates  /suppliers  …         │
 └────────────────────┬────────────────────────────────────┘
                      │ HTTPS / REST API
                      │ Bearer Token (Sanctum)
 ┌────────────────────▼────────────────────────────────────┐
 │               Backend API (Laravel)                      │
-│  Auth · Products · Orders · Suppliers · Exchange Rate    │
-│  Import Declaration · Mail · Admin                       │
+│  Auth · Products · AI Search · Orders · Shipments        │
+│  Suppliers · Exchange Rate · Mail                        │
 └──────────┬──────────────────────────┬───────────────────┘
            │                          │
     ┌──────▼──────┐           ┌───────▼──────┐
     │    MySQL    │           │  File Storage │
-    │  (14 bảng) │           │ (ảnh, tờ khai)│
+    │ (18+ bảng) │           │ (ảnh, tờ khai)│
     └─────────────┘           └──────────────┘
 ```
 
@@ -53,15 +53,17 @@
 
 ## 3. Modules & Màn hình
 
-| Module | Route | Docs SA | Trạng thái |
-|--------|-------|---------|-----------|
-| Đăng nhập | `/login` | `1-001_Đăng_nhập.xlsx` | ✅ Có docs |
-| Dashboard | `/dashboard` | — | 📋 Chờ docs |
-| Hàng hóa | `/products` | `2-001_Thông_tin_hàng_hóa.xlsx` | ✅ Có docs |
-| AI Center | `/ai-center` | `2-101` | 📋 Chờ docs |
-| Nhà cung cấp | `/suppliers` | — | 📋 Chờ docs |
-| Đơn hàng | `/orders` | `3-001` | 📋 Chờ docs |
-| Quản trị | `/admin` | `5-001` | 📋 Chờ docs |
+| Module | Route | Docs SA | Code |
+|--------|-------|---------|------|
+| Đăng nhập | `/login` | `1-001_Đăng_nhập.xlsx` | ✅ BE+FE |
+| Dashboard | `/dashboard` | — | 🔄 UI demo |
+| Hàng hóa | `/products` | `2-001_Thông_tin_hàng_hóa.xlsx` | ✅ BE+FE |
+| AI Center | `/ai-center` | `2-101` (chờ xlsx) | ✅ Luồng A API+FE |
+| AI Duyệt | `/admin/ai-candidates` | amendment | ✅ BE+FE |
+| Đơn hàng | `/orders` | `3-001` (chờ xlsx) | ✅ BE+FE |
+| Chuyến hàng | `/shipments` | `4-001` (chờ xlsx) | ✅ BE+FE |
+| Nhà cung cấp | `/suppliers` | — | 🔄 UI demo |
+| Quản trị | `/admin` | `5-001` | 🔄 UI demo |
 
 ---
 
@@ -96,12 +98,42 @@
 | GET | `/suppliers` | Danh sách nhà cung cấp JP |
 | GET | `/product-categories` | Danh sách danh mục |
 | GET | `/exchange-rates/current` | Tỷ giá JPY→VND hiện tại |
+| POST | `/ai/search` | Khởi tạo tìm kiếm AI (async) |
+| GET | `/ai/search/{id}` | Poll kết quả tìm kiếm |
+| POST/GET | `/ai/candidates` | Gửi / list sản phẩm chờ duyệt |
+| PUT | `/ai/candidates/{id}/approve\|reject` | Duyệt / từ chối → tạo `products` |
+| POST | `/ai/product-search` | Semantic search catalog (📋 chưa code) |
+| GET/POST | `/orders` … | CRUD đơn hàng |
+| GET/POST | `/shipment-batches` … | Quản lý chuyến hàng |
+
+Chi tiết: `04_API_Contract.md`
+
+---
+
+## 4b. AI Product Search — Hai luồng
+
+```
+Luồng A (đã code) — Khám phá sản phẩm mới từ web
+  User nhập từ khóa → POST /ai/search → poll GET /ai/search/{id}
+  → Chọn kết quả → POST /ai/candidates → Admin duyệt → products
+
+Luồng B (chưa code) — Tìm trong catalog có sẵn
+  User nhập câu hỏi → POST /ai/product-search
+  → OpenAI embedding + cosine similarity trên products.embedding
+  → Top 10–20 sản phẩm + ảnh
+```
+
+| Tài liệu | Nội dung |
+|----------|----------|
+| `04_API_Contract.md` Module 3 | Contract cả hai luồng |
+| `amendments/ai_search-tables.md` | Schema `ai_*` (luồng A) |
+| `AI_Search_Implementation.md` | Hướng dẫn code luồng B |
 
 ---
 
 ## 5. Database Schema
 
-### Danh sách bảng (14 bảng)
+### Danh sách bảng (14 bảng gốc + amendments)
 
 | # | Bảng | Mô tả |
 |---|------|-------|
@@ -119,8 +151,13 @@
 | 12 | `import_declarations` | Tờ khai hải quan |
 | 13 | `mail_templates` | Mẫu email hệ thống |
 | 14 | `mail_histories` | Lịch sử gửi email |
+| 15 | `ai_search_sessions` | Phiên tìm kiếm AI (luồng A) ✅ |
+| 16 | `ai_product_candidates` | Sản phẩm chờ duyệt từ AI ✅ |
+| 17 | `shipment_batches` | Chuyến hàng JP→VN ✅ |
+| 18 | `batch_order_items` | Đơn trong chuyến ✅ |
+| — | `products.embedding` | Vector semantic search (luồng B) 📋 |
 
-> ⚠️ `product_images`: Amendment 2026-06-07 — chờ sync vào `03_Thiết_kế_CSDL.xlsx`
+> Amendments: `product_images`, `ai_*`, `shipment_*`, `orders.status` — chờ sync `03_Thiết_kế_CSDL.xlsx`
 
 ### Quan hệ chính giữa các bảng
 
@@ -173,31 +210,36 @@ Mọi bảng đều có các cột audit:
 
 | File | Ngày | Nội dung | Trạng thái |
 |------|------|----------|-----------|
-| `companies_vn-auth-columns.md` | 2026-06-07 | Thêm `login_id`, `password` vào `companies_vn` | ✅ Migration tạo xong |
-| `product_images-table.md` | 2026-06-07 | Thêm bảng `product_images` (multi-image) | ⚠️ Chờ sync SA |
+| `companies_vn-auth-columns.md` | 2026-06-07 | `login_id`, `password` trên `companies_vn` | ✅ |
+| `product_images-table.md` | 2026-06-07 | Bảng `product_images` | ✅ Code · chờ sync xlsx |
+| `ai_search-tables.md` | 2026-06-07 | `ai_search_sessions`, `ai_product_candidates` | ✅ Luồng A |
+| `orders-status.md` | 2026-06-07 | `orders.status` varchar workflow | ✅ |
+| `shipment-batches-tables.md` | 2026-06-07 | `shipment_batches`, `batch_order_items` | ✅ |
+| `rbac-req003.md` | 2026-06-07 | RBAC tạm + permission matrix | ⏸ Chờ SA |
 
 ---
 
 ## 7. Luồng nghiệp vụ chính
 
-### Luồng đặt hàng
+### Luồng đặt hàng (đã cập nhật)
 
 ```
-[Công ty VN] → Đăng nhập → Chọn sản phẩm → Tạo đơn (draft)
-      → Gửi đơn (status: 1) → [Admin JP] Xem đơn → Xác nhận (status: 2)
-      → Tạo tờ khai hải quan → Thông quan → Giao hàng (status: 3)
-      [Nếu hủy] → status: 4
+[Công ty VN] → Tạo đơn DRAFT → Gửi PENDING (reserve tồn kho)
+      → [Admin JP] CONFIRMED (lock tỷ giá)
+      → Gom chuyến PROCESSING → … → DELIVERED
+      [Hủy] DRAFT|PENDING → CANCELLED (release reserve)
 ```
 
-### Trạng thái đơn hàng
+### Trạng thái đơn hàng (`orders.status`)
 
-| Giá trị | Tên | Mô tả |
-|---------|-----|-------|
-| 0 | Nháp | Công ty VN đang tạo |
-| 1 | Đã gửi | Chờ admin xác nhận |
-| 2 | Xác nhận | Admin đã duyệt |
-| 3 | Hoàn thành | Đã giao hàng |
-| 4 | Hủy | Đơn bị hủy |
+| Status | Mô tả |
+|--------|-------|
+| DRAFT | Đang soạn |
+| PENDING | Đã gửi, chờ xác nhận |
+| CONFIRMED | Admin đã duyệt |
+| PROCESSING | Đã gom vào chuyến |
+| DELIVERED | Đã giao |
+| CANCELLED | Đã hủy |
 
 ### Trạng thái thông quan
 
@@ -212,22 +254,36 @@ Mọi bảng đều có các cột audit:
 
 ## 8. Tiến độ phát triển
 
-### ✅ Đã hoàn thành
-- Cấu trúc DB (13/14 bảng, chờ `product_images` sync)
-- API Contract Module Auth + Products
-- Shell frontend 12 routes
-- UI layout từ SupplyFlow ERP
+### ✅ Đã hoàn thành (code)
+- DB 18+ bảng + migrations amendments
+- API Contract markdown (`04_API_Contract.md`) — Auth, Products, AI, Orders, Shipments
+- Auth, Products CRUD + images, **AI Search luồng A**, Orders, Shipment batches
+- FE: 13+ routes (thêm `/shipments`, `/admin/ai-candidates`)
+- PHPUnit **33 tests** pass · CI GitHub Actions
 
-### 🔄 Đang làm
-- Docs SA màn hình: Dashboard, Suppliers, Orders, Admin
-- API endpoints cho Orders, Suppliers
-- Module AI Center (2-101)
+### 🔄 Đang làm / tiếp theo
+
+| Ticket | Mô tả | Trạng thái |
+|--------|-------|-----------|
+| **BE-016b** | `POST /ai/product-search` embedding (luồng B) | 📋 Có guide |
+| **BE-021** | Email đơn mới / confirm | 📋 |
+| **S1 RBAC** | Permission matrix | ⏸ REQ-003 |
+| **DevOps** | Railway + Vercel staging | 📋 Cuối |
 
 ### 📋 Chưa bắt đầu
-- CI/CD pipeline
-- Deploy lên server (AWS/GCP)
-- Testing strategy
-- Module báo cáo / xuất Excel
+- Scraper Rakuten/Amazon thật (luồng A production)
+- Dashboard / Reports / Suppliers API
+- SA màn hình xlsx: `2-101`, `3-001`, `4-001`, `5-001`
+
+### 📁 Tài liệu bổ sung mới
+| File | Nội dung |
+|------|----------|
+| `amendments/rbac-req003.md` | RBAC tạm thời chờ SA |
+| `qa/QA_Orders_Batch.md` | Test cases Orders + Shipment Batch |
+| `devops/deploy_guide.md` | Deploy Railway + Vercel |
+| `migrations_guide.md` | 8 migration files + thứ tự chạy |
+| `AI_Search_Implementation.md` | Luồng B — embedding search (chưa code) |
+| `../README.md` | Mục lục toàn bộ docs |
 
 ---
 

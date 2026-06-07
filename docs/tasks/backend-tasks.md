@@ -48,6 +48,7 @@
 | BE-014 | Scraper Rakuten/Amazon JP | P0 | BE-013 | 2d | 🔄 Mock catalog |
 | BE-015 | Queue `AiProductSearchJob` + poll status API | P0 | BE-013 | 1d | ✅ |
 | BE-016 | API: `/ai/search`, candidates approve/reject | P0 | BE-015 | 1d | ✅ |
+| BE-016b | `POST /ai/product-search` — embedding semantic search | P1 | BE-011 | 2d | 📋 Xem `AI_Search_Implementation.md` |
 
 ---
 

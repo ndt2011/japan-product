@@ -15,9 +15,9 @@
 | ID | Mô tả | Trạng thái |
 |----|-------|------------|
 | FE-UI-01 | AppShell + design tokens SupplyFlow | ✅ |
-| FE-UI-02 | 12 route dashboard (sidebar navigation) | ✅ |
+| FE-UI-02 | 13+ route dashboard (sidebar navigation) | ✅ |
 | FE-UI-03 | Login brand SupplyFlow | ✅ |
-| FE-UI-04 | Dashboard, Products, AI, Suppliers, Orders, Admin — UI | 🔄 Products=API · còn lại demo |
+| FE-UI-04 | Products, AI, Orders, Shipments — API · còn lại demo | 🔄 |
 | FE-UI-05 | 6 màn placeholder (agents, stock, debts, reports…) | ✅ Chờ docs SA |
 
 ---
