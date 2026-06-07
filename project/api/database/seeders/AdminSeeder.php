@@ -12,6 +12,7 @@ class AdminSeeder extends Seeder
         $admin = Admin::query()->updateOrCreate(
             ['login_id' => 'admin'],
             [
+                'password' => 'Admin@123',
                 'full_name' => 'Super Admin',
                 'email' => 'admin@japan-product.local',
                 'disabled_flag' => false,
@@ -21,7 +22,9 @@ class AdminSeeder extends Seeder
         );
 
         // Luôn reset mật khẩu demo (tránh hash lỗi sau migrate:test / seed cũ)
-        $admin->password = 'Admin@123';
-        $admin->save();
+        if (! $admin->wasRecentlyCreated) {
+            $admin->password = 'Admin@123';
+            $admin->save();
+        }
     }
 }

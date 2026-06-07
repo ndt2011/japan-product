@@ -12,6 +12,7 @@ class CompanyVnSeeder extends Seeder
         $company = CompanyVn::query()->updateOrCreate(
             ['login_id' => 'vn_company01'],
             [
+                'password' => 'Company@123',
                 'company_cd' => 'VN001',
                 'company_name' => 'Công ty Demo Việt Nam',
                 'email' => 'demo@company.vn',
@@ -22,7 +23,9 @@ class CompanyVnSeeder extends Seeder
             ],
         );
 
-        $company->password = 'Company@123';
-        $company->save();
+        if (! $company->wasRecentlyCreated) {
+            $company->password = 'Company@123';
+            $company->save();
+        }
     }
 }

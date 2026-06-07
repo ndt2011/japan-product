@@ -1,64 +1,81 @@
-# Staging — Railway + Vercel
+# Staging — Railway + Vercel (tóm tắt)
 
-> **Task**: DO-001, DO-002 | **Repo**: https://github.com/ndt2011/japan-product
+> **Task**: DO-001, DO-002 · DEV-12, DEV-13  
+> **Repo**: https://github.com/ndt2011/japan-product
 
-## 1. Railway (Backend API)
+## ★ Hướng dẫn đầy đủ (đọc file này trước)
 
-1. Tạo project mới trên [Railway](https://railway.app)
-2. **Add Service** → Deploy from GitHub → chọn `japan-product`
-3. **Root Directory**: `project/api`
-4. Thêm services: **MySQL 8**, **Redis 7**
-5. Variables (từ `project/api/.env.example`):
+**[STAGING_DEPLOY_MEMO.md](./STAGING_DEPLOY_MEMO.md)** — từng bước cụ thể + bảng memo ghi URL + checklist + troubleshooting.
 
-```env
-APP_NAME=JapanProductAPI
-APP_ENV=staging
-APP_KEY=          # php artisan key:generate --show
-APP_DEBUG=false
-APP_URL=https://<api-service>.up.railway.app
+**Template env copy nhanh:**
 
-DB_CONNECTION=mysql
-DB_HOST=${{MySQL.MYSQLHOST}}
-DB_PORT=${{MySQL.MYSQLPORT}}
-DB_DATABASE=${{MySQL.MYSQLDATABASE}}
-DB_USERNAME=${{MySQL.MYSQLUSER}}
-DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+- [staging-env-railway.template.env](./staging-env-railway.template.env)
+- [staging-env-vercel.template.env](./staging-env-vercel.template.env)
 
-CACHE_STORE=redis
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
-REDIS_URL=${{Redis.REDIS_URL}}
+---
 
-SANCTUM_STATEFUL_DOMAINS=<vercel-domain>
-FRONTEND_URL=https://<vercel-app>.vercel.app
+## Thứ tự 6 bước
+
+| Bước | Việc | Nơi thực hiện |
+|------|------|---------------|
+| 0 | Smoke test local (login OK) | localhost |
+| 1 | MySQL 8 + Redis 7 | Railway project |
+| 2 | Deploy API — Root `project/api` | Railway + GitHub |
+| 3 | `php artisan db:seed --force` | Railway Shell / CLI |
+| 4 | Deploy FE — Root `project/frontend`, `API_URL` | Vercel |
+| 5 | Login staging `admin` / `Admin@123` | Browser |
+
+---
+
+## Railway (API) — tóm tắt
+
+1. New Project → Add **MySQL** + **Redis**
+2. Add service từ GitHub `japan-product` → Root: **`project/api`**
+3. Generate public domain
+4. Variables: xem template [staging-env-railway.template.env](./staging-env-railway.template.env)
+5. `APP_KEY`: `php artisan key:generate --show` (chạy local)
+6. Health: `GET https://<api>/api/health`
+
+Start command (đã có trong `project/api/railway.toml`):
+
+```
+php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
 ```
 
-6. **Deploy command** (hoặc dùng `railway.toml`):
-   - Build: `composer install --no-dev --optimize-autoloader`
-   - Start: `php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT`
+---
 
-7. Kiểm tra: `GET https://<api>/api/health`
+## Vercel (Frontend) — tóm tắt
 
-## 2. Vercel (Frontend)
+1. Import repo → Root: **`project/frontend`**
+2. Env: `API_URL=https://<api-railway>/api`
+3. Deploy → `/login`
 
-1. Import repo `ndt2011/japan-product`
-2. **Root Directory**: `project/frontend`
-3. Framework: Next.js (auto)
-4. Environment:
+Template: [staging-env-vercel.template.env](./staging-env-vercel.template.env)
 
-```env
-API_URL=https://<api-service>.up.railway.app/api
-```
+---
 
-5. Deploy → mở `https://<app>.vercel.app/login`
+## Sau deploy
 
-## 3. GitHub Actions
+| Kiểm tra | Lệnh / URL |
+|----------|------------|
+| Health | `GET /api/health` |
+| Login API | `POST /api/auth/login` body `admin` / `Admin@123` |
+| Login UI | `https://<vercel>/login` |
 
-- **CI**: `.github/workflows/ci.yml` — chạy khi push/PR `main`
-- **Deploy** (tùy chọn): thêm secrets `RAILWAY_TOKEN`, `VERCEL_TOKEN` rồi bật job deploy
+---
 
-## 4. Branch protection (DO-004)
+## CI & bảo vệ branch (tùy chọn)
 
-GitHub → Settings → Branches → `main`:
-- Require PR before merge
-- Require status check: `Laravel API Tests`, `Next.js Build`
+- **CI**: `.github/workflows/ci.yml` — push `main`
+- **Auto-deploy**: secrets `RAILWAY_TOKEN`, `VERCEL_TOKEN` → xem [deploy_guide.md](../sa/devops/deploy_guide.md)
+- **Branch protection**: require PR + CI checks trên `main`
+
+---
+
+## Chi phí ước tính staging
+
+| Dịch vụ | ~Chi phí |
+|---------|----------|
+| Railway (API + MySQL + Redis) | ~$5/tháng (credit free ban đầu) |
+| Vercel | $0 (hobby) |
+| OpenAI (tùy chọn) | pay-as-you-go |

@@ -294,6 +294,8 @@ Kỳ vọng JSON có `status` ok / success.
 | 502 / crash loop | Thiếu `APP_KEY` hoặc DB reference sai |
 | Migration fail | MySQL Active; `DB_HOST` = reference `${{MySQL.MYSQLHOST}}` |
 | Redis / ext-redis | Staging dùng `CACHE_STORE=database`, `QUEUE_CONNECTION=sync`, `SESSION_DRIVER=database` (template đã cập nhật) |
+| Seed lỗi `Connection: sqlite` | Thiếu `DB_CONNECTION=mysql` + `DB_*` reference MySQL trên Railway → Redeploy → seed lại |
+| Seed lỗi `admins.password NOT NULL` | Pull code mới (AdminSeeder đã sửa) hoặc set password trong seeder |
 
 **Sửa nhanh trên Railway (không đợi code):**
 
