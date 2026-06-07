@@ -61,7 +61,13 @@ docs/
 │   └── bruno-auth-collection.md
 │
 ├── devops/
-│   └── staging-setup.md
+│   ├── ENV_STAGING.md              ★ Tổng hợp môi trường cloud (Railway + Vercel)
+│   ├── ENV_LOCAL.md                ★ Tổng hợp môi trường local (Windows)
+│   ├── STAGING_DEPLOY_MEMO.md      Checklist deploy từng bước
+│   ├── railway-mysql-variables.md  MySQL + reset DB
+│   ├── staging-setup.md            Tóm tắt Railway + Vercel
+│   ├── staging-env-railway.template.env
+│   └── staging-env-vercel.template.env
 │
 └── communication/
     └── request.md            Blockers dev → SA/PM
@@ -107,7 +113,7 @@ Chi tiết: [tasks/STATUS.md](./tasks/STATUS.md)
 | Backend | `tasks/backend-tasks.md` → `sa/04_API_Contract.md` → `sa/migrations_guide.md` |
 | Frontend | `tasks/frontend-tasks.md` → `sa/design-source-demothietke.md` |
 | QA | `qa/test-cases.md` → `sa/qa/QA_Orders_Batch.md` |
-| DevOps | `devops/staging-setup.md` → `sa/devops/deploy_guide.md` |
+| DevOps | **`devops/ENV_STAGING.md`** + **`devops/ENV_LOCAL.md`** → `devops/STAGING_DEPLOY_MEMO.md` |
 
 ---
 

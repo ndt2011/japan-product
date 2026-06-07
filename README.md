@@ -137,7 +137,10 @@ Chi tiết từng file: **[docs/README.md](docs/README.md)**
 |-----|------|
 | GitHub | https://github.com/ndt2011/japan-product |
 | API Contract | [docs/sa/04_API_Contract.md](docs/sa/04_API_Contract.md) |
-| Deploy guide | [docs/sa/devops/deploy_guide.md](docs/sa/devops/deploy_guide.md) |
+| **Môi trường staging (cloud)** | [docs/devops/ENV_STAGING.md](docs/devops/ENV_STAGING.md) |
+| **Môi trường local** | [docs/devops/ENV_LOCAL.md](docs/devops/ENV_LOCAL.md) |
+| Deploy staging (checklist) | [docs/devops/STAGING_DEPLOY_MEMO.md](docs/devops/STAGING_DEPLOY_MEMO.md) |
+| Deploy guide (tổng quan) | [docs/sa/devops/deploy_guide.md](docs/sa/devops/deploy_guide.md) |
 
 ---
 
