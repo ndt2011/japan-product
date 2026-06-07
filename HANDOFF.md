@@ -99,6 +99,7 @@ Toàn bộ tài liệu thiết kế đã được hoàn thiện. Dev **KHÔNG đ
 ```
 
 #### 8. Tham khảo task chi tiết
+→ `docs/tasks/STATUS.md` (trạng thái & việc tiếp theo)  
 → `docs/tasks/backend-tasks.md`
 
 ---
@@ -157,6 +158,7 @@ app/
 - Dùng `next-intl` hoặc `i18next`
 
 #### 6. Tham khảo task chi tiết
+→ `docs/tasks/STATUS.md` (trạng thái & việc tiếp theo)  
 → `docs/tasks/frontend-tasks.md`
 
 ---
@@ -202,6 +204,7 @@ Screenshot/Video: [đính kèm]
 - Mỗi User Story phải có tối thiểu 1 happy path + 1 negative case pass
 
 #### 5. Tham khảo task chi tiết
+→ `docs/tasks/STATUS.md`  
 → `docs/tasks/qa-tasks.md`
 
 ---
@@ -269,6 +272,7 @@ Stack:
 - Alert: Email khi server down
 
 #### 7. Tham khảo task chi tiết
+→ `docs/tasks/STATUS.md`  
 → `docs/tasks/devops-tasks.md`
 
 ---

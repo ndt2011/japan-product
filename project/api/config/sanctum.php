@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 1440),
+    // null = dùng expires_at từng token (Remember Me 24h / 30 ngày — RULE-AUTH-03/04)
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION'),
 
     /*
     |--------------------------------------------------------------------------

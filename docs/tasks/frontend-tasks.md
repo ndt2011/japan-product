@@ -1,52 +1,93 @@
 # Frontend Tasks — Next.js 14
 
-> **Cập nhật**: 2026-06-07 | **Nguồn**: HANDOFF.md + docs/sa/
+**Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
+**Cập nhật**: 2026-06-07 | **Assignee**: Frontend Developer  
+**Repo**: https://github.com/ndt2011/japan-product (`project/frontend/`)  
+**UI reference**: `project/demothietke` — [design-source-demothietke.md](../sa/design-source-demothietke.md)  
+**Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
 
-## Sprint 1 — Setup & Auth
+**Legend**: ✅ Done | 🔄 Partial | ⏸ Blocked | 📋 Todo
 
-| ID | Mô tả | Priority | Dependency | Estimate | Trạng thái |
-|----|-------|----------|------------|----------|------------|
-| FE-001 | Khởi tạo Next.js 14 App Router + TypeScript + Tailwind | P0 | — | 2h | ✅ Done |
-| FE-002 | Layout dashboard — AppShell theo `demothietke` | P0 | FE-001 | 3h | ✅ Done |
-| FE-003 | Màn hình Login — brand SupplyFlow + `1-001` | P0 | BE-003 | 4h | ✅ Done |
-| FE-004 | Auth middleware + token httpOnly cookie | P0 | FE-003 | 3h | ✅ Done |
-| FE-005 | i18n VI/JP (`next-intl`) | P1 | FE-003 | 4h | 📋 Todo |
+---
 
-## Sprint 2 — Products
+## SPRINT 0 — UI Shell (demothietke) — Ngoài backlog gốc
 
-| ID | Mô tả | Priority | Dependency | Estimate | Trạng thái |
-|----|-------|----------|------------|----------|------------|
-| FE-101 | Danh sách sản phẩm — UI demothietke + API | P0 | BE-101 | 6h | ✅ Done |
-| FE-102 | Form thêm/sửa sản phẩm (`2-001`) | P0 | BE-101 | 8h | 📋 Todo |
-| FE-103 | Tính giá VND gợi ý (JPY × tỷ giá × thuế) | P1 | FE-102 | 2h | 📋 Todo |
+| ID | Mô tả | Trạng thái |
+|----|-------|------------|
+| FE-UI-01 | AppShell + design tokens SupplyFlow | ✅ |
+| FE-UI-02 | 12 route dashboard (sidebar navigation) | ✅ |
+| FE-UI-03 | Login brand SupplyFlow | ✅ |
+| FE-UI-04 | Dashboard, Products, AI, Suppliers, Orders, Admin — UI | 🔄 Products=API · còn lại demo |
+| FE-UI-05 | 6 màn placeholder (agents, stock, debts, reports…) | ✅ Chờ docs SA |
 
-## Sprint 3 — UI theo demothietke (prototype)
+---
 
-| ID | Mô tả | Priority | Dependency | Estimate | Trạng thái |
-|----|-------|----------|------------|----------|------------|
-| FE-201 | AppShell + 12 route + design tokens | P0 | FE-004 | 6h | ✅ Done |
-| FE-202 | Dashboard (demo charts) | P1 | FE-201 | 4h | ✅ Done |
-| FE-203 | AI Center (demo chat) | P1 | FE-201 | 4h | 🔄 UI demo — chờ 2-101 |
-| FE-204 | Suppliers, Orders (demo data) | P1 | FE-201 | 4h | 🔄 UI demo |
-| FE-205 | Admin (demo users) | P1 | FE-201 | 3h | 🔄 UI demo — chờ 5-001 |
-| FE-206 | Placeholder: agents, stock, debts, reports | P2 | FE-201 | 2h | ✅ Done |
-| FE-207 | Menu theo role | P1 | BE-201 | 4h | ⏸ Blocked REQ-003 |
+## SPRINT 1 — Setup & Auth
 
-## Cấu trúc thư mục
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-001 | Next.js 14 + TS + Tailwind | P0 | — | 1d | ✅ |
+| FE-002 | Login: `login_id`, password, Remember Me, httpOnly cookie | P0 | BE-004 | 1d | ✅ |
+| FE-003 | Middleware auth redirect | P0 | FE-002 | 0.5d | ✅ |
+| FE-004 | Layout sidebar + header; **menu theo role** | P0 | FE-003 | 1.5d | 🔄 Shell ✅ · role ⏸ REQ-003 |
+| FE-005 | Zustand `useAuthStore` + AuthProvider | P0 | FE-002 | 0.5d | ✅ |
+| FE-006 | Vercel deployment | P0 | — | 0.5d | 📋 DEV-13 |
 
-```
-app/
-├── (auth)/login/
-├── (dashboard)/
-│   ├── layout.tsx      ← AppShell
-│   ├── dashboard/
-│   ├── products/       ← API thật
-│   ├── ai-center/
-│   ├── suppliers/
-│   ├── orders/
-│   ├── admin/
-│   └── … (placeholder)
-└── api/
-    ├── auth/
-    └── proxy/products/
-```
+---
+
+## SPRINT 2 — Sản phẩm
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-101 | `/products` — list, search, filter, pagination | P0 | BE-011 | 1.5d | ✅ |
+| FE-102 | `/products/new`, `/products/[id]/edit` — form `2-001` | P0 | BE-011 | 2d | ✅ |
+| FE-103 | `/products/[id]` — chi tiết + xóa mềm | P0 | FE-101 | 1d | ✅ |
+| FE-104 | Upload ảnh drag & drop | P0 | BE-010 | 1d | 📋 |
+
+---
+
+## SPRINT 3 — AI Search
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-201 | `/ai-center` — chat UI + polling API | P0 | BE-016 | 2.5d | 🔄 UI demo · API 📋 |
+| FE-202 | Card kết quả + chọn + gửi duyệt | P0 | FE-201 | 1d | 📋 |
+| FE-203 | `/admin/ai-candidates` — duyệt/từ chối | P0 | BE-016 | 2d | 📋 |
+
+---
+
+## SPRINT 4 — Đơn hàng
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-301 | `/orders/new` — tạo đơn + tỷ giá real-time | P0 | BE-019 | 2.5d | 📋 |
+| FE-302 | `/orders` — list filter (thay demo data) | P0 | BE-019 | 1.5d | 🔄 UI demo |
+| FE-303 | `/orders/[id]` — chi tiết + confirm/cancel | P0 | FE-302 | 1.5d | 📋 |
+
+---
+
+## SPRINT 5 — Chuyến hàng & Permission
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-401 | `/shipments` — quản lý batch | P0 | BE-023 | 2.5d | 📋 |
+| FE-402 | `/admin/permissions` — matrix toggle | P1 | BE-024 | 2d | ⏸ REQ-003 |
+
+---
+
+## Backlog P1
+
+| ID | Mô tả | Trạng thái |
+|----|-------|------------|
+| FE-i18n | `next-intl` VI/JP | 📋 |
+| FE-toast | Toast notification action | 📋 |
+| FE-skeleton | Loading skeleton thay spinner | 📋 |
+
+---
+
+## Coding Standards
+
+- TypeScript strict · `/components/ui` vs `/components/screens`
+- httpOnly cookie only — **không localStorage**
+- Custom hooks: `useProducts`, `useOrders`…
+- i18n keys: `/messages/vi.json`, `/messages/ja.json`

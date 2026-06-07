@@ -95,4 +95,61 @@ class AuthTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.user.user_type', 'company');
     }
+
+    public function test_remember_me_sets_token_expiry_30_days(): void
+    {
+        $admin = Admin::factory()->create([
+            'login_id' => 'remember-user',
+            'password' => 'Secret@123',
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'login_id' => 'remember-user',
+            'password' => 'Secret@123',
+            'remember_me' => true,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['data' => ['expires_at']]);
+
+        $token = $admin->tokens()->first();
+        $this->assertNotNull($token);
+        $this->assertTrue($token->expires_at->greaterThan(now()->addDays(29)));
+    }
+
+    public function test_logout_revokes_token(): void
+    {
+        $admin = Admin::factory()->create([
+            'login_id' => 'logout-user',
+            'password' => 'Secret@123',
+        ]);
+
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $this->withToken($token)
+            ->postJson('/api/auth/logout')
+            ->assertOk()
+            ->assertJsonPath('message', 'M0000');
+
+        $this->assertEquals(0, $admin->fresh()->tokens()->count());
+    }
+
+    public function test_without_remember_me_sets_token_expiry_24_hours(): void
+    {
+        $admin = Admin::factory()->create([
+            'login_id' => 'session-user',
+            'password' => 'Secret@123',
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'login_id' => 'session-user',
+            'password' => 'Secret@123',
+            'remember_me' => false,
+        ])->assertOk();
+
+        $token = $admin->tokens()->first();
+        $this->assertNotNull($token);
+        $this->assertTrue($token->expires_at->lessThanOrEqualTo(now()->addHours(24)->addMinute()));
+        $this->assertTrue($token->expires_at->greaterThan(now()->addHours(23)));
+    }
 }

@@ -32,9 +32,12 @@
 ```json
 {
   "login_id": "admin",
-  "password": "Admin@123"
+  "password": "Admin@123",
+  "remember_me": false
 }
 ```
+
+`remember_me` (boolean, optional): `true` → token TTL 30 ngày (RULE-AUTH-04); `false`/bỏ qua → 24 giờ (RULE-AUTH-03).
 
 **Response 200** (`M0103`):
 ```json
@@ -49,7 +52,8 @@
       "user_type": "admin"
     },
     "token": "1|xxxx",
-    "token_type": "Bearer"
+    "token_type": "Bearer",
+    "expires_at": "2026-06-08T10:00:00+00:00"
   },
   "message": "M0103",
   "errors": null

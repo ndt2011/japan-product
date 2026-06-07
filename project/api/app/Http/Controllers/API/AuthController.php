@@ -24,6 +24,7 @@ class AuthController extends Controller
                 $request->validated('login_id'),
                 $request->validated('password'),
                 $request->ip() ?? 'unknown',
+                (bool) $request->validated('remember_me', false),
             );
         } catch (AuthException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
@@ -33,6 +34,7 @@ class AuthController extends Controller
             'user' => AuthUserPresenter::present($result['user'], $result['user_type']),
             'token' => $result['token'],
             'token_type' => 'Bearer',
+            'expires_at' => $result['expires_at'],
         ], 'M0103');
     }
 

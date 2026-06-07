@@ -29,9 +29,15 @@ export async function POST(request: Request) {
     });
   }
 
+  const rememberMe = Boolean(body.remember_me);
+  const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+
   const response = NextResponse.json({
     success: true,
-    data: { user: result.data.user },
+    data: {
+      user: result.data.user,
+      expires_at: result.data.expires_at,
+    },
     message: result.message,
     errors: null,
   });
@@ -41,7 +47,7 @@ export async function POST(request: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge,
   });
 
   response.cookies.set(
@@ -52,9 +58,19 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24,
+      maxAge,
     },
   );
+
+  if (result.data.expires_at) {
+    response.cookies.set("auth_expires_at", result.data.expires_at, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge,
+    });
+  }
 
   return response;
 }

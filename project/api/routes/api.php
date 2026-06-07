@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\MasterDataController;
 use App\Http\Controllers\API\ProductController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/health', HealthController::class);
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);

@@ -1,6 +1,7 @@
 "use client";
 
 import { NAV_ITEMS } from "@/lib/navigation";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { clsx } from "clsx";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -8,11 +9,16 @@ import { useState } from "react";
 
 interface AppShellProps {
   children: React.ReactNode;
-  userName?: string;
-  userEmail?: string;
 }
 
-export function AppShell({ children, userName = "User", userEmail = "" }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
+  const user = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clear);
+  const displayName =
+    user?.user_type === "company"
+      ? user?.company_name ?? user?.login_id
+      : user?.full_name ?? user?.login_id ?? "User";
+  const userEmail = user?.email ?? user?.login_id ?? "";
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -23,6 +29,7 @@ export function AppShell({ children, userName = "User", userEmail = "" }: AppShe
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    clearAuth();
     router.push("/login");
     router.refresh();
   }
@@ -67,10 +74,10 @@ export function AppShell({ children, userName = "User", userEmail = "" }: AppShe
           {!collapsed && (
             <div className="flex items-center gap-2 px-2 py-2 mb-2">
               <div className="w-7 h-7 rounded-full bg-brand text-white text-xs flex items-center justify-center">
-                {userName.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-text-primary truncate">{userName}</p>
+                <p className="text-xs text-text-primary truncate">{displayName}</p>
                 <p className="text-xs text-text-placeholder truncate">{userEmail || "—"}</p>
               </div>
             </div>
@@ -104,7 +111,7 @@ export function AppShell({ children, userName = "User", userEmail = "" }: AppShe
               Đăng xuất
             </button>
             <div className="w-8 h-8 rounded-full bg-brand text-white text-xs flex items-center justify-center">
-              {userName.charAt(0).toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>

@@ -21,18 +21,18 @@ class AuthService
     /**
      * @return array{user: Authenticatable, user_type: string, token: string}
      */
-    public function login(string $loginId, string $password, string $ip): array
+    public function login(string $loginId, string $password, string $ip, bool $rememberMe = false): array
     {
         $admin = $this->adminRepository->findActiveByLoginId($loginId);
 
         if ($admin && Hash::check($password, $admin->password)) {
-            return $this->issueToken($admin, 'admin', $loginId, $ip);
+            return $this->issueToken($admin, 'admin', $loginId, $ip, $rememberMe);
         }
 
         $company = $this->companyVnRepository->findActiveByLoginId($loginId);
 
         if ($company && $company->password && Hash::check($password, $company->password)) {
-            return $this->issueToken($company, 'company', $loginId, $ip);
+            return $this->issueToken($company, 'company', $loginId, $ip, $rememberMe);
         }
 
         $this->logAttempt($ip, $loginId, 'Failure');
@@ -50,22 +50,30 @@ class AuthService
     /**
      * @return array{user: Authenticatable, user_type: string, token: string}
      */
-    private function issueToken(Authenticatable $user, string $userType, string $loginId, string $ip): array
-    {
+    private function issueToken(
+        Authenticatable $user,
+        string $userType,
+        string $loginId,
+        string $ip,
+        bool $rememberMe,
+    ): array {
         if (method_exists($user, 'isActive') && ! $user->isActive()) {
             $this->logAttempt($ip, $loginId, 'Disabled-Failure');
 
             throw new AuthException('M0102', 403);
         }
 
+        $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(24);
+
         /** @var Admin|CompanyVn $user */
-        $token = $user->createToken('api-token')->plainTextToken;
+        $accessToken = $user->createToken('api-token', ['*'], $expiresAt);
         $this->logAttempt($ip, $loginId, 'Success');
 
         return [
             'user' => $user,
             'user_type' => $userType,
-            'token' => $token,
+            'token' => $accessToken->plainTextToken,
+            'expires_at' => $expiresAt->toIso8601String(),
         ];
     }
 

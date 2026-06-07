@@ -1,19 +1,20 @@
-import { apiFetch } from "@/lib/api";
+import { jsonFromProxy, proxyToApi } from "@/lib/server-api";
 import type { ProductListData } from "@/types/api";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
 
-export async function GET() {
-  const token = cookies().get("auth_token")?.value;
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.toString();
+  const path = query ? `/products?${query}` : "/products";
 
-  if (!token) {
-    return NextResponse.json({ success: false, message: "M0101" }, { status: 401 });
-  }
+  const { result, status } = await proxyToApi<ProductListData>(path, { method: "GET" });
+  return jsonFromProxy(result, status);
+}
 
-  try {
-    const result = await apiFetch<ProductListData>("/products", { method: "GET" }, token);
-    return NextResponse.json(result, { status: result.success ? 200 : 400 });
-  } catch {
-    return NextResponse.json({ success: false, message: "API_OFFLINE" }, { status: 503 });
-  }
+export async function POST(request: Request) {
+  const body = await request.json();
+  const { result, status } = await proxyToApi("/products", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return jsonFromProxy(result, status === 200 ? 201 : status);
 }
