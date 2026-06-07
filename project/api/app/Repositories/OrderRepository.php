@@ -19,7 +19,7 @@ class OrderRepository
     {
         return Order::query()
             ->active()
-            ->with(['company', 'details.product', 'handler'])
+            ->with(['company', 'branch', 'details.product', 'handler'])
             ->find($id);
     }
 
@@ -65,10 +65,14 @@ class OrderRepository
         $query = Order::query()
             ->active()
             ->select('orders.*')
-            ->with(['company']);
+            ->with(['company', 'branch']);
 
         if (! empty($filters['company_vn_id'])) {
             $query->where('company_vn_id', $filters['company_vn_id']);
+        }
+
+        if (! empty($filters['branch_id'])) {
+            $query->where('branch_id', $filters['branch_id']);
         }
 
         if (! empty($filters['status'])) {

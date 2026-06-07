@@ -14,6 +14,8 @@ class OrderResource extends JsonResource
             'order_no' => $this->order_no,
             'company_vn_id' => $this->company_vn_id,
             'company_name' => $this->company?->company_name,
+            'branch_id' => $this->branch_id,
+            'branch_name' => $this->branch?->branch_name,
             'status' => $this->status,
             'order_date' => $this->order_date?->toDateString(),
             'expected_date' => $this->expected_date?->toDateString(),

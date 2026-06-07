@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\OrderException;
 use App\Models\Admin;
+use App\Models\BranchUser;
 use App\Models\CompanyVn;
 use App\Models\ExchangeRate;
 use App\Models\Order;
@@ -26,6 +27,8 @@ class OrderService
     {
         if ($user instanceof CompanyVn) {
             $filters['company_vn_id'] = $user->id;
+        } elseif ($user instanceof BranchUser) {
+            $filters['branch_id'] = $user->branch_id;
         }
 
         $perPage = min((int) ($filters['per_page'] ?? 20), 100);
@@ -46,9 +49,9 @@ class OrderService
         return $order;
     }
 
-    public function store(array $data, CompanyVn $company, bool $submit = false): Order
+    public function store(array $data, Authenticatable $user, string $userType, bool $submit = false): Order
     {
-        $order = DB::transaction(function () use ($data, $company, $submit) {
+        $order = DB::transaction(function () use ($data, $user, $userType, $submit) {
             $lines = $data['items'] ?? [];
             $status = $submit ? 'PENDING' : ($data['status'] ?? 'DRAFT');
 
@@ -61,8 +64,7 @@ class OrderService
             $rate = $this->currentExchangeRate();
             $totals = $this->calculateTotals($lines, $rate);
 
-            $order = $this->orderRepository->create([
-                'company_vn_id' => $company->id,
+            $orderPayload = [
                 'order_no' => $this->orderRepository->generateOrderNo(),
                 'status' => $status,
                 'order_date' => now()->toDateString(),
@@ -72,11 +74,23 @@ class OrderService
                 'exchange_rate' => $rate,
                 'biko' => $data['biko'] ?? null,
                 'created' => now(),
-                'created_user_id' => $company->id,
+                'created_user_id' => $user->id,
                 'deleted_flag' => false,
-            ]);
+            ];
 
-            $this->syncDetails($order, $lines, $company->id);
+            if (str_starts_with($userType, 'branch_') && $user instanceof BranchUser) {
+                $orderPayload['branch_id'] = $user->branch_id;
+                $orderPayload['company_vn_id'] = null;
+            } elseif ($user instanceof CompanyVn) {
+                $orderPayload['company_vn_id'] = $user->id;
+                $orderPayload['branch_id'] = null;
+            } else {
+                throw new OrderException('M0407', 403);
+            }
+
+            $order = $this->orderRepository->create($orderPayload);
+
+            $this->syncDetails($order, $lines, $user->id);
 
             if ($status === 'PENDING') {
                 foreach ($lines as $line) {
@@ -102,9 +116,7 @@ class OrderService
             throw new OrderException('M0402', 409);
         }
 
-        if ($userType !== 'company' || $order->company_vn_id !== $user->id) {
-            throw new OrderException('M0407', 403);
-        }
+        $this->assertCanModify($order, $user, $userType);
 
         return DB::transaction(function () use ($order, $data, $user) {
             $lines = $data['items'] ?? null;
@@ -141,9 +153,7 @@ class OrderService
             throw new OrderException('M0402', 409);
         }
 
-        if ($userType !== 'company' || $order->company_vn_id !== $user->id) {
-            throw new OrderException('M0407', 403);
-        }
+        $this->assertCanModify($order, $user, $userType);
 
         $updated = DB::transaction(function () use ($order, $user) {
             foreach ($order->details as $detail) {
@@ -279,5 +289,32 @@ class OrderService
         if ($userType === 'company' && (int) $order->company_vn_id !== (int) $user->id) {
             throw new OrderException('M0407', 403);
         }
+
+        if (str_starts_with($userType, 'branch_') && $user instanceof BranchUser) {
+            if ((int) $order->branch_id !== (int) $user->branch_id) {
+                throw new OrderException('M0407', 403);
+            }
+        }
+    }
+
+    private function assertCanModify(Order $order, Authenticatable $user, string $userType): void
+    {
+        if ($userType === 'company') {
+            if ((int) $order->company_vn_id !== (int) $user->id) {
+                throw new OrderException('M0407', 403);
+            }
+
+            return;
+        }
+
+        if (str_starts_with($userType, 'branch_') && $user instanceof BranchUser) {
+            if ((int) $order->branch_id !== (int) $user->branch_id) {
+                throw new OrderException('M0407', 403);
+            }
+
+            return;
+        }
+
+        throw new OrderException('M0407', 403);
     }
 }

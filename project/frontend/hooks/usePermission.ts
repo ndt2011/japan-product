@@ -36,11 +36,20 @@ const COMPANY_PERMISSIONS: Permission[] = [
   "reports.orders",
 ];
 
+const BRANCH_PERMISSIONS: Permission[] = [
+  "orders.create",
+  "reports.orders",
+];
+
 export function usePermission(permission: Permission): boolean {
   const userType = useAuthStore((s) => s.user?.user_type);
   if (!userType) return false;
   if (userType === "admin") return ADMIN_PERMISSIONS.includes(permission);
-  return COMPANY_PERMISSIONS.includes(permission);
+  if (userType === "company") return COMPANY_PERMISSIONS.includes(permission);
+  if (userType === "branch_manager" || userType === "branch_staff") {
+    return BRANCH_PERMISSIONS.includes(permission);
+  }
+  return false;
 }
 
 export function useIsAdmin(): boolean {
@@ -65,15 +74,20 @@ export function canAccessRoute(user: AuthUser | null, pathname: string): boolean
     "/debts",
   ];
 
-  const companyOnlyPrefixes = ["/orders/new"];
+  const companyOrBranchPrefixes = ["/orders/new"];
 
-  if (user.user_type === "company") {
-    if (adminOnlyPrefixes.some((p) => pathname.startsWith(p))) return false;
+  if (user.user_type === "company" || user.user_type === "branch_manager" || user.user_type === "branch_staff") {
+    if (adminOnlyPrefixes.some((p) => pathname.startsWith(p))) {
+      if (user.user_type === "branch_manager" && pathname.startsWith(`/admin/branches/${user.branch_id}/users`)) {
+        return true;
+      }
+      return false;
+    }
     if (/\/products\/\d+\/edit/.test(pathname)) return false;
     return true;
   }
 
-  if (companyOnlyPrefixes.some((p) => pathname.startsWith(p))) return false;
+  if (companyOrBranchPrefixes.some((p) => pathname.startsWith(p))) return false;
 
   return true;
 }

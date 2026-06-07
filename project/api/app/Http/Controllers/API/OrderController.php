@@ -60,7 +60,11 @@ class OrderController extends Controller
     {
         $auth = AuthContext::from($request);
 
-        if ($auth['type'] !== 'company') {
+        if ($auth['type'] === 'admin') {
+            return ApiResponse::error('M0407', null, 403);
+        }
+
+        if ($auth['type'] !== 'company' && ! str_starts_with($auth['type'], 'branch_')) {
             return ApiResponse::error('M0407', null, 403);
         }
 
@@ -68,6 +72,7 @@ class OrderController extends Controller
             $order = $this->orderService->store(
                 $request->validated(),
                 $auth['user'],
+                $auth['type'],
                 (bool) $request->boolean('submit'),
             );
         } catch (OrderException $e) {

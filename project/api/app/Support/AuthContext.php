@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\BranchUser;
 use App\Models\CompanyVn;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
@@ -10,7 +11,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 class AuthContext
 {
     /**
-     * @return array{user: Authenticatable, type: string, id: int}
+     * @return array{user: Authenticatable|null, type: string, id: int}
      */
     public static function from(Request $request): array
     {
@@ -22,18 +23,26 @@ class AuthContext
             $accessToken = PersonalAccessToken::findToken($bearer);
             if ($accessToken?->tokenable) {
                 $user = $accessToken->tokenable;
-                $type = str_contains((string) $accessToken->tokenable_type, 'CompanyVn')
-                    ? 'company'
-                    : 'admin';
+                $tokenableType = (string) $accessToken->tokenable_type;
+                if (str_contains($tokenableType, 'CompanyVn')) {
+                    $type = 'company';
+                } elseif (str_contains($tokenableType, 'BranchUser')) {
+                    /** @var BranchUser $user */
+                    $type = $user->user_type;
+                } else {
+                    $type = 'admin';
+                }
             }
         } elseif ($user instanceof CompanyVn) {
             $type = 'company';
+        } elseif ($user instanceof BranchUser) {
+            $type = $user->user_type;
         }
 
         return [
             'user' => $user,
             'type' => $type,
-            'id' => (int) $user->id,
+            'id' => (int) ($user?->id ?? 0),
         ];
     }
 }

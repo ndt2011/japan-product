@@ -110,7 +110,19 @@ curl https://<api>/api/health
 curl "https://<api>/api/health?ip=1"
 ```
 
-Fields: `rakuten_configured`, `openai_configured`, `queue_connection`, `ai_search_result_limit`.
+Fields: `rakuten_configured`, `openai_configured`, `queue_connection`, `ai_search_result_limit`, `product_image_disk`, `r2_configured`.
+
+**R2 / Railway Bucket** (ảnh sản phẩm):
+
+```env
+PRODUCT_IMAGE_DISK=r2
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET=...
+R2_ENDPOINT=...
+```
+
+Chi tiết: [../devops/r2-cloudflare-setup.md](../devops/r2-cloudflare-setup.md)
 
 ---
 
@@ -135,12 +147,29 @@ Fields: `rakuten_configured`, `openai_configured`, `queue_connection`, `ai_searc
 
 ---
 
-## 9. Checklist
+## 9. Checklist staging OPS
+
+```bash
+# Railway Shell — KHÔNG chạy migrate thủ công nếu deploy đã auto-migrate
+php artisan migrate:status   # tất cả Ran
+
+# Sau migrate OK — embedding catalog (luồng B)
+php artisan products:generate-vi
+php artisan products:embed --force
+
+# Seed chi nhánh (nếu DB mới)
+php artisan db:seed --class=BranchSeeder
+```
 
 ```
-[ ] OPENAI_API_KEY + RAKUTEN_* trong .env / Railway
+[ ] OPENAI_API_KEY + RAKUTEN_* trong Railway Variables
+[ ] PRODUCT_IMAGE_DISK=r2 + R2_* (Railway Bucket)
+[ ] /api/health → r2_configured: true, product_image_disk: "r2"
 [ ] Rakuten: IP + URL đã đăng ký
 [ ] QUEUE_CONNECTION=sync
-[ ] /api/health?ip=1 → outbound_ip đã whitelist
-[ ] /ai-center → Khám phá web → コラーゲン → có ảnh Rakuten
+[ ] products:generate-vi + products:embed --force
+[ ] /ai-center → Khám phá web → có ảnh Rakuten
+[ ] Login hn_manager / Manager@123 → tạo đơn chi nhánh OK
 ```
+
+> **Lưu ý migrate**: `stock_movements already exists` khi chạy migrate thủ công là bình thường — `railway/start.sh` đã chạy migrate trên deploy. Dùng `migrate:status` để kiểm tra.

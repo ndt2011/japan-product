@@ -8,6 +8,7 @@ use App\Http\Presenters\AuthUserPresenter;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\AuthService;
 use App\Support\ApiResponse;
+use App\Support\AuthContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -47,11 +48,10 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $userType = $user instanceof \App\Models\CompanyVn ? 'company' : 'admin';
+        $auth = AuthContext::from($request);
 
         return ApiResponse::success([
-            'user' => AuthUserPresenter::present($user, $userType),
+            'user' => AuthUserPresenter::present($auth['user'], $auth['type']),
         ]);
     }
 }

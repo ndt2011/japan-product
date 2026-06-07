@@ -5,16 +5,51 @@ export interface ApiResponse<T = unknown> {
   errors: Record<string, string[]> | null;
 }
 
+export type UserType = "admin" | "company" | "branch_manager" | "branch_staff";
+
+export interface BranchSummary {
+  id: number;
+  branch_cd: string;
+  branch_name: string;
+  region: string;
+  province: string;
+}
+
 export interface AuthUser {
   id: number;
   login_id: string;
-  user_type: "admin" | "company";
+  user_type: UserType;
   full_name?: string;
   company_name?: string;
   email?: string;
+  role?: "manager" | "staff";
   branch_id?: number | null;
+  branch?: BranchSummary | null;
   company_cd?: string;
   contact_name?: string;
+}
+
+export interface BranchItem {
+  id: number;
+  branch_cd: string;
+  branch_name: string;
+  region: string;
+  province: string;
+  address?: string | null;
+  tel?: string | null;
+  disabled_flag: boolean;
+  users_count?: number;
+}
+
+export interface BranchUserItem {
+  id: number;
+  branch_id: number;
+  login_id: string;
+  full_name: string;
+  email?: string | null;
+  role: "manager" | "staff";
+  user_type: UserType;
+  disabled_flag: boolean;
 }
 
 export interface LoginData {

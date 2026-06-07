@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'company_vn_id',
+        'branch_id',
         'order_no',
         'status',
         'order_date',
@@ -49,6 +50,11 @@ class Order extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(CompanyVn::class, 'company_vn_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function handler(): BelongsTo

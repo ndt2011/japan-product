@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Exceptions\AuthException;
 use App\Models\Admin;
+use App\Models\BranchUser;
 use App\Models\CompanyVn;
 use App\Repositories\AdminRepository;
+use App\Repositories\BranchUserRepository;
 use App\Repositories\CompanyVnRepository;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +18,7 @@ class AuthService
     public function __construct(
         private readonly AdminRepository $adminRepository,
         private readonly CompanyVnRepository $companyVnRepository,
+        private readonly BranchUserRepository $branchUserRepository,
     ) {}
 
     /**
@@ -33,6 +36,12 @@ class AuthService
 
         if ($company && $company->password && Hash::check($password, $company->password)) {
             return $this->issueToken($company, 'company', $loginId, $ip, $rememberMe);
+        }
+
+        $branchUser = $this->branchUserRepository->findActiveByLoginId($loginId);
+
+        if ($branchUser && Hash::check($password, $branchUser->password)) {
+            return $this->issueToken($branchUser, $branchUser->user_type, $loginId, $ip, $rememberMe);
         }
 
         $this->logAttempt($ip, $loginId, 'Failure');

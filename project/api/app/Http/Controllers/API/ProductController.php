@@ -12,6 +12,7 @@ use App\Services\ProductService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -92,5 +93,37 @@ class ProductController extends Controller
         }
 
         return ApiResponse::success(null, 'M0303');
+    }
+
+    public function branchStats(int $id): JsonResponse
+    {
+        $stats = DB::table('order_details')
+            ->join('orders', 'order_details.order_id', '=', 'orders.id')
+            ->join('branches', 'orders.branch_id', '=', 'branches.id')
+            ->where('order_details.product_id', $id)
+            ->whereNotNull('orders.branch_id')
+            ->where('orders.deleted_flag', false)
+            ->where('order_details.deleted_flag', false)
+            ->selectRaw('
+                branches.id as branch_id,
+                branches.branch_name,
+                branches.region,
+                branches.province,
+                SUM(order_details.quantity) as total_ordered,
+                SUM(CASE WHEN orders.status IN ("PENDING","CONFIRMED","PROCESSING")
+                    THEN order_details.quantity ELSE 0 END) as pending_qty,
+                SUM(CASE WHEN orders.status = "DELIVERED"
+                    THEN order_details.quantity ELSE 0 END) as delivered_qty,
+                MAX(orders.created) as last_order_date
+            ')
+            ->groupBy('branches.id', 'branches.branch_name', 'branches.region', 'branches.province')
+            ->orderByDesc('total_ordered')
+            ->get();
+
+        return ApiResponse::success([
+            'product_id' => $id,
+            'branches' => $stats,
+            'total_ordered_all_branches' => $stats->sum('total_ordered'),
+        ]);
     }
 }
