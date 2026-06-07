@@ -1,0 +1,120 @@
+# Railway — Gắn MySQL vào service `product`
+
+> Khi `/api/health` trả `"db":"sqlite"`, `"db_host_set":false` → biến DB **chưa** vào container API.
+
+## Hay nhầm #1 — Thêm biến vào MySQL
+
+| ❌ Sai | ✅ Đúng |
+|--------|---------|
+| Tab **Variables** của service **MySQL** | Tab **Variables** của service **`product`** (GitHub) |
+
+Biến trên MySQL chỉ dùng cho container MySQL, **không** tự sang `product`.
+
+---
+
+## Cách fix — Copy tay (5 phút)
+
+### 1. Lấy giá trị từ MySQL
+
+1. Click **MySQL** (không phải product)
+2. Tab **Variables**
+3. Ghi lại giá trị **thật** (click icon copy):
+
+- `MYSQLHOST`
+- `MYSQLPORT`
+- `MYSQLDATABASE`
+- `MYSQLUSER`
+- `MYSQLPASSWORD`
+
+### 2. Dán vào `product`
+
+1. Click **`product`**
+2. Tab **Variables** → **RAW Editor**
+3. Dán (thay giá trị thật):
+
+```env
+APP_ENV=staging
+APP_URL=https://product-production-7e4e.up.railway.app
+APP_DEBUG=false
+
+DB_CONNECTION=mysql
+DB_HOST=<paste MYSQLHOST>
+DB_PORT=<paste MYSQLPORT>
+DB_DATABASE=<paste MYSQLDATABASE>
+DB_USERNAME=<paste MYSQLUSER>
+DB_PASSWORD=<paste MYSQLPASSWORD>
+```
+
+4. **Update Variables**
+
+### 3. Redeploy bắt buộc
+
+**Deployments** → **Redeploy** → đợi **Success**
+
+### 4. Kiểm tra
+
+```
+GET https://product-production-7e4e.up.railway.app/api/health
+```
+
+Kỳ vọng:
+
+```json
+"db": "mysql",
+"db_host_set": true,
+"db_connection_env": "mysql"
+```
+
+---
+
+## Hay nhầm #2 — Sai Railway Environment
+
+Góc trên dashboard có dropdown **Environment** (ví dụ `production`).
+
+Biến phải thêm trong **cùng environment** đang deploy.
+
+---
+
+## Cách fix — Railway CLI (Windows)
+
+```powershell
+npm install -g @railway/cli
+railway login
+cd c:\WORK\05_THUY_PROJECT\project_alone\TT_product_japan
+railway link
+```
+
+Chọn project `japan-product-staging` và service **`product`**.
+
+Xem biến hiện tại:
+
+```powershell
+railway variables
+```
+
+Nếu trống → set (thay giá trị từ MySQL Variables):
+
+```powershell
+railway variables --set "DB_CONNECTION=mysql" --set "DB_HOST=mysql.railway.internal" --set "DB_PORT=3306" --set "DB_DATABASE=railway" --set "DB_USERNAME=root" --set "DB_PASSWORD=YOUR_PASSWORD"
+```
+
+Redeploy:
+
+```powershell
+railway up --detach
+```
+
+---
+
+## Sau khi `db: mysql`
+
+```bash
+php artisan db:seed --force
+```
+
+Login test:
+
+```powershell
+$body = '{"login_id":"admin","password":"Admin@123"}'
+Invoke-RestMethod -Uri "https://product-production-7e4e.up.railway.app/api/auth/login" -Method POST -Body $body -ContentType "application/json"
+```
