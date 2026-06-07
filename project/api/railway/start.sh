@@ -23,6 +23,10 @@ if [ -z "$DB_CONNECTION" ] || [ "$DB_CONNECTION" = "sqlite" ]; then
   fi
 fi
 
+echo "[start] env DB_CONNECTION=${DB_CONNECTION:-unset}"
+echo "[start] env DB_HOST=${DB_HOST:-unset}"
+echo "[start] env MYSQLHOST=${MYSQLHOST:-unset}"
+
 php artisan config:clear
 
 php artisan migrate --force

@@ -10,10 +10,16 @@ class HealthController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        return ApiResponse::success([
+        $payload = [
             'status' => 'ok',
             'service' => 'japan-product-api',
             'timestamp' => now()->toIso8601String(),
-        ]);
+        ];
+
+        if (in_array(config('app.env'), ['staging', 'local'], true)) {
+            $payload['db'] = config('database.default');
+        }
+
+        return ApiResponse::success($payload);
     }
 }
