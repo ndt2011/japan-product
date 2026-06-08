@@ -152,11 +152,10 @@ class OrderTest extends TestCase
 
         $confirm->assertOk()
             ->assertJsonPath('message', 'M0404')
-            ->assertJsonPath('data.order.status', 'CONFIRMED');
+            ->assertJsonPath('data.order.status', 'APPROVED');
 
-        $this->assertDatabaseHas('invoices', [
+        $this->assertDatabaseMissing('invoices', [
             'order_id' => $orderId,
-            'status' => 'draft',
         ]);
     }
 
@@ -294,7 +293,7 @@ class OrderTest extends TestCase
             ->latest('id')
             ->first();
 
-        $this->assertStringContainsString('CONFIRMED', $history->subject);
+        $this->assertStringContainsString('APPROVED', $history->subject);
         $this->assertStringContainsString($orderNo, $history->subject);
     }
 }

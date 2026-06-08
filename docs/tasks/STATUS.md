@@ -1,9 +1,9 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-08 (lần 6 — Quy trình dạy AI catalog)  
+> **Cập nhật**: 2026-06-08 (lần 13 — FE-V3-033 validation + sync G2–G3)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
-> **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp**  
+> **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp** (V3 ~95% task)  
 > **Server**: [SERVER_CURRENT.md](../devops/SERVER_CURRENT.md)
 
 ---
@@ -19,8 +19,10 @@
 | **S6–S7** Kho + Báo cáo | Reports + profit | **✅ ~95%** | Tab Lợi nhuận ✅ |
 | **DevOps** | Railway + Vercel staging | **✅** | Auto-deploy `main` |
 | **Phase 2** Invoice & Payment | HĐ, công nợ, profit | **✅ ~98%** | by-product ⏳ P2 |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~95%** | Code local · chưa push `main` |
+| **AI Purchasing** | BE service + FE screen | **✅ ~90%** | History page P2 còn lại |
 
-**Tổng MVP + Phase 2**: ~**95%** — staging dùng được thực tế.
+**Tổng MVP + Phase 2 + V3 core**: ~**92%** — staging cần migrate `100100` + `100110` sau push.
 
 ---
 
@@ -33,6 +35,13 @@
 | 2026-06-08 PM | Admin UX | All-users, ma trận quyền (`29fe4e8`) |
 | 2026-06-08 PM | Audit BE | profit API, order_costs, patch invoices |
 | 2026-06-08 PM | Phase 2 FE | Form giá kép, tab profit, badge 🔔, DomPDF |
+| 2026-06-08 PM | V3 local | Order APPROVED→PAID→SHIPPING, notifications, dashboard revenue |
+| 2026-06-08 PM | Docs sync | `backend-tasks` / `frontend-tasks` tick ✅⚠️📋 |
+| 2026-06-08 PM | FE-V3-013 | CSV import modal InventoryScreen + proxy bulkImport |
+| 2026-06-08 PM | AI-P FE | `PurchasingScreen` + `ProductCard` + `ScoreBar` + nav item |
+| 2026-06-08 PM | FE-V3-024 | Branch xem products đã duyệt + filter disabled |
+| 2026-06-08 PM | FE-V3-033 | `form-validation.ts` + inline errors 14 form screens |
+| 2026-06-08 PM | Docs G2–G3 | Sync STATUS · backend-tasks · backlog · audit |
 
 ---
 
@@ -115,6 +124,64 @@
 
 ---
 
+## ✅ V3 Giai đoạn 1 — Critical (local, chưa push)
+
+| ID | Nội dung | Trạng thái |
+|----|----------|------------|
+| BE-V3-001~009 | Order flow + shipment tracking API | ✅ |
+| BE-V3-010~012 | Pricing 3 tầng + `retail_price_vnd` | ✅ |
+| BE-V3-013~016 | Inventory migration + update/delete API | ✅ |
+| BE-V3-019~022 | Notifications table + service + triggers | ✅ |
+| FE-V3-001~006 | Duyệt đơn, thanh toán, tracking, badges, proxy | ✅ |
+| FE-V3-010,014 | Inventory list + restock badge | ✅ |
+| FE-V3-015,016 | Product form/detail pricing branch | ✅ |
+
+**Chưa G1:** BE-V3-018 scheduler restock daily (P1)
+
+---
+
+## ✅ V3 Giai đoạn 2 — Important (G2, local)
+
+| ID | Nội dung | Trạng thái |
+|----|----------|------------|
+| BE-V3-023~025 | `/dashboard/revenue`, `/cashflow`, phân quyền role | ✅ |
+| BE-V3-026, 028 | `barcode`, `min_order_qty`, AI `image_url` | ✅ |
+| BE-V3-027 | `ProductResource.created_by_name` | ✅ |
+| BE-V3-030 | Categories CRUD + warehouses create/list | ✅ |
+| BE-V3-031 | Profile migration `avatar_url`, `phone` | ✅ `100110` |
+| BE-V3-032 | GET/PUT `/profile` | ✅ |
+| FE-V3-017~019 | Dashboard tài chính + chart + proxy | ✅ |
+| FE-V3-020~024 | Product thumb, gallery, filter, AI thumb, branch filter | ✅ |
+| FE-V3-025~026 | `/admin/master-data` 4 tab (categories, warehouses, suppliers RO, units) | ✅ |
+| FE-V3-027 | `/profile` — sửa tên, email, phone, avatar URL | ✅ |
+| FE-V3-032 | Tỷ giá JPY/VND trên Dashboard + estimator ProductForm | ✅ |
+
+**Còn G2 (P2, không blocking):** BE-V3-029 Form Requests · BE-V3-030 suppliers full CRUD · BE-V3-032 `POST /profile/avatar` R2 · FE avatar upload R2
+
+---
+
+## ✅ V3 Giai đoạn 3 — Enhancement (G3, local)
+
+| ID | Nội dung | Trạng thái |
+|----|----------|------------|
+| FE-V3-028 | Mobile bottom navigation | ✅ |
+| FE-V3-029 | Products/Orders card list mobile | ✅ |
+| FE-V3-030 | AI Chat full-screen | ✅ |
+| FE-V3-031 | Mermaid trong chat | ✅ |
+| FE-V3-033 | Inline validation tất cả forms (`lib/form-validation.ts`) | ✅ |
+| FE-V3-007~009 | Notification dropdown + badge | ✅ |
+| FE-V3-011~014 | Inventory edit/delete/CSV import | ✅ |
+
+**G3 hoàn thành** — không còn task FE blocking.
+
+**Migrations:** `100100_v3_upgrade_phase1` · `100110_v3_profile_fields`
+
+**OPS sau push:** Railway Deploy Logs → `[start] migrate OK` → smoke `/api/notifications/count`, `/api/profile`
+
+Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-tasks.md](./frontend-tasks.md) · [upgrade-v3-analysis.md](../sa/amendments/upgrade-v3-analysis.md)
+
+---
+
 ## 🔄 Còn lại (P2 — không blocking staging)
 
 | ID | Việc | Priority |
@@ -125,7 +192,10 @@
 | INV-001 | reserve/release thêm warehouseId (khi có kho thứ 2) | P2 — xem `inventory-known-issues.md` |
 | INV-002 | Pre-order support (khi BA yêu cầu) | P3 — xem `inventory-known-issues.md` |
 | **AI-P** | **AI Purchasing Specialist** — BE 8 tasks + FE 7 tasks | **P1 — xem `ai-purchasing-specialist.md`** |
-| OPS | Railway: `php artisan migrate` (bao gồm ai_conversations + ai_messages) | **P0 ops** |
+| **V3-G1** | Order + Notify + Pricing + Inventory core | **✅ ~97%** — thiếu BE-V3-018 scheduler |
+| **V3-G2** | Dashboard + Product + Master + Profile | **✅ ~92%** — thiếu avatar R2 · Form Requests · suppliers CRUD |
+| **V3-G3** | Mobile + Mermaid + validation | **✅ 100%** |
+| OPS | Railway migrate `100100` + `100110` sau push `main` | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
 | OPS | Vercel: cập nhật domain R2 trong `next.config.mjs` | P1 |
 | T1-003 | Auto price calculation | P2 |
@@ -145,7 +215,7 @@
 cd project/api && php artisan test
 ```
 
-**64 passed** · FE build OK (`npm run build`)
+**73 passed** · FE build OK (`npm run build`)
 
 ---
 

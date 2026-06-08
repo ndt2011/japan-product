@@ -21,6 +21,8 @@ class BranchUser extends Authenticatable
         'password',
         'full_name',
         'email',
+        'phone',
+        'avatar_url',
         'role',
         'disabled_flag',
         'created',

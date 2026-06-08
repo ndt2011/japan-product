@@ -71,7 +71,7 @@ class ShipmentBatchRepository
 
         return Order::query()
             ->active()
-            ->where('status', 'CONFIRMED')
+            ->whereIn('status', \App\Services\OrderService::BATCH_READY_STATUSES)
             ->whereNotIn('id', $assignedOrderIds)
             ->with('company')
             ->orderByDesc('id')

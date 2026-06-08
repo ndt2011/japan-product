@@ -30,7 +30,7 @@ const costTypeOptions = [
   { value: "other", label: "Khác" },
 ];
 
-const INVOICE_ELIGIBLE = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "DELIVERED_ADMIN", "COMPLETED"];
+const INVOICE_ELIGIBLE = ["APPROVED", "PAID", "CONFIRMED", "PROCESSING", "SHIPPING", "SHIPPED", "DELIVERED", "DELIVERED_ADMIN", "COMPLETED"];
 
 export function OrderDetailScreen({ orderId }: { orderId: number }) {
   const isAdmin = useIsAdmin();
@@ -48,6 +48,8 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [acting, setActing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [paymentRef, setPaymentRef] = useState("");
 
   async function loadCosts() {
     if (!isAdmin) return;
@@ -196,20 +198,20 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                 Gửi đơn
               </Button>
             )}
-            {order.status === "PENDING" && (
-              <>
-                <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/orders/${orderId}/confirm`)}>
-                  Xác nhận (JP)
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  disabled={acting}
-                  onClick={() => action(`/api/proxy/orders/${orderId}/cancel`)}
-                >
-                  Hủy
-                </Button>
-              </>
+            {order.status === "PENDING" && isAdmin && (
+              <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/orders/${orderId}/approve`)}>
+                Duyệt đơn
+              </Button>
+            )}
+            {order.status === "PENDING" && !isAdmin && (
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={acting}
+                onClick={() => action(`/api/proxy/orders/${orderId}/cancel`)}
+              >
+                Hủy
+              </Button>
             )}
             {canConfirmReceipt && order.status === "DELIVERED_ADMIN" && (
               <Button
@@ -232,6 +234,52 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
             )}
           </div>
         </div>
+
+        {(order.tracking_no || order.carrier_name) && (
+          <div className="mb-4 p-3 rounded-lg bg-purple-50 border border-purple-100 text-sm">
+            <p className="font-medium text-purple-900">Vận chuyển</p>
+            {order.carrier_name && <p className="text-purple-800">Đơn vị: {order.carrier_name}</p>}
+            {order.tracking_no && <p className="text-purple-800">Mã vận đơn: {order.tracking_no}</p>}
+          </div>
+        )}
+
+        {(order.status === "APPROVED" || order.status === "CONFIRMED") && canConfirmReceipt && (
+          <Card className="p-4 mb-4 space-y-3 border-brand/20">
+            <h3 className="text-sm font-medium">Ghi nhận thanh toán</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Select
+                label="Hình thức"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                options={[
+                  { value: "bank_transfer", label: "Chuyển khoản" },
+                  { value: "cash", label: "Tiền mặt" },
+                  { value: "credit", label: "Ghi nợ chuyến" },
+                ]}
+              />
+              <Input
+                label="Mã tham chiếu / biên lai"
+                optional
+                value={paymentRef}
+                onChange={(e) => setPaymentRef(e.target.value)}
+              />
+              <div className="flex items-end">
+                <Button
+                  size="sm"
+                  disabled={acting}
+                  onClick={() =>
+                    action(`/api/proxy/orders/${orderId}/record-payment`, "PUT", {
+                      payment_method: paymentMethod,
+                      payment_ref: paymentRef || null,
+                    })
+                  }
+                >
+                  Xác nhận đã thanh toán
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mb-6">
           <div>

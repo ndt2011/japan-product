@@ -24,6 +24,8 @@ class CompanyVn extends Authenticatable
         'tel',
         'fax',
         'email',
+        'phone',
+        'avatar_url',
         'tax_code',
         'contact_name',
         'memo',

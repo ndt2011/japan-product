@@ -20,12 +20,17 @@ use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
+    /** @var list<string> */
+    public const BATCH_READY_STATUSES = ['CONFIRMED', 'APPROVED', 'PAID'];
+
     public function __construct(
         private readonly OrderRepository $orderRepository,
         private readonly InventoryService $inventoryService,
         private readonly OrderMailService $orderMailService,
         private readonly InvoiceService $invoiceService,
         private readonly WarehouseRepository $warehouseRepository,
+        private readonly ShipmentBatchService $shipmentBatchService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
@@ -200,6 +205,12 @@ class OrderService
 
     public function confirm(int $id, Admin $admin): Order
     {
+        return $this->approve($id, $admin);
+    }
+
+    /** V3: PENDING → APPROVED — chờ thanh toán, chưa tạo HĐ tự động */
+    public function approve(int $id, Admin $admin): Order
+    {
         $order = $this->orderRepository->findDetail($id);
 
         if (! $order) {
@@ -211,22 +222,86 @@ class OrderService
         }
 
         $lockedRate = $this->currentExchangeRate();
+        $now = now();
 
         $updated = $this->orderRepository->update($order, [
-            'status' => 'CONFIRMED',
+            'status' => 'APPROVED',
             'exchange_rate' => $lockedRate,
             'handler_admin_id' => $admin->id,
-            'modified' => now(),
+            'approved_at' => $now,
+            'approved_by' => $admin->id,
+            'modified' => $now,
             'modified_user_id' => $admin->id,
         ]);
 
         $this->orderMailService->notifyCompanyOrderConfirmed($updated);
 
-        try {
-            $this->invoiceService->createFromOrder($updated->id, $admin);
-        } catch (InvoiceException) {
-            // Đơn đã có HĐ hoặc không đủ điều kiện — bỏ qua sau confirm
+        $this->notificationService->notifyOrderOwners(
+            $updated,
+            'ORDER_APPROVED',
+            "Đơn #{$updated->order_no} đã được duyệt",
+            'Vui lòng thanh toán để hệ thống chuẩn bị hàng.',
+        );
+
+        return $updated;
+    }
+
+    /** V3: APPROVED/CONFIRMED → PAID — tự tạo HĐ + chuyến hàng */
+    public function recordPayment(int $id, array $data, Authenticatable $user, string $userType): Order
+    {
+        $isCompany = $userType === 'company' && $user instanceof CompanyVn;
+        $isBranch = str_starts_with($userType, 'branch_') && $user instanceof BranchUser;
+
+        if (! $isCompany && ! $isBranch) {
+            throw new OrderException('M0407', 403);
         }
+
+        $order = $this->show($id, $user, $userType);
+
+        if (! in_array($order->status, ['APPROVED', 'CONFIRMED'], true)) {
+            throw new OrderException('M0402', 409);
+        }
+
+        $now = now();
+
+        $updated = DB::transaction(function () use ($order, $data, $user, $now) {
+            $updated = $this->orderRepository->update($order, [
+                'status' => 'PAID',
+                'payment_method' => $data['payment_method'] ?? 'bank_transfer',
+                'payment_at' => $now,
+                'payment_ref' => $data['payment_ref'] ?? null,
+                'payment_note' => $data['payment_note'] ?? null,
+                'modified' => $now,
+                'modified_user_id' => $user->id,
+            ]);
+
+            $admin = Admin::query()
+                ->where('disabled_flag', false)
+                ->where('deleted_flag', false)
+                ->first();
+
+            if ($admin) {
+                try {
+                    $this->invoiceService->createFromOrder($updated->id, $admin);
+                } catch (InvoiceException) {
+                    // HĐ đã tồn tại
+                }
+
+                if (! $this->shipmentBatchService->orderInActiveBatch($updated->id)) {
+                    $this->shipmentBatchService->autoCreateFromOrder($updated, $admin);
+                }
+            }
+
+            return $this->orderRepository->findDetail($updated->id);
+        });
+
+        $this->notificationService->notifyAllAdmins(
+            'ORDER_PAID',
+            "Đơn #{$updated->order_no} đã thanh toán",
+            'Hệ thống đang chuẩn bị hàng.',
+            'order',
+            $updated->id,
+        );
 
         return $updated;
     }

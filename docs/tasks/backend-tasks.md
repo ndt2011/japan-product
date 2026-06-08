@@ -125,6 +125,83 @@
 
 ---
 
+## SPRINT V3 — Giai đoạn 1: Critical (Order Flow + Pricing + Inventory + Notify)
+
+> Spec đầy đủ: `docs/sa/amendments/upgrade-v3-analysis.md`
+
+### V3-G1: Order Flow Redesign (#12)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-001 | Migration: payment fields orders + status string APPROVED/PAID/SHIPPING | P0 | — | 2h | ✅ `100100` |
+| BE-V3-002 | Migration: carrier_name, shipping_at vào shipment_batches | P0 | — | 1h | ✅ `100100` |
+| BE-V3-003 | `OrderService::approve()` — PENDING → APPROVED, notify branch | P0 | BE-V3-001 | 2h | ✅ |
+| BE-V3-004 | `OrderService::recordPayment()` — APPROVED → PAID + payment fields | P0 | BE-V3-001 | 2h | ✅ |
+| BE-V3-005 | `ShipmentBatchService::autoCreateFromOrder()` — tự tạo khi PAID | P0 | BE-V3-002 | 2h | ✅ |
+| BE-V3-006 | `ShipmentBatchService::setTracking()` — PROCESSING → SHIPPING + tracking | P0 | BE-V3-002 | 1h | ✅ |
+| BE-V3-007 | `InvoiceService` — tự tạo invoice khi order PAID | P0 | BE-V3-004 | 2h | ✅ |
+| BE-V3-008 | `OrderController` — thêm endpoint approve + recordPayment | P0 | BE-V3-003,004 | 1h | ✅ |
+| BE-V3-009 | `ShipmentBatchController` — thêm endpoint setTracking | P0 | BE-V3-006 | 1h | ✅ |
+
+### V3-G1: Pricing Permissions (#3)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-010 | Migration: thêm `retail_price_vnd` vào products | P0 | — | 0.5h | ✅ `100100` |
+| BE-V3-011 | `ProductResource` — phân quyền 3 tầng (admin/company/branch) cho price fields | P0 | BE-V3-010 | 2h | ✅ |
+| BE-V3-012 | `StoreProductRequest` — thêm `retail_price_vnd` validation | P0 | BE-V3-010 | 0.5h | ✅ |
+
+### V3-G1: Inventory Workflow (#6)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-013 | Migration: `location_type`, `is_default` vào warehouses | P0 | — | 0.5h | ✅ `100100` |
+| BE-V3-014 | Migration: `inventory_cd`, `restock_status`, `restock_eta`, `min_stock_qty` vào inventories | P0 | — | 1h | ✅ `100100` |
+| BE-V3-015 | `InventoryService` — auto sinh `inventory_cd` (INV-{WH}-{PROD}-{SEQ}) | P0 | BE-V3-014 | 2h | ✅ |
+| BE-V3-016 | `InventoryController` — PUT update + DELETE (soft) | P0 | BE-V3-015 | 2h | ✅ |
+| BE-V3-017 | `POST /inventories/bulk-import` — CSV nhập kho hàng loạt | P1 | BE-V3-015 | 3h | ✅ |
+| BE-V3-018 | Scheduler: kiểm tra tồn kho daily → auto set restock_status | P1 | BE-V3-014 | 2h | 📋 |
+
+### V3-G1: Notification System (#4)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-019 | Migration: bảng `notifications` | P1 | — | 1h | ✅ `100100` |
+| BE-V3-020 | `NotificationService::send()` — tạo record + đánh dấu unread | P1 | BE-V3-019 | 2h | ✅ |
+| BE-V3-021 | `NotificationController` — GET list, PUT read, PUT read-all, GET count | P1 | BE-V3-020 | 2h | ✅ |
+| BE-V3-022 | Inject `NotificationService` vào OrderService + AiProductCandidateService | P1 | BE-V3-020 | 2h | ✅ |
+
+---
+
+## SPRINT V3 — Giai đoạn 2: Important (Dashboard + Product + Profile)
+
+### V3-G2: Dashboard Financial (#8 + #9)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-023 | `GET /dashboard/revenue?year&month` — doanh thu theo tháng | P1 | — | 4h | ✅ |
+| BE-V3-024 | `GET /dashboard/cashflow?year&from_month&to_month` — cashflow theo tháng | P1 | — | 4h | ✅ |
+| BE-V3-025 | `DashboardService` — phân quyền chặt theo role (`can_view_financial`) | P1 | — | 3h | ✅ |
+
+### V3-G2: Product Improvements (#1 #2 #5 #7)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-026 | Migration: `barcode`, `min_order_qty` vào products | P1 | — | 0.5h | ✅ `100100` |
+| BE-V3-027 | `ProductResource` — thêm `created_by_name` (resolve Admin từ `created_user_id`) | P1 | — | 1h | ✅ |
+| BE-V3-028 | `AiProductCandidateResource` — đảm bảo `image_url` trong response | P1 | — | 0.5h | ✅ |
+| BE-V3-029 | Review + cập nhật required validation tất cả Form Requests | P2 | — | 2h | 📋 |
+
+### V3-G2: Master Data + Profile (#10 #14)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-V3-030 | API CRUD `product_categories`; warehouses create/list; suppliers read-only | P2 | — | 3h | ✅ · suppliers CRUD 📋 P2 |
+| BE-V3-031 | Migration: `avatar_url`, `phone` vào admins + branch_users + companies_vn | P2 | — | 1h | ✅ `100110` |
+| BE-V3-032 | `GET/PUT /profile` + `POST /profile/avatar` (upload R2) | P2 | BE-V3-031 | 3h | ⚠️ GET/PUT ✅ · avatar R2 📋 |
+
+---
+
 ## Coding Standards
 
 - PSR-12 · Repository + Service · Form Request · API Resource

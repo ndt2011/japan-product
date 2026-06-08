@@ -66,7 +66,7 @@ class ShipmentBatchTest extends TestCase
         return Order::query()->create([
             'company_vn_id' => $companyId,
             'order_no' => 'ORD-TEST-'.uniqid(),
-            'status' => 'CONFIRMED',
+            'status' => 'PAID',
             'order_date' => now()->toDateString(),
             'total_jpy' => '1000',
             'total_vnd' => '200000',

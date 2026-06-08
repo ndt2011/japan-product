@@ -60,4 +60,128 @@ class InventoryController extends Controller
 
         return ApiResponse::success($result, 'M1003');
     }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'min_stock_qty' => ['nullable', 'integer', 'min:0'],
+            'restock_eta' => ['nullable', 'date'],
+            'restock_status' => ['nullable', 'in:NORMAL,LOW,CRITICAL,ON_ORDER'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $auth = AuthContext::from($request);
+
+        try {
+            $inventory = $this->inventoryService->updateRecord($id, $data, $auth['id']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return ApiResponse::error('M0002', null, 404);
+        }
+
+        return ApiResponse::success([
+            'inventory' => new InventoryResource($inventory),
+        ], 'M1001');
+    }
+
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+
+        try {
+            $this->inventoryService->softDelete($id, $auth['id']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return ApiResponse::error('M0002', null, 404);
+        }
+
+        return ApiResponse::success(null, 'M1002');
+    }
+}
+
+    /**
+     * POST /inventories/bulk-import
+     * CSV columns: product_cd, warehouse_id, quantity, min_stock_qty, notes
+     */
+    public function bulkImport(Request $request): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
+
+        $path = $request->file('file')->getRealPath();
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return ApiResponse::error('M0001', null, 422);
+        }
+
+        $auth = \App\Support\AuthContext::from($request);
+        $header = null;
+        $imported = 0;
+        $errors = [];
+        $row = 0;
+
+        while (($line = fgetcsv($handle)) !== false) {
+            $row++;
+            if ($header === null) {
+                $header = array_map('trim', $line);
+                continue;
+            }
+            if (count($line) < 3) continue;
+
+            $data = array_combine($header, array_map('trim', $line));
+            if (!$data) continue;
+
+            try {
+                $warehouseId = (int) ($data['warehouse_id'] ?? 0);
+                $productCd   = $data['product_cd'] ?? null;
+                $quantity    = (int) ($data['quantity'] ?? 0);
+
+                if (!$productCd || !$warehouseId) {
+                    $errors[] = "Dòng {$row}: thiếu product_cd hoặc warehouse_id";
+                    continue;
+                }
+
+                $product = \App\Models\Product::query()
+                    ->where('product_cd', $productCd)
+                    ->where('deleted_flag', false)
+                    ->first();
+
+                if (!$product) {
+                    $errors[] = "Dòng {$row}: không tìm thấy product_cd={$productCd}";
+                    continue;
+                }
+
+                $this->inventoryService->stockIn(
+                    (int) $product->id,
+                    $warehouseId,
+                    $quantity,
+                    (int) $auth['id'],
+                    'Nhập kho CSV bulk import',
+                    'csv_import',
+                    null,
+                    $data['notes'] ?? null,
+                );
+
+                // Update min_stock_qty if provided
+                if (!empty($data['min_stock_qty'])) {
+                    $inv = \App\Models\Inventory::query()
+                        ->where('product_id', $product->id)
+                        ->where('warehouse_id', $warehouseId)
+                        ->first();
+                    if ($inv) {
+                        $inv->update(['min_stock_qty' => (int) $data['min_stock_qty']]);
+                    }
+                }
+
+                $imported++;
+            } catch (\Throwable $e) {
+                $errors[] = "Dòng {$row}: " . $e->getMessage();
+            }
+        }
+
+        fclose($handle);
+
+        return ApiResponse::success([
+            'imported' => $imported,
+            'errors' => $errors,
+            'total_rows' => $row - 1,
+        ], $imported > 0 ? 'M0200' : 'M0001');
+    }
 }

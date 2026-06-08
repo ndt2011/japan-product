@@ -128,4 +128,24 @@ class CodeGeneratorService
 
         return strtr($str, $map);
     }
+
+    /** INV-{WH}-{PROD}-{SEQ3} */
+    public function inventoryCode(string $warehouseCd, string $productCd): string
+    {
+        $wh = strtoupper(preg_replace('/[^A-Z0-9]/', '', $warehouseCd) ?: 'WH');
+        $prod = strtoupper(preg_replace('/[^A-Z0-9]/', '', $productCd) ?: 'PRD');
+        $prefix = "INV-{$wh}-{$prod}";
+
+        $latest = \App\Models\Inventory::query()
+            ->where('inventory_cd', 'like', "{$prefix}-%")
+            ->orderByDesc('id')
+            ->value('inventory_cd');
+
+        $seq = 1;
+        if ($latest && preg_match('/-(\d{3})$/', $latest, $m)) {
+            $seq = (int) $m[1] + 1;
+        }
+
+        return sprintf('%s-%03d', $prefix, $seq);
+    }
 }

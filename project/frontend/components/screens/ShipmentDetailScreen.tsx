@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, Button, Card, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ShipmentBatchItem } from "@/types/api";
@@ -36,12 +36,17 @@ export function ShipmentDetailScreen({ batchId }: { batchId: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [acting, setActing] = useState(false);
+  const [trackingNo, setTrackingNo] = useState("");
+  const [carrierName, setCarrierName] = useState("");
 
   async function load() {
     const res = await fetch(`/api/proxy/shipment-batches/${batchId}`);
     const data = await res.json();
     if (data.success && data.data?.batch) {
-      setBatch(data.data.batch);
+      const b = data.data.batch;
+      setBatch(b);
+      setTrackingNo(b.tracking_number ?? "");
+      setCarrierName(b.logistics_partner ?? "");
     } else {
       setError(translateMessage(data.message ?? "M0002"));
     }
@@ -51,6 +56,35 @@ export function ShipmentDetailScreen({ batchId }: { batchId: number }) {
   useEffect(() => {
     load();
   }, [batchId]);
+
+  async function saveTracking() {
+    if (!trackingNo.trim()) {
+      setError("Nhập mã vận đơn.");
+      return;
+    }
+    setActing(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/proxy/shipment-batches/${batchId}/tracking`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tracking_no: trackingNo.trim(),
+          carrier_name: carrierName.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(translateMessage(data.message ?? "M0505"));
+        return;
+      }
+      setBatch(data.data.batch);
+    } catch {
+      setError("Cập nhật tracking thất bại.");
+    } finally {
+      setActing(false);
+    }
+  }
 
   async function advanceStatus() {
     if (!batch) return;
@@ -136,6 +170,28 @@ export function ShipmentDetailScreen({ batchId }: { batchId: number }) {
           <p>{batch.created_admin_name ?? "—"}</p>
         </div>
       </Card>
+
+      {isAdmin && (
+        <Card className="p-4 space-y-3">
+          <h3 className="text-sm font-medium">Cập nhật vận đơn</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              label="Mã tracking *"
+              required
+              value={trackingNo}
+              onChange={(e) => setTrackingNo(e.target.value)}
+            />
+            <Input
+              label="Đơn vị vận chuyển"
+              value={carrierName}
+              onChange={(e) => setCarrierName(e.target.value)}
+            />
+          </div>
+          <Button onClick={saveTracking} disabled={acting}>
+            {acting ? "..." : "Lưu tracking → SHIPPING"}
+          </Button>
+        </Card>
+      )}
 
       <Card>
         <div className="p-4 border-b border-border">

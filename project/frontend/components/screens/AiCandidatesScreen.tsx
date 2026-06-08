@@ -146,6 +146,7 @@ export function AiCandidatesScreen() {
           <Table>
             <Thead>
               <tr>
+                <Th>Ảnh</Th>
                 <Th>Tên (JP)</Th>
                 <Th>Giá gốc JPY</Th>
                 <Th>Giá bán gợi ý</Th>
@@ -156,19 +157,31 @@ export function AiCandidatesScreen() {
             <tbody>
               {loading ? (
                 <Tr>
-                  <Td colSpan={5} className="text-center text-text-muted py-8">
+                  <Td colSpan={6} className="text-center text-text-muted py-8">
                     Đang tải...
                   </Td>
                 </Tr>
               ) : candidates.length === 0 ? (
                 <Tr>
-                  <Td colSpan={5} className="text-center text-text-muted py-8">
+                  <Td colSpan={6} className="text-center text-text-muted py-8">
                     Không có sản phẩm chờ duyệt
                   </Td>
                 </Tr>
               ) : (
                 candidates.map((c) => (
                   <Tr key={c.id}>
+                    <Td>
+                      {c.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.image_url}
+                          alt=""
+                          className="w-14 h-14 object-cover rounded-lg border border-border bg-white"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-lg bg-gray-100 border border-border" />
+                      )}
+                    </Td>
                     <Td className="text-xs text-text-primary max-w-xs">
                       <p>{c.product_name_jp}</p>
                       {c.product_name_vn && <p className="text-text-muted">{c.product_name_vn}</p>}

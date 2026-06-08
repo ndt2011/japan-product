@@ -4,6 +4,12 @@ import { ProductImagePicker } from "@/components/ProductImagePicker";
 import { ProductImageUpload } from "@/components/ProductImageUpload";
 import { useIsAdmin, usePermission } from "@/hooks/usePermission";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateProductForm,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import {
   calcUnitPriceVnd,
@@ -30,6 +36,9 @@ const emptyForm: ProductFormData = {
   selling_price_jpy: "",
   fee_rate_percent: 5,
   price_vnd: "",
+  retail_price_vnd: "",
+  barcode: "",
+  min_order_qty: "",
   import_tax_rate: "",
   origin: "Nhật Bản",
   description: "",
@@ -57,6 +66,9 @@ function productToForm(product: ProductItem): ProductFormData {
         : product.cost_jpy ?? "",
     fee_rate_percent: feeRateToPercent(product.fee_rate),
     price_vnd: product.price_vnd ?? "",
+    retail_price_vnd: product.retail_price_vnd ?? "",
+    barcode: product.barcode ?? "",
+    min_order_qty: product.min_order_qty ?? "",
     import_tax_rate: product.import_tax_rate ?? "",
     origin: product.origin ?? "Nhật Bản",
     description: product.description ?? "",
@@ -79,6 +91,7 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const canUpload = usePermission("products.create");
   const isAdmin = useIsAdmin();
@@ -130,6 +143,7 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
 
   function updateField<K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((prev) => clearFieldError(prev, String(key)));
   }
 
   function suggestVndFromLegacy() {
@@ -167,6 +181,12 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const errors = validateProductForm(form, isAdmin);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setError("");
     setSaving(true);
 
@@ -193,6 +213,9 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
           body.append("fee_rate", String(dual.fee_rate));
         }
         if (form.price_vnd !== "") body.append("price_vnd", String(form.price_vnd));
+        if (form.retail_price_vnd !== "") body.append("retail_price_vnd", String(form.retail_price_vnd));
+        if (form.barcode) body.append("barcode", form.barcode);
+        if (form.min_order_qty !== "") body.append("min_order_qty", String(form.min_order_qty));
         if (form.import_tax_rate !== "") body.append("import_tax_rate", String(form.import_tax_rate));
         if (form.origin) body.append("origin", form.origin);
         if (form.description) body.append("description", form.description);
@@ -215,6 +238,9 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
           cost_jpy: form.cost_jpy !== "" ? Number(form.cost_jpy) : null,
           ...(isAdmin ? dualPricingPayload() : {}),
           price_vnd: form.price_vnd !== "" ? Number(form.price_vnd) : null,
+          retail_price_vnd: form.retail_price_vnd !== "" ? Number(form.retail_price_vnd) : null,
+          barcode: form.barcode || null,
+          min_order_qty: form.min_order_qty !== "" ? Number(form.min_order_qty) : null,
           import_tax_rate: form.import_tax_rate !== "" ? Number(form.import_tax_rate) : null,
           origin: form.origin || null,
           description: form.description || null,
@@ -277,6 +303,7 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               onChange={(e) => updateField("product_category_id", e.target.value ? Number(e.target.value) : "")}
               options={categories.map((c) => ({ value: c.id, label: c.category_name }))}
               placeholder="Chọn danh mục"
+              error={fieldErrors.product_category_id}
             />
             <Input
               label="Mã hàng hóa"
@@ -289,11 +316,14 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               required
               value={form.product_name}
               onChange={(e) => updateField("product_name", e.target.value)}
+              error={fieldErrors.product_name}
             />
             <Input
               label="Tên (Tiếng Nhật)"
+              required={isAdmin}
               value={form.product_name_jp}
               onChange={(e) => updateField("product_name_jp", e.target.value)}
+              error={fieldErrors.product_name_jp}
             />
             <Input
               label="Tên VN (AI search)"
@@ -315,14 +345,32 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
             />
             <Input
               label="Quy cách"
+              required
               value={form.spec}
               onChange={(e) => updateField("spec", e.target.value)}
+              error={fieldErrors.spec}
             />
             <Input
               label="Đơn vị"
+              required
               value={form.unit}
               onChange={(e) => updateField("unit", e.target.value)}
               placeholder="hộp, chai..."
+              error={fieldErrors.unit}
+            />
+            <Input
+              label="Mã vạch (barcode)"
+              value={form.barcode}
+              onChange={(e) => updateField("barcode", e.target.value)}
+            />
+            <Input
+              label="SL đặt tối thiểu"
+              type="number"
+              min={1}
+              value={form.min_order_qty}
+              onChange={(e) =>
+                updateField("min_order_qty", e.target.value === "" ? "" : Number(e.target.value))
+              }
             />
             {!isAdmin && (
               <Input
@@ -342,6 +390,17 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
                 value={form.price_vnd}
                 onChange={(e) => updateField("price_vnd", e.target.value === "" ? "" : Number(e.target.value))}
                 hint={isAdmin ? "Đại lý thấy giá này — có thể gợi ý từ giá kép bên dưới" : undefined}
+                error={fieldErrors.price_vnd}
+              />
+              <Input
+                label="Giá lẻ VND (chi nhánh)"
+                type="number"
+                min={0}
+                value={form.retail_price_vnd}
+                onChange={(e) =>
+                  updateField("retail_price_vnd", e.target.value === "" ? "" : Number(e.target.value))
+                }
+                hint="Chi nhánh thấy giá lẻ này"
               />
               {!isAdmin && exchangeRate && (
                 <button
@@ -380,12 +439,13 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
                   type="number"
                   min={0}
                   step={0.01}
-                  optional
+                  required
                   value={form.cost_price_jpy}
                   onChange={(e) =>
                     updateField("cost_price_jpy", e.target.value === "" ? "" : Number(e.target.value))
                   }
                   hint="Chỉ Admin thấy — dùng tính lợi nhuận"
+                  error={fieldErrors.cost_price_jpy}
                 />
                 <Input
                   label="Giá bán JPY"

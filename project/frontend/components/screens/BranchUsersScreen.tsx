@@ -13,6 +13,12 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateBranchUserForm,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { BranchUserItem } from "@/types/api";
@@ -29,6 +35,7 @@ export function BranchUsersScreen({ branchId }: Props) {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [form, setForm] = useState({
     login_id: "",
     password: "",
@@ -59,8 +66,19 @@ export function BranchUsersScreen({ branchId }: Props) {
     loadUsers();
   }, [loadUsers]);
 
+  function patchForm<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
+    const errors = validateBranchUserForm(form);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -110,27 +128,31 @@ export function BranchUsersScreen({ branchId }: Props) {
             <Input
               label="Login ID"
               value={form.login_id}
-              onChange={(e) => setForm({ ...form, login_id: e.target.value })}
+              onChange={(e) => patchForm("login_id", e.target.value)}
               required
+              error={fieldErrors.login_id}
             />
             <Input
               label="Mật khẩu"
               type="password"
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={(e) => patchForm("password", e.target.value)}
               required
+              error={fieldErrors.password}
             />
             <Input
               label="Họ tên"
               value={form.full_name}
-              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              onChange={(e) => patchForm("full_name", e.target.value)}
               required
+              error={fieldErrors.full_name}
             />
             <Input
               label="Email"
               type="email"
               value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onChange={(e) => patchForm("email", e.target.value)}
+              error={fieldErrors.email}
             />
             {userType === "admin" && (
               <Select

@@ -52,6 +52,7 @@ docs/
 │   │   ├── reports-module.md
 │   │   ├── ai-search-improvement.md
 │   │   ├── ai-catalog-teaching-process.md  ★ Quy trình dạy AI catalog (Luồng B)
+│   │   ├── upgrade-v3-analysis.md          ★ V3 — 14 yêu cầu nâng cấp + trạng thái implement
 │   │   └── rbac-req003.md
 │   ├── qa/
 │   │   └── QA_Orders_Batch.md
@@ -102,16 +103,14 @@ docs/
 
 ## Tiến độ phát triển (tóm tắt)
 
-| Sprint | Nội dung | Code |
-|--------|----------|------|
-| S1 Auth | Login, Remember Me | ~65% |
-| S2 Products | CRUD + ảnh | ~85% |
-| S3 AI | Luồng A (search + duyệt) | ~75% |
-| S4 Orders | CRUD + confirm + reserve | ~70% |
-| S5 Shipments | Gom đơn + status flow | ~75% |
-| DevOps | CI có · deploy cloud chưa | ~25% |
+| Sprint / Phase | Nội dung | Code |
+|----------------|----------|------|
+| S1–S7 MVP | Auth, SP, AI, Orders, Kho, Reports | **✅ ~95%** |
+| Phase 2 | Invoice, dual pricing, profit | **✅ ~98%** |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile, mobile | **✅ ~95% local** |
+| DevOps staging | Railway + Vercel | **✅** · V3 chưa push `main` |
 
-Chi tiết: [tasks/STATUS.md](./tasks/STATUS.md)
+Chi tiết + task tick ✅⚠️📋: [tasks/STATUS.md](./tasks/STATUS.md) · [backend-tasks.md](./tasks/backend-tasks.md) · [frontend-tasks.md](./tasks/frontend-tasks.md)
 
 ---
 

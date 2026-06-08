@@ -116,6 +116,11 @@ class OrderController extends Controller
 
     public function confirm(Request $request, int $id): JsonResponse
     {
+        return $this->approve($request, $id);
+    }
+
+    public function approve(Request $request, int $id): JsonResponse
+    {
         $auth = AuthContext::from($request);
 
         if ($auth['type'] !== 'admin') {
@@ -125,7 +130,7 @@ class OrderController extends Controller
         try {
             /** @var Admin $admin */
             $admin = $auth['user'];
-            $order = $this->orderService->confirm($id, $admin);
+            $order = $this->orderService->approve($id, $admin);
         } catch (OrderException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
         }
@@ -133,6 +138,32 @@ class OrderController extends Controller
         return ApiResponse::success([
             'order' => new OrderResource($order),
         ], 'M0404');
+    }
+
+    public function recordPayment(Request $request, int $id): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+
+        $validated = $request->validate([
+            'payment_method' => ['required', 'in:bank_transfer,cash,credit'],
+            'payment_ref' => ['nullable', 'string', 'max:100'],
+            'payment_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $order = $this->orderService->recordPayment(
+                $id,
+                $validated,
+                $auth['user'],
+                $auth['type'],
+            );
+        } catch (OrderException $e) {
+            return ApiResponse::error($e->messageCode, null, $e->status);
+        }
+
+        return ApiResponse::success([
+            'order' => new OrderResource($order),
+        ], 'M0409');
     }
 
     public function confirmReceipt(Request $request, int $id): JsonResponse

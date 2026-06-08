@@ -12,6 +12,7 @@
  * API: POST /api/proxy/ai/chat
  */
 
+import { ChatMessageContent } from "@/components/chat/ChatMessageContent";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useEffect, useRef, useState } from "react";
 
@@ -231,7 +232,7 @@ export function AiStaffChatWidget() {
           />
 
           {/* Panel */}
-          <div className="absolute right-4 bottom-20 w-[380px] max-h-[calc(100vh-6rem)] flex flex-col bg-white rounded-2xl shadow-2xl border border-border pointer-events-auto overflow-hidden animate-slide-up">
+          <div className="absolute inset-x-2 bottom-16 md:inset-x-auto md:right-4 md:bottom-20 md:w-[380px] top-16 md:top-auto max-h-none md:max-h-[calc(100vh-6rem)] flex flex-col bg-white rounded-2xl shadow-2xl border border-border pointer-events-auto overflow-hidden animate-slide-up">
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-brand to-purple-600 text-white shrink-0">
@@ -294,13 +295,17 @@ export function AiStaffChatWidget() {
 
                     {/* Bubble */}
                     <div
-                      className={`px-3 py-2.5 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
+                      className={`px-3 py-2.5 rounded-2xl text-xs leading-relaxed ${
                         msg.role === "assistant"
                           ? "bg-surface-subtle text-text-primary rounded-tl-sm"
-                          : "bg-brand text-white rounded-tr-sm"
+                          : "bg-brand text-white rounded-tr-sm whitespace-pre-wrap"
                       }`}
                     >
-                      {msg.content}
+                      {msg.role === "assistant" ? (
+                        <ChatMessageContent content={msg.content} />
+                      ) : (
+                        msg.content
+                      )}
                     </div>
 
                     {/* Suggestions */}
@@ -381,7 +386,7 @@ export function AiStaffChatWidget() {
           setOpen((o) => !o);
           setUnread(0);
         }}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
         title="AI Nhân viên hỗ trợ"
       >
         <span className="text-2xl">{open ? "✕" : "💬"}</span>

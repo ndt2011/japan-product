@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Admin;
+use App\Models\BranchUser;
+use App\Models\CompanyVn;
 use App\Services\ImageStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -10,7 +13,10 @@ class ProductResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $isAdmin = $request->user() instanceof \App\Models\Admin;
+        $user = $request->user();
+        $isAdmin = $user instanceof \App\Models\Admin;
+        $isCompany = $user instanceof \App\Models\CompanyVn;
+        $isBranch = $user instanceof \App\Models\BranchUser;
 
         // available_qty: từ subquery (list) hoặc tính lại từ eager loaded inventories (show)
         $availableQty = isset($this->resource->available_qty)
@@ -50,11 +56,14 @@ class ProductResource extends JsonResource
             'name_vi'             => $this->name_vi,
             'spec'                => $this->spec,
             'unit'                => $this->unit,
-            'cost_jpy'            => $this->cost_jpy,
+            'cost_jpy'            => $this->when($isAdmin, $this->cost_jpy),
             'cost_price_jpy'      => $this->when($isAdmin, $this->cost_price_jpy ?? $this->cost_jpy),
-            'selling_price_jpy'   => $this->when($isAdmin, $this->selling_price_jpy ?? $this->cost_jpy),
-            'fee_rate'            => $this->fee_rate ?? 0.05,
-            'price_vnd'           => $this->price_vnd,
+            'selling_price_jpy'   => $this->when($isAdmin || $isCompany, $this->selling_price_jpy ?? $this->cost_jpy),
+            'fee_rate'            => $this->when($isAdmin, $this->fee_rate ?? 0.05),
+            'price_vnd'           => $this->when($isAdmin || $isCompany || $isBranch, $this->price_vnd),
+            'retail_price_vnd'    => $this->when($isAdmin || $isCompany || $isBranch, $this->retail_price_vnd),
+            'barcode'             => $this->barcode,
+            'min_order_qty'       => $this->min_order_qty,
             'supplier_id'         => $this->supplier_id,
             'supplier_name'       => $this->supplier?->supplier_name,
             'origin'              => $this->origin,
@@ -72,6 +81,8 @@ class ProductResource extends JsonResource
             }),
             'memo'                => $this->memo,
             'disabled_flag'       => $this->disabled_flag,
+            'created_by_name'     => $this->resolveCreatedByName(),
+            'created_at'          => $this->created?->format('d/m/Y H:i'),
             // Tồn kho — spec: docs/sa/amendments/product-tier-model.md § 3
             'available_qty'       => $availableQty,
             'stock_status'        => $stockStatus,
@@ -80,5 +91,16 @@ class ProductResource extends JsonResource
                 return (int) $this->inventories->sum('quantity');
             }),
         ];
+    }
+
+    private function resolveCreatedByName(): ?string
+    {
+        if (! $this->created_user_id) {
+            return null;
+        }
+
+        $admin = Admin::query()->find($this->created_user_id);
+
+        return $admin?->full_name ?? $admin?->login_id;
     }
 }

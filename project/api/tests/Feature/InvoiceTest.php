@@ -48,7 +48,7 @@ class InvoiceTest extends TestCase
         $order = Order::query()->create([
             'company_vn_id' => $company->id,
             'order_no' => 'ORD-INV-01',
-            'status' => 'CONFIRMED',
+            'status' => 'APPROVED',
             'order_date' => now()->toDateString(),
             'total_jpy' => '1000',
             'total_vnd' => '200000',

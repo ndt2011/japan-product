@@ -19,6 +19,7 @@ import {
 } from "recharts";
 
 interface DashboardStats {
+  can_view_financial?: boolean;
   orders_today: number;
   orders_month: number;
   revenue_month_vnd: number;
@@ -38,6 +39,22 @@ interface ChartPoint {
   count: number;
 }
 
+interface RevenueData {
+  restricted?: boolean;
+  revenue_vnd?: number;
+  orders_count?: number;
+  avg_order_value_vnd?: number;
+  daily_chart?: Array<{ date: string; revenue: number; orders: number }>;
+}
+
+interface CashflowMonth {
+  month: number;
+  revenue: number;
+  cost_import: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+}
+
 function fmtVnd(n: number) {
   return `${new Intl.NumberFormat("vi-VN").format(n)}đ`;
 }
@@ -49,9 +66,16 @@ function fmtShortDate(iso: string) {
 
 export function DashboardScreen() {
   const isAdmin = useIsAdmin();
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
+  const [revenue, setRevenue] = useState<RevenueData | null>(null);
+  const [cashflow, setCashflow] = useState<CashflowMonth[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const canViewFinancial = stats?.can_view_financial !== false;
 
   useEffect(() => {
     let cancelled = false;
@@ -59,12 +83,16 @@ export function DashboardScreen() {
     async function load() {
       setLoading(true);
       try {
-        const [statsRes, chartRes] = await Promise.all([
+        const [statsRes, chartRes, revRes, cfRes] = await Promise.all([
           fetch("/api/proxy/dashboard/stats"),
           fetch("/api/proxy/dashboard/charts/orders?period=30"),
+          fetch(`/api/proxy/dashboard/revenue?year=${year}&month=${month}`),
+          fetch(`/api/proxy/dashboard/cashflow?year=${year}&from_month=1&to_month=${month}`),
         ]);
         const statsData = await statsRes.json();
         const chartData = await chartRes.json();
+        const revData = await revRes.json();
+        const cfData = await cfRes.json();
 
         if (!cancelled) {
           if (statsData.success && statsData.data) {
@@ -72,6 +100,16 @@ export function DashboardScreen() {
           }
           if (chartData.success && chartData.data?.points) {
             setChartPoints(chartData.data.points);
+          }
+          if (revData.success && revData.data && !revData.data.restricted) {
+            setRevenue(revData.data);
+          } else {
+            setRevenue(null);
+          }
+          if (cfData.success && cfData.data?.monthly && !cfData.data.restricted) {
+            setCashflow(cfData.data.monthly);
+          } else {
+            setCashflow([]);
           }
         }
       } finally {
@@ -83,7 +121,7 @@ export function DashboardScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [year, month]);
 
   const pendingCount = stats?.orders_by_status?.PENDING ?? 0;
   const statusPie = useMemo(() => {
@@ -99,6 +137,17 @@ export function DashboardScreen() {
     () => chartPoints.map((p) => ({ ...p, label: fmtShortDate(p.date) })),
     [chartPoints],
   );
+
+  const revenueChart = useMemo(
+    () =>
+      (revenue?.daily_chart ?? []).map((p) => ({
+        ...p,
+        label: fmtShortDate(p.date),
+      })),
+    [revenue?.daily_chart],
+  );
+
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
     <div className="space-y-6">
@@ -126,12 +175,14 @@ export function DashboardScreen() {
           icon={<span>🛒</span>}
           color="purple"
         />
-        <StatCard
-          title="Doanh Thu Tháng"
-          value={loading ? "…" : fmtVnd(stats?.revenue_month_vnd ?? 0)}
-          icon={<span>💰</span>}
-          color="green"
-        />
+        {canViewFinancial && (
+          <StatCard
+            title="Doanh Thu Tháng"
+            value={loading ? "…" : fmtVnd(stats?.revenue_month_vnd ?? 0)}
+            icon={<span>💰</span>}
+            color="green"
+          />
+        )}
         <StatCard
           title="Chờ Xác Nhận"
           value={loading ? "…" : String(pendingCount)}
@@ -202,6 +253,72 @@ export function DashboardScreen() {
           </div>
         )}
       </Card>
+
+      {canViewFinancial && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">Doanh thu theo tháng</h3>
+              <p className="text-xs text-text-muted mt-0.5">
+                {revenue?.orders_count ?? 0} đơn · TB {fmtVnd(revenue?.avg_order_value_vnd ?? 0)}/đơn
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={month}
+                onChange={(e) => setMonth(Number(e.target.value))}
+                className="text-xs border border-border rounded-lg px-2 py-1.5"
+              >
+                {monthOptions.map((m) => (
+                  <option key={m} value={m}>
+                    Tháng {m}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="text-xs border border-border rounded-lg px-2 py-1.5"
+              >
+                {[year - 1, year, year + 1].map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {loading ? (
+            <EmptyState message="Đang tải..." icon="⏳" />
+          ) : revenueChart.length === 0 ? (
+            <EmptyState message="Chưa có doanh thu trong tháng." />
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={revenueChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid #E5E7EB", fontSize: 12 }}
+                  formatter={(value) => [fmtVnd(Number(value)), "Doanh thu"]}
+                />
+                <Area type="monotone" dataKey="revenue" stroke="#16A34A" fill="#16A34A22" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+          {cashflow.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              {cashflow.slice(-4).map((row) => (
+                <div key={row.month} className="rounded-lg border border-border p-2">
+                  <p className="text-text-muted">T{row.month}</p>
+                  <p className="font-medium text-text-primary">{fmtVnd(row.revenue)}</p>
+                  <p className="text-success">LN gộp {row.gross_margin_pct}%</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card className="p-5 xl:col-span-2">
@@ -330,7 +447,9 @@ export function DashboardScreen() {
                   <p className="text-sm text-text-primary truncate">{p.name}</p>
                   <p className="text-xs text-text-muted">{p.order_count} đơn</p>
                 </div>
-                <p className="text-sm text-text-primary shrink-0">{fmtVnd(p.revenue_vnd)}</p>
+                {canViewFinancial && (
+                  <p className="text-sm text-text-primary shrink-0">{fmtVnd(p.revenue_vnd)}</p>
+                )}
               </div>
             ))}
           </div>

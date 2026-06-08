@@ -74,8 +74,19 @@ class ProductRepository
             ->whereColumn('inventories.product_id', 'products.id')
             ->where('inventories.deleted_flag', false);
 
-        $query = Product::query()
-            ->active()
+        // Admin có thể xem cả sản phẩm đã vô hiệu hoá (disabled_flag=true)
+        $includeDisabled = ! empty($filters['include_disabled']) && $filters['include_disabled'];
+        $onlyDisabled    = ! empty($filters['only_disabled'])    && $filters['only_disabled'];
+
+        $baseModel = $includeDisabled || $onlyDisabled
+            ? Product::query()->where('deleted_flag', false)
+            : Product::query()->active(); // active() = deleted_flag=false AND disabled_flag=false
+
+        if ($onlyDisabled) {
+            $baseModel->where('disabled_flag', true);
+        }
+
+        $query = $baseModel
             ->select([
                 'products.*',
                 \DB::raw("({$primaryImageSub->toSql()}) as primary_image_url"),

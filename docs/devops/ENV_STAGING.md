@@ -197,6 +197,11 @@ php artisan tinker --execute="echo config('database.default');"
 # AI catalog search (luồng B) — dạy AI tìm tiếng Việt
 php artisan products:generate-vi    # GPT sinh name_vi + description_vi
 php artisan products:embed --force  # Re-embed sau khi có tên VN
+
+# V3 upgrade (sau push code mới — auto qua start.sh, hoặc chạy tay)
+php artisan migrate --force
+# Kiểm tra: 100100_v3_upgrade_phase1, 100110_v3_profile_fields
+# Smoke: GET /api/notifications/count · GET /api/profile · GET /api/dashboard/revenue?year=2026&month=6
 ```
 
 > Chi tiết: [../sa/amendments/ai-catalog-teaching-process.md](../sa/amendments/ai-catalog-teaching-process.md) · [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md)

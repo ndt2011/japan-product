@@ -12,6 +12,7 @@ class Inventory extends Model
     protected $table = 'inventories';
 
     protected $fillable = [
+        'inventory_cd',
         'product_id',
         'warehouse_id',
         'quantity',
@@ -19,6 +20,11 @@ class Inventory extends Model
         'actual_qty',
         'last_check_date',
         'memo',
+        'restock_status',
+        'restock_eta',
+        'min_stock_qty',
+        'last_restock_at',
+        'notes',
         'created',
         'created_user_id',
         'modified',
@@ -35,6 +41,9 @@ class Inventory extends Model
             'actual_qty' => 'integer',
             'deleted_flag' => 'boolean',
             'last_check_date' => 'date',
+            'restock_eta' => 'date',
+            'last_restock_at' => 'datetime',
+            'min_stock_qty' => 'integer',
             'created' => 'datetime',
             'modified' => 'datetime',
             'deleted' => 'datetime',

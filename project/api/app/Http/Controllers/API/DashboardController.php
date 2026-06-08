@@ -34,4 +34,27 @@ class DashboardController extends Controller
             'points' => $this->dashboardService->orderChart($auth['user'], $auth['type'], $days),
         ]);
     }
+
+    public function revenue(Request $request): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+        $year = (int) $request->query('year', now()->year);
+        $month = (int) $request->query('month', now()->month);
+
+        return ApiResponse::success(
+            $this->dashboardService->revenue($auth['user'], $auth['type'], $year, $month),
+        );
+    }
+
+    public function cashflow(Request $request): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+        $year = (int) $request->query('year', now()->year);
+        $fromMonth = (int) $request->query('from_month', 1);
+        $toMonth = (int) $request->query('to_month', min(12, now()->month));
+
+        return ApiResponse::success(
+            $this->dashboardService->cashflow($auth['user'], $auth['type'], $year, $fromMonth, $toMonth),
+        );
+    }
 }

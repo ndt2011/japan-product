@@ -18,6 +18,7 @@ class AiProductCandidateService
         private readonly ProductService $productService,
         private readonly ProductImageService $productImageService,
         private readonly ProductPricingService $pricingService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function list(?string $status, int $perPage = 20): LengthAwarePaginator
@@ -82,7 +83,17 @@ class AiProductCandidateService
             ];
         }
 
-        return $this->candidateRepository->createMany($rows);
+        $created = $this->candidateRepository->createMany($rows);
+
+        $this->notificationService->notifyAllAdmins(
+            'AI_CANDIDATE_PENDING',
+            'Có '.count($rows).' sản phẩm AI chờ duyệt',
+            'Vào màn Duyệt AI để xem chi tiết.',
+            'ai_candidate',
+            $created->first()?->id,
+        );
+
+        return $created;
     }
 
     public function approve(int $id, array $data, Authenticatable $reviewer, string $reviewerType): AiProductCandidate

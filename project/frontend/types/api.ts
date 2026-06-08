@@ -22,6 +22,8 @@ export interface AuthUser {
   full_name?: string;
   company_name?: string;
   email?: string;
+  phone?: string | null;
+  avatar_url?: string | null;
   role?: "manager" | "staff";
   branch_id?: number | null;
   branch?: BranchSummary | null;
@@ -116,6 +118,11 @@ export interface ProductItem {
   fee_rate?: number | string | null;
   unit_price_vnd?: number | string | null;
   price_vnd: number | null;
+  retail_price_vnd?: number | null;
+  barcode?: string | null;
+  min_order_qty?: number | null;
+  created_by_name?: string | null;
+  created_at?: string | null;
   supplier_id?: number | null;
   supplier_name?: string | null;
   category_name?: string | null;
@@ -215,6 +222,9 @@ export interface ProductFormData {
   selling_price_jpy: number | "";
   fee_rate_percent: number | "";
   price_vnd: number | "";
+  retail_price_vnd: number | "";
+  barcode: string;
+  min_order_qty: number | "";
   import_tax_rate: number | "";
   origin: string;
   description: string;
@@ -313,6 +323,10 @@ export interface OrderItem {
   total_jpy?: string | null;
   total_vnd?: string | null;
   exchange_rate?: number | null;
+  payment_method?: string | null;
+  payment_ref?: string | null;
+  tracking_no?: string | null;
+  carrier_name?: string | null;
   items_count?: number;
   details?: OrderLineItem[];
 }

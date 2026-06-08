@@ -13,6 +13,12 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateBranchForm,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import type { BranchItem } from "@/types/api";
 import Link from "next/link";
@@ -26,6 +32,7 @@ export function BranchesScreen() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [form, setForm] = useState({
     branch_cd: "",
     branch_name: "",
@@ -57,8 +64,19 @@ export function BranchesScreen() {
     loadBranches();
   }, [loadBranches]);
 
+  function patchForm<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
+    const errors = validateBranchForm(form);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -113,14 +131,16 @@ export function BranchesScreen() {
             <Input
               label="Mã chi nhánh"
               value={form.branch_cd}
-              onChange={(e) => setForm({ ...form, branch_cd: e.target.value })}
+              onChange={(e) => patchForm("branch_cd", e.target.value)}
               required
+              error={fieldErrors.branch_cd}
             />
             <Input
               label="Tên chi nhánh"
               value={form.branch_name}
-              onChange={(e) => setForm({ ...form, branch_name: e.target.value })}
+              onChange={(e) => patchForm("branch_name", e.target.value)}
               required
+              error={fieldErrors.branch_name}
             />
             <Select
               label="Miền"
@@ -131,8 +151,9 @@ export function BranchesScreen() {
             <Input
               label="Tỉnh/Thành"
               value={form.province}
-              onChange={(e) => setForm({ ...form, province: e.target.value })}
+              onChange={(e) => patchForm("province", e.target.value)}
               required
+              error={fieldErrors.province}
             />
             <Input
               label="Địa chỉ"

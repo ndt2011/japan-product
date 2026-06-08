@@ -23,9 +23,13 @@ class ProductController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->productService->list($request->only([
-            'search', 'category_id', 'per_page', 'stock_status',
-        ]));
+        $auth = \App\Support\AuthContext::from($request);
+        $isAdmin = in_array($auth['type'], ['admin', 'company'], true);
+        $filters = $request->only(['search', 'category_id', 'per_page', 'stock_status']);
+        if ($isAdmin && $request->query('product_status') === 'disabled') {
+            $filters['only_disabled'] = true;
+        }
+        $paginator = $this->productService->list($filters);
 
         return ApiResponse::success([
             'items' => ProductResource::collection($paginator->items()),

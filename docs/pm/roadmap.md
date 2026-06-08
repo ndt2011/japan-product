@@ -1,23 +1,23 @@
 # Product Roadmap
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Phiên bản**: 1.1 | **Ngày**: 2026-06-08
+**Phiên bản**: 1.2 | **Ngày**: 2026-06-08
 
-> **Tiến độ thực tế**: [docs/tasks/STATUS.md](../tasks/STATUS.md) — MVP + Phase 2 ~95%
+> **Tiến độ thực tế**: [docs/tasks/STATUS.md](../tasks/STATUS.md) — MVP + Phase 2 ~95% · V3 planning ✅
 
 ---
 
 ## Tổng quan lộ trình
 
 ```
-Phase 1 — MVP          Phase 2 — Extended       Phase 3 — Scale
-[2026-06 → 2026-09]    [2026-10 → 2027-01]      [2027-02 →]
-         │                      │                      │
-   Auth + RBAC           Báo cáo tổng hợp       Mobile App (PWA)
-   Sản phẩm + AI         Website catalog         Multi-supplier
-   Đơn hàng              HQ điện tử              ERP Integration
-   Chuyến hàng           Email nâng cao           Warehouse mgmt
-   Deploy cơ bản         CI/CD Production
+Phase 1 — MVP          Phase 2 — Extended       V3 Upgrades         Phase 3 — Scale
+[2026-06 → 2026-09]    [2026-10 → 2027-01]      [2026-06 sprint]    [2027-02 →]
+         │                      │                      │                   │
+   Auth + RBAC           Báo cáo tổng hợp       Order flow mới      Mobile App (PWA)
+   Sản phẩm + AI ✅      Website catalog         AI Purchasing       Multi-supplier
+   Đơn hàng ✅           HQ điện tử              Notification        ERP Integration
+   Chuyến hàng ✅        Email nâng cao           Dashboard V2        Warehouse mgmt
+   Invoice + Profit ✅   CI/CD Production         Mobile responsive
 ```
 
 ---
@@ -53,6 +53,22 @@ Phase 1 — MVP          Phase 2 — Extended       Phase 3 — Scale
 | Khai báo hải quan điện tử | P1 | Tháng 12/2026 |
 | Email template editor (WYSIWYG) | P2 | Tháng 1/2027 |
 | Tích hợp thêm nguồn scraping (Yahoo Shopping) | P2 | Tháng 1/2027 |
+
+---
+
+## V3 Upgrades — Sprint (2026-06-08)
+
+**Mục tiêu**: 14 cải tiến UX/nghiệp vụ sau khi staging live
+
+> Phân tích chi tiết: `docs/sa/amendments/upgrade-v3-analysis.md`  
+> Backlog: `docs/pm/backlog.md` — Phase 3 V3 Upgrades
+
+| Nhóm | Scope | Sprint | Ước tính |
+|------|-------|--------|---------|
+| G1 — Critical | Order flow, Pricing, Inventory, Notifications | V3-G1 | ~5 ngày BE + 3 ngày FE |
+| G2 — Important | Dashboard V2, Product UX, Master Data, Profile | V3-G2 | ~3 ngày BE + 2 ngày FE |
+| G3 — Enhancement | Mobile responsive, Form validation, AI diagram | V3-G3 | ~2 ngày FE |
+| AI-P | AI Purchasing Specialist | Sprint AI-P | ~22h BE + 13.5h FE |
 
 ---
 

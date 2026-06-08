@@ -5,6 +5,7 @@ export type UserType = AuthUser["user_type"];
 export type NavPageId =
   | "dashboard"
   | "ai-center"
+  | "purchasing"
   | "suppliers"
   | "agents"
   | "branches"
@@ -18,7 +19,9 @@ export type NavPageId =
   | "debts"
   | "reports"
   | "my-branch"
-  | "admin";
+  | "admin"
+  | "master-data"
+  | "profile";
 
 export interface NavItem {
   id: NavPageId;
@@ -34,6 +37,7 @@ const BRANCH_ROLES: UserType[] = ["branch_manager", "branch_staff"];
 export const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "📊", href: "/dashboard", roles: ["admin", "company", ...BRANCH_ROLES] },
   { id: "ai-center", label: "AI Product Center", icon: "🤖", href: "/ai-center", roles: ["admin", "company", ...BRANCH_ROLES] },
+  { id: "purchasing", label: "Tư Vấn Thu Mua", icon: "🛍️", href: "/purchasing", group: "AI", roles: ["admin", "company"] },
   { id: "suppliers", label: "Nhà Cung Cấp", icon: "🏭", href: "/suppliers", group: "Danh Mục", roles: ["admin", "company"] },
   { id: "agents", label: "Đại Lý", icon: "🏪", href: "/agents", group: "Danh Mục", roles: ["admin"] },
   { id: "branches", label: "Chi Nhánh", icon: "🏢", href: "/admin/branches", group: "Danh Mục", roles: ["admin"] },
@@ -48,6 +52,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "reports", label: "Báo Cáo", icon: "📈", href: "/reports", group: "Phân Tích", roles: ["admin", "company", "branch_manager"] },
   { id: "my-branch", label: "Chi Nhánh Của Tôi", icon: "📍", href: "/my-branch", group: "Hệ Thống", roles: BRANCH_ROLES },
   { id: "admin", label: "Quản Trị", icon: "⚙️", href: "/admin", group: "Hệ Thống", roles: ["admin"] },
+  { id: "master-data", label: "Dữ Liệu Gốc", icon: "🗃️", href: "/admin/master-data", group: "Hệ Thống", roles: ["admin"] },
+  { id: "profile", label: "Hồ Sơ", icon: "👤", href: "/profile", group: "Hệ Thống", roles: ["admin", "company", ...BRANCH_ROLES] },
 ];
 
 export function getNavForUser(userType: UserType | undefined): NavItem[] {

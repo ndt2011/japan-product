@@ -1,6 +1,12 @@
 "use client";
 
 import { Button, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateStockMovement,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
@@ -25,6 +31,7 @@ export function StockOutScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [form, setForm] = useState({
     warehouse_id: "",
     product_id: "",
@@ -52,8 +59,19 @@ export function StockOutScreen() {
     loadData();
   }, [loadData]);
 
+  function patchForm<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const errors = validateStockMovement(form);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -93,9 +111,10 @@ export function StockOutScreen() {
             label="Kho *"
             required
             value={form.warehouse_id}
-            onChange={(e) => setForm((f) => ({ ...f, warehouse_id: e.target.value }))}
+            onChange={(e) => patchForm("warehouse_id", e.target.value)}
             options={warehouses.map((w) => ({ value: w.id, label: w.warehouse_name }))}
             placeholder="Chọn kho"
+            error={fieldErrors.warehouse_id}
           />
           <Input
             label="Mã sản phẩm (ID) *"
@@ -103,7 +122,8 @@ export function StockOutScreen() {
             type="number"
             min={1}
             value={form.product_id}
-            onChange={(e) => setForm((f) => ({ ...f, product_id: e.target.value }))}
+            onChange={(e) => patchForm("product_id", e.target.value)}
+            error={fieldErrors.product_id}
           />
           <Input
             label="Số lượng *"
@@ -111,7 +131,8 @@ export function StockOutScreen() {
             type="number"
             min={1}
             value={form.quantity}
-            onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+            onChange={(e) => patchForm("quantity", e.target.value)}
+            error={fieldErrors.quantity}
           />
           <Input
             label="Lý do"

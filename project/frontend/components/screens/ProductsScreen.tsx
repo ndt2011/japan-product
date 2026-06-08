@@ -14,6 +14,7 @@ import {
   Tr,
 } from "@/components/ui";
 import { usePermission } from "@/hooks/usePermission";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { CategoryOption, ProductItem, StockStatus } from "@/types/api";
 import Image from "next/image";
 import Link from "next/link";
@@ -76,7 +77,11 @@ export function ProductsScreen() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [stockFilter, setStockFilter] = useState("");
+  const [productStatus, setProductStatus] = useState("active"); // "active" | "disabled"
   const [page, setPage] = useState(1);
+  const userType = useAuthStore((s) => s.user?.user_type);
+  const isAdminOrCompany = userType === "admin" || userType === "company";
+  const isBranch = userType === "branch_manager" || userType === "branch_staff";
   const [pagination, setPagination] = useState({ total: 0, last_page: 1 });
 
   const loadProducts = useCallback(async () => {
@@ -87,6 +92,7 @@ export function ProductsScreen() {
       if (search.trim()) params.set("search", search.trim());
       if (categoryId) params.set("category_id", categoryId);
       if (stockFilter) params.set("stock_status", stockFilter);
+      if (productStatus === "disabled") params.set("product_status", "disabled");
 
       const res = await fetch(`/api/proxy/products?${params}`);
       const data = await res.json();
@@ -104,7 +110,7 @@ export function ProductsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, categoryId, stockFilter]);
+  }, [page, search, categoryId, stockFilter, productStatus]);
 
   useEffect(() => {
     fetch("/api/proxy/product-categories")
@@ -121,13 +127,17 @@ export function ProductsScreen() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, categoryId, stockFilter]);
+  }, [search, categoryId, stockFilter, productStatus]);
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Quản Lý Hàng Hóa"
-        subtitle={loading ? "Đang tải..." : `${pagination.total} sản phẩm`}
+        subtitle={
+          loading
+            ? "Đang tải..."
+            : `${pagination.total} sản phẩm${isBranch ? " · chỉ hàng đang kinh doanh" : ""}`
+        }
         actions={
           <>
             <Button variant="secondary" size="sm" disabled>
@@ -173,6 +183,17 @@ export function ProductsScreen() {
             <option value="LOW_STOCK">🟡 Sắp hết</option>
             <option value="OUT_OF_STOCK">🔴 Hết hàng</option>
           </select>
+          {/* Filter trạng thái sản phẩm: chỉ admin/company (FE-V3-024) */}
+          {isAdminOrCompany && (
+            <select
+              value={productStatus}
+              onChange={(e) => setProductStatus(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-border text-sm bg-white text-text-body"
+            >
+              <option value="active">✅ Đang kinh doanh</option>
+              <option value="disabled">⛔ Đã vô hiệu hoá</option>
+            </select>
+          )}
         </div>
       </Card>
 
@@ -185,6 +206,33 @@ export function ProductsScreen() {
           <EmptyState message="Chưa có sản phẩm." />
         ) : (
           <>
+            {/* Mobile card list — FE-V3-029 */}
+            <div className="md:hidden divide-y divide-border">
+              {products.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.id}`}
+                  className="flex gap-3 p-4 hover:bg-surface-subtle transition-colors"
+                >
+                  <ProductThumb
+                    src={product.primary_image_url ?? product.image_path}
+                    name={product.product_name}
+                  />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-sm font-medium text-text-primary truncate">{product.product_name}</p>
+                    <p className="text-xs text-text-muted font-mono">{product.product_cd ?? `#${product.id}`}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-text-body">
+                        {product.price_vnd?.toLocaleString("vi-VN") ?? "—"}đ
+                      </span>
+                      <StockBadge product={product} />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className="hidden md:block">
             <Table>
               <Thead>
                 <tr>
@@ -235,6 +283,7 @@ export function ProductsScreen() {
                 ))}
               </tbody>
             </Table>
+            </div>
 
             {pagination.last_page > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">

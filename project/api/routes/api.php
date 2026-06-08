@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AiChatController;
 use App\Http\Controllers\API\AiProductCandidateController;
 use App\Http\Controllers\API\AiProductSearchController;
+use App\Http\Controllers\API\AiPurchasingController;
 use App\Http\Controllers\API\AiSearchController;
 use App\Http\Controllers\API\AdminUserController;
 use App\Http\Controllers\API\AuthController;
@@ -14,10 +15,13 @@ use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\InvoiceController;
 use App\Http\Controllers\API\InventoryController;
 use App\Http\Controllers\API\MasterDataController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrderCostController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\ProductCategoryController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\ProductImageController;
+use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\ShipmentBatchController;
 use App\Http\Controllers\API\StockMovementController;
@@ -38,6 +42,16 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard/charts/orders', [DashboardController::class, 'orderChart']);
+    Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
+    Route::get('/dashboard/cashflow', [DashboardController::class, 'cashflow']);
+
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/count', [NotificationController::class, 'count']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
@@ -72,6 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/ai/candidates/{id}/reject', [AiProductCandidateController::class, 'reject']);
 
         Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
+        Route::put('/orders/{id}/approve', [OrderController::class, 'approve']);
 
         Route::get('/orders/{id}/costs', [OrderCostController::class, 'index']);
         Route::post('/orders/{id}/costs', [OrderCostController::class, 'store']);
@@ -87,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/shipment-batches', [ShipmentBatchController::class, 'store']);
         Route::put('/shipment-batches/{id}', [ShipmentBatchController::class, 'update']);
         Route::put('/shipment-batches/{id}/status', [ShipmentBatchController::class, 'advanceStatus']);
+        Route::put('/shipment-batches/{id}/tracking', [ShipmentBatchController::class, 'setTracking']);
     });
 
     Route::get('/products/{product}/images', [ProductImageController::class, 'index']);
@@ -99,6 +115,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai/chat', [AiChatController::class, 'chat']);
     Route::get('/ai/conversations', [AiChatController::class, 'conversations']);
     Route::get('/ai/conversations/{id}/messages', [AiChatController::class, 'messages']);
+
+    // AI Purchasing Specialist — spec: docs/sa/amendments/ai-purchasing-specialist.md
+    Route::post('/ai/purchasing', [AiPurchasingController::class, 'analyze']);
 
     Route::post('/ai/product-search', [AiProductSearchController::class, 'search']);
     Route::post('/ai/search', [AiSearchController::class, 'store']);
@@ -118,6 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/orders/{id}', [OrderController::class, 'update']);
     Route::put('/orders/{id}/submit', [OrderController::class, 'submit']);
     Route::put('/orders/{id}/confirm-receipt', [OrderController::class, 'confirmReceipt']);
+    Route::put('/orders/{id}/record-payment', [OrderController::class, 'recordPayment']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
     Route::get('/shipment-batches', [ShipmentBatchController::class, 'index']);
@@ -141,8 +161,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/warehouses', [WarehouseController::class, 'store']);
         Route::get('/warehouses/{id}', [WarehouseController::class, 'show']);
 
+        Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+        Route::put('/product-categories/{id}', [ProductCategoryController::class, 'update']);
+        Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);
+
         Route::get('/inventories', [InventoryController::class, 'index']);
+        Route::put('/inventories/{id}', [InventoryController::class, 'update']);
+        Route::delete('/inventories/{id}', [InventoryController::class, 'destroy']);
         Route::post('/inventory-checks', [InventoryController::class, 'check']);
+        Route::post('/inventories/bulk-import', [InventoryController::class, 'bulkImport']);
 
         Route::get('/stock-movements', [StockMovementController::class, 'index']);
         Route::post('/stock-movements', [StockMovementController::class, 'store']);

@@ -109,7 +109,7 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| FE-AI-001 | Proxy route `POST /api/proxy/ai/purchasing` + `GET /api/proxy/ai/purchasing/[id]` | P0 | BE-AI-006 | 1h | 📋 |
+| FE-AI-001 | Proxy route `POST /api/proxy/ai/purchasing` + `GET /api/proxy/ai/purchasing/[id]` | P0 | BE-AI-006 | 1h | ✅ |
 | FE-AI-002 | `PurchasingScreen.tsx` — form nhập yêu cầu tự do (VI/JP), loading state, polling kết quả | P0 | FE-AI-001 | 4h | 📋 |
 | FE-AI-003 | `ProductCompareCard.tsx` — card sản phẩm: ảnh + tên VI + tên JP + giá JPY/VND + badge khuyến nghị | P0 | FE-AI-002 | 3h | 📋 |
 | FE-AI-004 | `ScoreBar.tsx` — thanh điểm 5 tiêu chí với màu gradient (xanh-vàng-đỏ theo điểm) | P1 | FE-AI-003 | 1h | 📋 |
@@ -141,19 +141,83 @@
 
 ---
 
-## Backlog P1
+## SPRINT V3 — Giai đoạn 1: Critical
 
-| ID | Mô tả | Trạng thái |
-|----|-------|------------|
-| FE-i18n | `next-intl` VI/JP | 📋 |
-| FE-toast | Toast notification action | 📋 |
-| FE-skeleton | Loading skeleton thay spinner | 📋 |
+> Spec đầy đủ: `docs/sa/amendments/upgrade-v3-analysis.md`
+
+### V3-G1: Order Flow (#12)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-001 | `OrderDetailScreen` — nút "Duyệt đơn" cho admin (PENDING → APPROVED) | P0 | BE-V3-003 | 2h | ✅ |
+| FE-V3-002 | `OrderDetailScreen` — form "Ghi nhận thanh toán" (APPROVED → PAID) | P0 | BE-V3-004 | 3h | ✅ |
+| FE-V3-003 | `OrderDetailScreen` — nút "Tracking" + modal nhập tracking URL (PAID → SHIPPING) | P0 | BE-V3-005 | 2h | ✅ |
+| FE-V3-004 | `OrderDetailScreen` — nút "Đã giao" cho branch staff (SHIPPING → DELIVERED) | P0 | BE-V3-006 | 1h | ✅ |
+| FE-V3-005 | `OrdersScreen` badge màu theo status mới (APPROVED/PAID/SHIPPING) | P0 | FE-V3-001 | 1h | ✅ |
+| FE-V3-006 | Proxy routes ORDER: confirm, approve, record-payment, tracking | P0 | — | 1h | ✅ |
+| FE-V3-007 | Notification bell badge 🔔 + count trong header | P0 | BE-V3-019 | 2h | ✅ |
+| FE-V3-008 | `NotificationDropdown.tsx` — panel dropdown danh sách thông báo | P0 | FE-V3-007 | 3h | ✅ |
+| FE-V3-009 | Proxy routes NOTIFY: `/notifications`, `/notifications/count`, mark-read | P0 | FE-V3-008 | 1h | ✅ |
+| FE-V3-010 | `InventoryScreen` — hiển thị cột restock_status badge (NORMAL/LOW/CRITICAL/ON_ORDER) | P0 | BE-V3-013 | 2h | ✅ |
+| FE-V3-011 | `InventoryScreen` — edit modal: min_stock_qty + restock_status + restock_eta + notes | P0 | BE-V3-014 | 3h | ✅ |
+| FE-V3-012 | `InventoryScreen` — xác nhận delete + gọi DELETE /inventories/{id} | P0 | BE-V3-015 | 1h | ✅ |
+| FE-V3-013 | `InventoryScreen` — CSV import modal + proxy bulk-import | P0 | BE-V3-017 | 3h | ✅ |
+| FE-V3-014 | `InventoryScreen` — hiển thị cột Ngưỡng min_stock_qty | P1 | FE-V3-010 | 0.5h | ✅ |
+
+### V3-G1: Pricing (#9, #10)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-015 | `ProductForm` — thêm field `retail_price_vnd` (giá bán lẻ VND) | P0 | BE-V3-010 | 1h | ✅ |
+| FE-V3-016 | `ProductDetailScreen` — hiển thị 3 tầng giá theo role | P0 | BE-V3-012 | 2h | ✅ |
+
+### V3-G2: Dashboard (#1, #2)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-017 | `DashboardScreen` — section tài chính: doanh thu tháng + công nợ + tồn kho thấp | P0 | BE-V3-023 | 3h | ✅ |
+| FE-V3-018 | `DashboardScreen` — chart doanh thu 30 ngày (Recharts LineChart) | P1 | BE-V3-024 | 2h | ✅ |
+| FE-V3-019 | Proxy routes DASHBOARD: `/dashboard/revenue`, `/dashboard/cashflow` | P0 | FE-V3-017 | 0.5h | ✅ |
+
+### V3-G2: Product UX (#6, #7, #8)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-020 | `ProductsScreen` — thumbnail ảnh trong table/grid | P1 | BE-V3-026 | 2h | ✅ |
+| FE-V3-021 | `ProductDetailScreen` — gallery ảnh full (swiper) | P2 | FE-V3-020 | 3h | ✅ |
+| FE-V3-022 | `ProductsScreen` — filter vô hiệu hoá (admin/company) | P1 | BE-V3-028 | 2h | ✅ |
+| FE-V3-023 | `ProductDetailScreen` — AI thumb suggestion + approve | P2 | BE-V3-027 | 3h | ✅ |
+| FE-V3-024 | `ProductsScreen` — branch chỉ xem SP đã duyệt + filter | P0 | BE-V3-002 | 2h | ✅ |
+
+### V3-G2: Master Data + Profile (#11, #13, #14)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-025 | `/admin/master-data` — tab Categories CRUD UI | P1 | BE-V3-030 | 2h | ✅ |
+| FE-V3-026 | `/admin/master-data` — tab Warehouses + Suppliers + Units | P1 | — | 2h | ✅ |
+| FE-V3-027 | `/profile` — xem + sửa avatar_url, phone, display_name | P1 | BE-V3-031 | 3h | ✅ · upload R2 📋 P2 |
+
+### V3-G3: Enhancement (#3, #4, #5)
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-V3-028 | Mobile bottom navigation (breakpoint < 768px) | P2 | — | 2h | ✅ |
+| FE-V3-029 | Mobile: Products/Orders table → Card list view | P2 | — | 4h | ✅ |
+| FE-V3-030 | AI Chat full-screen mode (modal → `/chat` route) | P2 | — | 2h | ✅ |
+| FE-V3-031 | `ChatMessageContent` render Mermaid diagram | P1 | — | 3h | ✅ |
+| FE-V3-032 | Exchange rate banner + VND estimator | P1 | BE-V3-025 | 2h | ✅ |
+| FE-V3-033 | Inline validation đầy đủ tất cả forms | P2 | — | 4h | ✅ |
 
 ---
 
-## Coding Standards
+## Sprint AI-P — AI Purchasing Specialist
 
-- TypeScript strict · `/components/ui` vs `/components/screens`
-- httpOnly cookie only — **không localStorage**
-- Custom hooks: `useProducts`, `useOrders`…
-- i18n keys: `/messages/vi.json`, `/messages/ja.json`
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-AI-001 | Proxy route `POST /api/proxy/ai/purchasing` | P0 | BE-AI-006 | 1h | ✅ |
+| FE-AI-002 | `PurchasingScreen.tsx` — form query + gợi ý nhanh + layout grid | P0 | FE-AI-001 | 4h | ✅ |
+| FE-AI-003 | `ProductCard` trong PurchasingScreen — ảnh + tên VI/JP + giá + badge | P0 | FE-AI-002 | 3h | ✅ |
+| FE-AI-004 | `ScoreBar` — thanh 5 tiêu chí màu gradient | P1 | FE-AI-003 | 1h | ✅ |
+| FE-AI-005 | AI report section trong PurchasingScreen | P1 | FE-AI-002 | 2h | ✅ |
+| FE-AI-006 | Sidebar nav "Tư Vấn Thu Mua" (admin + company) | P0 | FE-AI-002 | 0.5h | ✅ |
+| FE-AI-007 | Màn hình lịch sử `/purchasing/history` | P2 | FE-AI-002 | 2h | 📋 |

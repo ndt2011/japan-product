@@ -1,6 +1,12 @@
 "use client";
 
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateOrderLines,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import type { ProductItem } from "@/types/api";
 import Link from "next/link";
@@ -19,6 +25,7 @@ export function OrderFormScreen() {
   const [biko, setBiko] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     fetch("/api/proxy/products?per_page=100")
@@ -30,6 +37,12 @@ export function OrderFormScreen() {
 
   function updateLine(index: number, patch: Partial<LineRow>) {
     setLines((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+    setFieldErrors((prev) => {
+      let next = prev;
+      if (patch.product_id !== undefined) next = clearFieldError(next, `lines.${index}.product_id`);
+      if (patch.quantity !== undefined) next = clearFieldError(next, `lines.${index}.quantity`);
+      return clearFieldError(next, "_form");
+    });
   }
 
   function addLine() {
@@ -38,14 +51,16 @@ export function OrderFormScreen() {
 
   async function save(submit: boolean) {
     setError("");
+    const errors = validateOrderLines(lines);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError(errors._form ?? "Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
+
     const items = lines
       .filter((l) => l.product_id && l.quantity > 0)
       .map((l) => ({ product_id: Number(l.product_id), quantity: l.quantity }));
-
-    if (items.length === 0) {
-      setError("Thêm ít nhất một sản phẩm.");
-      return;
-    }
 
     setSaving(true);
     try {
@@ -91,6 +106,7 @@ export function OrderFormScreen() {
           <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
             <Select
               label="Sản phẩm"
+              required
               value={line.product_id}
               onChange={(e) =>
                 updateLine(index, { product_id: e.target.value ? Number(e.target.value) : "" })
@@ -100,13 +116,16 @@ export function OrderFormScreen() {
                 label: `${p.product_cd ?? p.id} — ${p.product_name}`,
               }))}
               placeholder="Chọn SP"
+              error={fieldErrors[`lines.${index}.product_id`]}
             />
             <Input
               label="Số lượng"
               type="number"
               min={1}
+              required
               value={line.quantity}
               onChange={(e) => updateLine(index, { quantity: Number(e.target.value) || 1 })}
+              error={fieldErrors[`lines.${index}.quantity`]}
             />
             {lines.length > 1 && (
               <Button variant="ghost" size="sm" onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}>

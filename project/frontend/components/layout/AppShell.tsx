@@ -2,6 +2,8 @@
 
 import { AppLogo } from "@/components/AppLogo";
 import { AiStaffChatWidget } from "@/components/layout/AiStaffChatWidget";
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 import { getNavForUser, type NavItem } from "@/lib/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -39,12 +41,17 @@ export function AppShell({ children }: AppShellProps) {
     router.refresh();
   }
 
+  const mobileNav = navItems.filter((i) =>
+    ["dashboard", "orders", "products", "ai-center", "profile"].includes(i.id),
+  );
+
   return (
     <div className="flex h-screen bg-surface">
       <aside
         className={clsx(
           "h-screen bg-white border-r border-border flex flex-col transition-all duration-300 shrink-0",
           collapsed ? "w-16" : "w-60",
+          "hidden md:flex",
         )}
       >
         <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
@@ -76,9 +83,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="border-t border-border p-3">
           {!collapsed && (
             <div className="flex items-center gap-2 px-2 py-2 mb-2">
-              <div className="w-7 h-7 rounded-full bg-brand text-white text-xs flex items-center justify-center">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar name={displayName} avatarUrl={user?.avatar_url} size="sm" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-text-primary truncate">{displayName}</p>
                 <p className="text-xs text-text-placeholder truncate">{userEmail || "—"}</p>
@@ -95,26 +100,18 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-14 bg-white border-b border-border flex items-center justify-between px-6 shrink-0">
-          <h2 className="text-sm text-text-primary font-medium">{pageTitle}</h2>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-14 md:pb-0">
+        <header className="h-14 bg-white border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
+          <h2 className="text-sm text-text-primary font-medium truncate">{pageTitle}</h2>
           <div className="flex items-center gap-2">
-            <Link
-              href={notifications.overdueInvoices > 0 ? "/debts" : "/orders?status=DELIVERED_ADMIN"}
-              title={
+            <NotificationDropdown
+              legacyTotal={notifications.total}
+              legacyTitle={
                 notifications.total > 0
                   ? `${notifications.overdueInvoices} HĐ quá hạn · ${notifications.pendingReceipt} đơn chờ xác nhận`
-                  : "Không có thông báo"
+                  : undefined
               }
-              className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface-subtle text-text-muted"
-            >
-              🔔
-              {notifications.total > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[10px] font-medium rounded-full flex items-center justify-center">
-                  {notifications.total > 9 ? "9+" : notifications.total}
-                </span>
-              )}
-            </Link>
+            />
             <button
               type="button"
               onClick={handleLogout}
@@ -122,15 +119,31 @@ export function AppShell({ children }: AppShellProps) {
             >
               Đăng xuất
             </button>
-            <div className="w-8 h-8 rounded-full bg-brand text-white text-xs flex items-center justify-center">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
+            <Link href="/profile" title="Hồ sơ">
+              <UserAvatar name={displayName} avatarUrl={user?.avatar_url} size="md" />
+            </Link>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
 
-      {/* AI Staff Chat — floating widget, hiển thị với mọi role */}
+      {/* Mobile bottom navigation — V3 #13 */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-border flex justify-around py-2 px-1 safe-area-pb">
+        {mobileNav.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={clsx(
+              "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] min-w-0 flex-1",
+              pathname.startsWith(item.href) ? "text-brand font-medium" : "text-text-muted",
+            )}
+          >
+            <span className="text-lg">{item.icon}</span>
+            <span className="truncate w-full text-center">{item.label.split(" ")[0]}</span>
+          </Link>
+        ))}
+      </nav>
+
       <AiStaffChatWidget />
     </div>
   );

@@ -17,7 +17,10 @@ class ShipmentBatch extends Model
         'batch_name',
         'status',
         'logistics_partner',
+        'carrier_name',
         'tracking_number',
+        'shipping_at',
+        'estimated_arrival',
         'estimated_departure_date',
         'created_admin_id',
         'created',
@@ -29,6 +32,8 @@ class ShipmentBatch extends Model
     {
         return [
             'estimated_departure_date' => 'date',
+            'estimated_arrival' => 'date',
+            'shipping_at' => 'datetime',
             'deleted_flag' => 'boolean',
             'created' => 'datetime',
             'modified' => 'datetime',

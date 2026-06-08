@@ -1,6 +1,6 @@
 # Code vs Docs Audit Report
 
-> **Ngày**: 2026-06-08 (lần 3 — sau FE-P2-004~006) | **Tác giả**: SA  
+> **Ngày**: 2026-06-08 (lần 4 — sau V3 local + docs sync) | **Tác giả**: SA  
 > **Mục đích**: Kiểm tra code thực tế có phản ánh đúng tài liệu thiết kế không  
 > **Trạng thái tổng**: [docs/tasks/STATUS.md](../../tasks/STATUS.md)
 
@@ -10,9 +10,9 @@
 
 | Câu hỏi | Trả lời |
 |---------|---------|
-| **Docs có khớp code không?** | **~95% khớp** — Phase 2 core đã đồng bộ |
-| **File nào là nguồn sự thật?** | `STATUS.md` + code trong `project/` |
-| **Còn lệch gì?** | 4 điểm nhỏ (xem bảng ⚠️ bên dưới) |
+| **Docs có khớp code không?** | **~92% khớp** — Phase 2 ✅ · V3 ~80% task |
+| **File nào là nguồn sự thật?** | `STATUS.md` + `backend-tasks.md` / `frontend-tasks.md` + code `project/` |
+| **Còn lệch gì?** | V3 partial items + 4 điểm Phase 2 (bảng ⚠️) |
 
 ---
 
@@ -26,6 +26,7 @@
 | Invoice / Hóa đơn | 10 | 1 | 0 |
 | Reports / Profit | 2 | 0 | 1 |
 | DevOps staging | 4 | 0 | 1 prod |
+| **V3 Upgrade** | 28 | 8 | 6 |
 
 ---
 
@@ -48,7 +49,15 @@
 | order_costs UI | Order detail Admin | ✅ | `OrderDetailScreen.tsx` |
 | Notification badge | overdue + DELIVERED_ADMIN | ✅ | `useNotificationCounts.ts` + `AppShell.tsx` |
 | Admin all-users | search + ma trận quyền | ✅ | `AdminScreen.tsx` |
-| Tests | 64 passed | ✅ | `php artisan test` |
+| Tests | 73 passed | ✅ | `php artisan test` |
+| V3 order flow | APPROVED → PAID → SHIPPING | ✅ | `OrderService`, `ShipmentBatchService` |
+| V3 notifications | Table + API + dropdown FE | ✅ | `NotificationService`, `NotificationDropdown` |
+| V3 dashboard revenue | `/dashboard/revenue`, `/cashflow` | ✅ | `DashboardService` |
+| V3 profile | GET/PUT `/profile` | ⚠️ | Chưa `POST /profile/avatar` |
+| V3 master-data | Categories CRUD + warehouse create | ⚠️ | Chưa 4-tab UI / suppliers CRUD |
+| V3 inventory UI | List + badge | ⚠️ | Chưa edit/delete row FE |
+| V3 mobile | Bottom nav + chat full-screen | ⚠️ | Chưa card list Orders/Products |
+| Mermaid chat | `ChatMessageContent` | ✅ | `components/chat/ChatMessageContent.tsx` |
 
 ---
 
@@ -71,6 +80,10 @@
 | **BE-P2-014** | Persist `invoices.pdf_path` khi generate | P2 | PDF vẫn xem/download được |
 | **QA-INV** | Test cases invoice/delivery trong `docs/qa/` | P2 | PHPUnit có `InvoiceTest` |
 | **PROD** | ConoHa VPS production | Sprint 7 | Staging Railway+Vercel OK |
+| **BE-V3-018** | Scheduler restock_status daily | P1 | `console.php` chưa có command |
+| **BE-V3-029** | Required validation all Form Requests | P2 | FE đã có `form-validation.ts` |
+| **BE-V3-030** | Suppliers full CRUD | P2 | Hiện read-only — đủ cho MVP |
+| **BE-V3-032** | `POST /profile/avatar` upload R2 | P2 | GET/PUT profile ✅ · URL field ✅ |
 
 ---
 
@@ -84,9 +97,9 @@
 
 ---
 
-## Việc tiếp theo (ưu tiên thấp)
+## Việc tiếp theo
 
-1. `GET /reports/profit/by-product` (BE-P2-013)
-2. Recharts chart trên tab Lợi nhuận
-3. Formalize `orders-status.md` — bỏ `DELIVERED_CLIENT` khỏi flow chính
+1. **Push V3 local** → Railway migrate `100100` + `100110` → smoke staging
+2. V3 còn lại P2: BE-V3-018 scheduler · BE-V3-029 Form Requests · avatar R2 (BE/FE-V3-032)
+3. `GET /reports/profit/by-product` (BE-P2-013)
 4. Production deploy (ConoHa) — Sprint 7

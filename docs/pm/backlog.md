@@ -1,7 +1,7 @@
 # Product Backlog
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Phiên bản**: 1.2 | **Ngày**: 2026-06-08
+**Phiên bản**: 1.3 | **Ngày**: 2026-06-08
 
 > **Legend**: P0=Must Have | P1=Should Have | P2=Nice to Have | P3=Future  
 > **Trạng thái chi tiết**: [docs/tasks/STATUS.md](../tasks/STATUS.md)  
@@ -87,4 +87,53 @@
 | P2-008 | Audit log | P2 | 📋 |
 | P2-009 | Amazon JP PA-API | P1 | 📋 |
 | P2-010 | AI Phase 4 GPT re-rank | P2 | 📋 |
-| P2-011 | Notification in-app | P2 | 📋 |
+| P2-011 | Notification in-app | P2 | 📋 V3-G1 ↓ |
+
+---
+
+## Phase 3 — V3 Upgrades (2026-06-08 analysis)
+
+> Spec đầy đủ: `docs/sa/amendments/upgrade-v3-analysis.md`  
+> Tasks chi tiết: `docs/tasks/backend-tasks.md` (BE-V3-001~032) · `docs/tasks/frontend-tasks.md` (FE-V3-001~033)
+
+### Giai đoạn 1 — Critical (P0/P1)
+
+| ID | Feature | Ref | Priority | Status |
+|----|---------|-----|----------|--------|
+| V3-01 | Hiển thị ảnh trong màn duyệt AI candidates | #1 | P1 | ✅ FE-V3-021 |
+| V3-02 | Fix label "Quy cách", thêm barcode + min_order_qty + "thêm bởi" | #2 | P1 | ✅ FE-V3-022~023 · BE-V3-026~027 |
+| V3-03 | Pricing permissions: cost admin only, retail_price_vnd cho branch | #3 | P0 | ✅ BE-V3-010~011 |
+| V3-04 | In-app notification khi AI cần duyệt | #4 | P1 | ✅ BE-V3-020~022 |
+| V3-05 | Branch xem danh sách hàng đã duyệt / từ chối | #5 | P1 | ✅ FE-V3-024 |
+| V3-06 | Phân quyền xem sản phẩm theo role | #6 | P0 | ✅ BE-V3-011 |
+| V3-07 | Inventory workflow: form + mã kho + bulk import + restock badge | #7 | P0 | ✅ BE-V3-013~017 · FE-V3-011~014 · scheduler 📋 BE-V3-018 |
+| V3-08 | Required field validation tất cả form | #8 | P0 | ✅ FE-V3-033 |
+| V3-12 | Order flow redesign: APPROVED → PAID → SHIPPING + tracking | #12 | P0 | ✅ BE-V3-001~009 |
+
+### Giai đoạn 2 — Important (P1/P2)
+
+| ID | Feature | Ref | Priority | Status |
+|----|---------|-----|----------|--------|
+| V3-09 | Dashboard doanh thu/lợi nhuận + filter tháng/năm | #9 | P1 | ✅ BE-V3-023~024 · FE-V3-017~019 |
+| V3-10 | Dashboard phân quyền theo role | #10 | P1 | ✅ BE-V3-025 |
+| V3-11 | Master data UI: categories, suppliers, warehouses, units | #11 | P2 | ✅ FE-V3-025~026 · suppliers CRUD 📋 |
+| V3-13 | AI Chat render Mermaid diagram | #13 | P3 | ✅ FE-V3-031 |
+| V3-14 | Mobile responsive full (bottom nav, card list) | #14 | P2 | ✅ FE-V3-028~030 |
+| V3-15 | User profile: sửa thông tin + upload ảnh đại diện | #15 | P2 | ✅ GET/PUT profile · avatar R2 📋 BE-V3-032 |
+
+---
+
+## AI Purchasing Specialist (Sprint AI-P)
+
+> Spec đầy đủ: `docs/sa/amendments/ai-purchasing-specialist.md`  
+> Tasks: BE-AI-001~008 · FE-AI-001~007
+
+| ID | Feature | Priority | Status |
+|----|---------|----------|--------|
+| AI-P-01 | Phân tích yêu cầu từ tiếng Việt/Nhật | P1 | 📋 BE-AI-001 |
+| AI-P-02 | Tìm ≥5 sản phẩm từ Rakuten + internal catalog | P1 | 📋 BE-AI-002~003 |
+| AI-P-03 | Chấm điểm 5 tiêu chí: Giá 30% + Chất lượng 30% + Review 20% + BH 10% + Brand 10% | P1 | 📋 BE-AI-004 |
+| AI-P-04 | Sinh báo cáo so sánh VI/JP + khuyến nghị | P1 | 📋 BE-AI-005 |
+| AI-P-05 | API + queue + polling | P1 | 📋 BE-AI-006~007 |
+| AI-P-06 | Màn hình `/purchasing` + ProductCompareCard + ScoreBar | P1 | 📋 FE-AI-002~004 |
+| AI-P-07 | ProfitCalculator realtime | P2 | 📋 FE-AI-005 |

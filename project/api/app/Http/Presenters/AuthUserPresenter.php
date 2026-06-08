@@ -17,6 +17,8 @@ class AuthUserPresenter
                 'login_id' => $user->login_id,
                 'full_name' => $user->full_name,
                 'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'avatar_url' => $user->avatar_url ?? null,
                 'branch_id' => $user->branch_id,
                 'user_type' => $userType,
             ];
@@ -30,6 +32,8 @@ class AuthUserPresenter
                 'login_id' => $user->login_id,
                 'full_name' => $user->full_name,
                 'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'avatar_url' => $user->avatar_url ?? null,
                 'user_type' => $userType,
                 'role' => $user->role,
                 'branch_id' => $user->branch_id,
@@ -50,6 +54,8 @@ class AuthUserPresenter
             'company_name' => $user->company_name,
             'company_cd' => $user->company_cd,
             'email' => $user->email,
+            'phone' => $user->phone ?? null,
+            'avatar_url' => $user->avatar_url ?? null,
             'contact_name' => $user->contact_name,
             'user_type' => $userType,
         ];

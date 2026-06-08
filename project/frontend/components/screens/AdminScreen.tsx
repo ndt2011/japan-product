@@ -21,6 +21,13 @@ import {
   ROLE_LABELS,
   roleBadgeVariant,
 } from "@/lib/roleAccess";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateAdminUserForm,
+  validateCompanyUserForm,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import type {
   AdminUserItem,
@@ -123,6 +130,8 @@ export function AdminScreen() {
     contact_name: "",
     email: "",
   });
+  const [adminFieldErrors, setAdminFieldErrors] = useState<FieldErrors>({});
+  const [companyFieldErrors, setCompanyFieldErrors] = useState<FieldErrors>({});
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -250,8 +259,24 @@ export function AdminScreen() {
     [unifiedUsers],
   );
 
+  function patchAdminForm<K extends keyof typeof adminForm>(key: K, value: (typeof adminForm)[K]) {
+    setAdminForm((f) => ({ ...f, [key]: value }));
+    setAdminFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
+  function patchCompanyForm<K extends keyof typeof companyForm>(key: K, value: (typeof companyForm)[K]) {
+    setCompanyForm((f) => ({ ...f, [key]: value }));
+    setCompanyFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
   async function handleCreateAdmin(e: FormEvent) {
     e.preventDefault();
+    const errors = validateAdminUserForm(adminForm);
+    setAdminFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSuccess("");
@@ -279,6 +304,12 @@ export function AdminScreen() {
 
   async function handleCreateCompany(e: FormEvent) {
     e.preventDefault();
+    const errors = validateCompanyUserForm(companyForm);
+    setCompanyFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError("Vui lòng kiểm tra các trường được đánh dấu.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSuccess("");
@@ -439,26 +470,29 @@ export function AdminScreen() {
                       label="Login ID"
                       hint="Dùng để đăng nhập, không trùng user khác"
                       value={adminForm.login_id}
-                      onChange={(e) => setAdminForm({ ...adminForm, login_id: e.target.value })}
+                      onChange={(e) => patchAdminForm("login_id", e.target.value)}
                       placeholder="vd: admin_jp02"
                       required
+                      error={adminFieldErrors.login_id}
                     />
                     <Input
                       label="Mật khẩu"
                       hint="Tối thiểu 8 ký tự, nên có chữ hoa, số và ký tự đặc biệt"
                       type="password"
                       value={adminForm.password}
-                      onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+                      onChange={(e) => patchAdminForm("password", e.target.value)}
                       placeholder="vd: Admin@123"
                       required
                       minLength={8}
+                      error={adminFieldErrors.password}
                     />
                     <Input
                       label="Họ tên"
                       value={adminForm.full_name}
-                      onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })}
+                      onChange={(e) => patchAdminForm("full_name", e.target.value)}
                       placeholder="Nguyễn Văn A"
                       required
+                      error={adminFieldErrors.full_name}
                     />
                     <Input
                       label="Email"
@@ -466,8 +500,9 @@ export function AdminScreen() {
                       hint="Nhận thông báo đơn hàng mới"
                       type="email"
                       value={adminForm.email}
-                      onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
+                      onChange={(e) => patchAdminForm("email", e.target.value)}
                       placeholder="admin@company.com"
+                      error={adminFieldErrors.email}
                     />
                     <div className="md:col-span-2 flex gap-2">
                       <Button type="submit" disabled={saving}>
@@ -489,19 +524,21 @@ export function AdminScreen() {
                       label="Login ID"
                       hint="Tài khoản đăng nhập của đại lý"
                       value={companyForm.login_id}
-                      onChange={(e) => setCompanyForm({ ...companyForm, login_id: e.target.value })}
+                      onChange={(e) => patchCompanyForm("login_id", e.target.value)}
                       placeholder="vd: vn_company02"
                       required
+                      error={companyFieldErrors.login_id}
                     />
                     <Input
                       label="Mật khẩu"
                       hint="Gửi cho đại lý qua kênh bảo mật"
                       type="password"
                       value={companyForm.password}
-                      onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })}
+                      onChange={(e) => patchCompanyForm("password", e.target.value)}
                       placeholder="vd: Company@123"
                       required
                       minLength={8}
+                      error={companyFieldErrors.password}
                     />
                     <Input
                       label="Mã công ty"
@@ -514,9 +551,10 @@ export function AdminScreen() {
                     <Input
                       label="Tên công ty"
                       value={companyForm.company_name}
-                      onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
+                      onChange={(e) => patchCompanyForm("company_name", e.target.value)}
                       placeholder="Công ty TNHH ABC"
                       required
+                      error={companyFieldErrors.company_name}
                     />
                     <Input
                       label="Người liên hệ"
@@ -531,8 +569,9 @@ export function AdminScreen() {
                       hint="Nhận thông báo đơn / hóa đơn"
                       type="email"
                       value={companyForm.email}
-                      onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                      onChange={(e) => patchCompanyForm("email", e.target.value)}
                       placeholder="contact@company.vn"
+                      error={companyFieldErrors.email}
                     />
                     <div className="md:col-span-2 flex gap-2">
                       <Button type="submit" disabled={saving}>

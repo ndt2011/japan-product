@@ -1,6 +1,12 @@
 "use client";
 
-import { Button, Card, PageHeader } from "@/components/ui";
+import { Button, Card, Input, PageHeader } from "@/components/ui";
+import {
+  clearFieldError,
+  hasFieldErrors,
+  validateShipmentForm,
+  type FieldErrors,
+} from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import type { OrderItem } from "@/types/api";
 import Link from "next/link";
@@ -18,6 +24,7 @@ export function ShipmentFormScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     async function load() {
@@ -40,12 +47,15 @@ export function ShipmentFormScreen() {
       else next.add(id);
       return next;
     });
+    setFieldErrors((prev) => clearFieldError(prev, "order_ids"));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selected.size < 1) {
-      setError(translateMessage("M0503"));
+    const errors = validateShipmentForm(batchName, selected.size);
+    setFieldErrors(errors);
+    if (hasFieldErrors(errors)) {
+      setError(errors.order_ids ? translateMessage("M0503") : "Vui lòng kiểm tra các trường được đánh dấu.");
       return;
     }
     setSubmitting(true);
@@ -82,16 +92,17 @@ export function ShipmentFormScreen() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card className="p-4 space-y-3">
-          <div>
-            <label className="text-sm text-text-muted">Tên chuyến *</label>
-            <input
-              required
-              value={batchName}
-              onChange={(e) => setBatchName(e.target.value)}
-              className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm"
-              placeholder="VD: Chuyến tháng 6/2026"
-            />
-          </div>
+          <Input
+            label="Tên chuyến"
+            required
+            value={batchName}
+            onChange={(e) => {
+              setBatchName(e.target.value);
+              setFieldErrors((prev) => clearFieldError(prev, "batch_name"));
+            }}
+            placeholder="VD: Chuyến tháng 6/2026"
+            error={fieldErrors.batch_name}
+          />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-text-muted">Đối tác logistics</label>
@@ -123,6 +134,9 @@ export function ShipmentFormScreen() {
 
         <Card className="p-4">
           <h3 className="text-sm font-medium mb-3">Đơn hàng khả dụng ({selected.size} đã chọn)</h3>
+          {fieldErrors.order_ids && (
+            <p className="text-xs text-danger mb-2">{fieldErrors.order_ids}</p>
+          )}
           {loading ? (
             <p className="text-text-muted text-sm">Đang tải...</p>
           ) : orders.length === 0 ? (

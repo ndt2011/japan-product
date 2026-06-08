@@ -109,6 +109,32 @@ class ShipmentBatchController extends Controller
         ], 'M0506');
     }
 
+    public function setTracking(Request $request, int $id): JsonResponse
+    {
+        $auth = AuthContext::from($request);
+
+        if ($auth['type'] !== 'admin') {
+            return ApiResponse::error('M0507', null, 403);
+        }
+
+        $validated = $request->validate([
+            'tracking_no' => ['nullable', 'string', 'max:100'],
+            'tracking_number' => ['nullable', 'string', 'max:100'],
+            'carrier_name' => ['nullable', 'string', 'max:100'],
+            'logistics_partner' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        try {
+            $batch = $this->service->setTracking($id, $validated, $auth['user']);
+        } catch (ShipmentBatchException $e) {
+            return ApiResponse::error($e->messageCode, null, $e->status);
+        }
+
+        return ApiResponse::success([
+            'batch' => new ShipmentBatchResource($batch),
+        ], 'M0506');
+    }
+
     public function advanceStatus(AdvanceShipmentBatchStatusRequest $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);

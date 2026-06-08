@@ -19,6 +19,8 @@ class Admin extends Authenticatable
         'password',
         'full_name',
         'email',
+        'phone',
+        'avatar_url',
         'branch_id',
         'disabled_flag',
         'created',

@@ -103,7 +103,12 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
     { label: "NCC", value: product.supplier_name ?? "—" },
     { label: "Quy cách", value: product.spec ?? "—" },
     { label: "Đơn vị", value: product.unit ?? "—" },
+    { label: "Mã vạch", value: product.barcode ?? "—" },
+    { label: "SL đặt tối thiểu", value: product.min_order_qty?.toString() ?? "—" },
     { label: "Giá VND (catalog)", value: product.price_vnd?.toLocaleString("vi-VN") ?? "—" },
+    { label: "Giá lẻ VND", value: product.retail_price_vnd?.toLocaleString("vi-VN") ?? "—" },
+    { label: "Tạo bởi", value: product.created_by_name ?? "—" },
+    { label: "Ngày tạo", value: product.created_at ?? "—" },
     ...(isAdmin
       ? [
           { label: "Giá vốn JPY", value: product.cost_price_jpy != null ? Number(product.cost_price_jpy).toLocaleString("vi-VN") : "—" },

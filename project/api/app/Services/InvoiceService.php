@@ -122,7 +122,7 @@ class InvoiceService
             throw new InvoiceException('M0002', 404);
         }
 
-        if (! in_array($order->status, ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'DELIVERED_ADMIN'], true)) {
+        if (! in_array($order->status, ['APPROVED', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'SHIPPED', 'DELIVERED', 'DELIVERED_ADMIN'], true)) {
             throw new InvoiceException('M0510', 409);
         }
 

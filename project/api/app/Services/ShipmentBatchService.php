@@ -22,7 +22,87 @@ class ShipmentBatchService
         private readonly ShipmentBatchRepository $repository,
         private readonly InventoryService $inventoryService,
         private readonly WarehouseRepository $warehouseRepository,
+        private readonly NotificationService $notificationService,
     ) {}
+
+    public function orderInActiveBatch(int $orderId): bool
+    {
+        return $this->repository->orderInActiveBatch($orderId);
+    }
+
+    public function autoCreateFromOrder(Order $order, Admin $admin): ShipmentBatch
+    {
+        if ($this->repository->orderInActiveBatch($order->id)) {
+            throw new ShipmentBatchException('M0502', 422);
+        }
+
+        return DB::transaction(function () use ($order, $admin) {
+            $batch = $this->repository->create([
+                'batch_no' => $this->repository->generateBatchNo(),
+                'batch_name' => "Auto — đơn {$order->order_no}",
+                'status' => 'PREPARING',
+                'created_admin_id' => $admin->id,
+                'created' => now(),
+                'deleted_flag' => false,
+            ]);
+
+            $this->attachOrders($batch, [$order->id]);
+
+            return $this->repository->findDetail($batch->id);
+        });
+    }
+
+    public function setTracking(int $id, array $data, Admin $admin): ShipmentBatch
+    {
+        $batch = $this->repository->findDetail($id);
+
+        if (! $batch) {
+            throw new ShipmentBatchException('M0002', 404);
+        }
+
+        $tracking = trim((string) ($data['tracking_no'] ?? $data['tracking_number'] ?? ''));
+        $carrier = trim((string) ($data['carrier_name'] ?? $data['logistics_partner'] ?? ''));
+
+        if ($tracking === '') {
+            throw new ShipmentBatchException('M0001', 422);
+        }
+
+        return DB::transaction(function () use ($batch, $tracking, $carrier, $admin) {
+            $updated = $this->repository->update($batch, [
+                'tracking_number' => $tracking,
+                'carrier_name' => $carrier !== '' ? $carrier : $batch->carrier_name,
+                'logistics_partner' => $carrier !== '' ? $carrier : $batch->logistics_partner,
+                'shipping_at' => now(),
+                'modified' => now(),
+            ]);
+
+            $orderIds = $updated->items->pluck('order_id');
+
+            Order::query()
+                ->whereIn('id', $orderIds)
+                ->update([
+                    'status' => 'SHIPPING',
+                    'tracking_no' => $tracking,
+                    'carrier_name' => $carrier !== '' ? $carrier : null,
+                    'modified' => now(),
+                    'modified_user_id' => $admin->id,
+                ]);
+
+            foreach ($updated->items as $item) {
+                $order = $item->order;
+                if ($order) {
+                    $this->notificationService->notifyOrderOwners(
+                        $order,
+                        'SHIPMENT_SHIPPING',
+                        "Đơn #{$order->order_no} đang vận chuyển",
+                        "Mã vận đơn: {$tracking}",
+                    );
+                }
+            }
+
+            return $updated;
+        });
+    }
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
     {
@@ -209,7 +289,7 @@ class ShipmentBatchService
                 throw new ShipmentBatchException('M0002', 404);
             }
 
-            if ($order->status !== 'CONFIRMED') {
+            if (! in_array($order->status, OrderService::BATCH_READY_STATUSES, true)) {
                 throw new ShipmentBatchException('M0501', 422);
             }
 
@@ -257,7 +337,7 @@ class ShipmentBatchService
             ->whereIn('id', $orderIds)
             ->where('status', 'PROCESSING')
             ->update([
-                'status' => 'CONFIRMED',
+                'status' => 'PAID',
                 'modified' => now(),
             ]);
     }

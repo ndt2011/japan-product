@@ -9,9 +9,12 @@ export interface StatusConfig {
 
 export const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
   DRAFT: { label: "Nháp", variant: "gray", color: "#64748B" },
-  PENDING: { label: "Chờ xác nhận", variant: "orange", color: "#EA580C" },
-  CONFIRMED: { label: "Đã xác nhận", variant: "primary", color: "#2563EB" },
-  PROCESSING: { label: "Đang xử lý", variant: "info", color: "#0284C7" },
+  PENDING: { label: "Chờ duyệt", variant: "orange", color: "#EA580C" },
+  APPROVED: { label: "Đã duyệt — chờ TT", variant: "primary", color: "#2563EB" },
+  PAID: { label: "Đã thanh toán", variant: "teal", color: "#0D9488" },
+  CONFIRMED: { label: "Đã xác nhận (cũ)", variant: "primary", color: "#2563EB" },
+  PROCESSING: { label: "Chuẩn bị hàng", variant: "info", color: "#0284C7" },
+  SHIPPING: { label: "Đang vận chuyển", variant: "purple", color: "#7C3AED" },
   SHIPPED: { label: "Đang giao", variant: "purple", color: "#7C3AED" },
   DELIVERED: { label: "Đã giao", variant: "success", color: "#16A34A" },
   DELIVERED_ADMIN: { label: "Chờ xác nhận nhận", variant: "warning", color: "#D97706" },
@@ -22,8 +25,11 @@ export const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
 export const ORDER_STATUS_ORDER = [
   "DRAFT",
   "PENDING",
+  "APPROVED",
+  "PAID",
   "CONFIRMED",
   "PROCESSING",
+  "SHIPPING",
   "SHIPPED",
   "DELIVERED",
   "DELIVERED_ADMIN",

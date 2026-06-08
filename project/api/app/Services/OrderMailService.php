@@ -55,7 +55,7 @@ class OrderMailService
             return;
         }
 
-        $subject = "[CONFIRMED] Đơn {$order->order_no} đã được xác nhận";
+        $subject = "[APPROVED] Đơn {$order->order_no} đã được duyệt";
         $body = $this->buildConfirmedOrderBody($order);
 
         $this->sendAndLog($email, $subject, $body);
@@ -85,7 +85,7 @@ class OrderMailService
         return <<<HTML
         <p>Đơn hàng <strong>{$order->order_no}</strong> đã được JP Agency xác nhận.</p>
         <ul>
-          <li>Trạng thái: CONFIRMED</li>
+          <li>Trạng thái: APPROVED — vui lòng thanh toán</li>
           <li>Tổng VND: {$totalVnd} ₫</li>
           <li>Tỷ giá khóa: {$order->exchange_rate}</li>
         </ul>

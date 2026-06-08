@@ -15,7 +15,33 @@ class InventoryService
     public function __construct(
         private readonly InventoryRepository $inventoryRepository,
         private readonly StockMovementRepository $stockMovementRepository,
+        private readonly CodeGeneratorService $codeGenerator,
     ) {}
+
+    public function updateRecord(int $id, array $data, int $userId): \App\Models\Inventory
+    {
+        $inv = \App\Models\Inventory::query()->active()->findOrFail($id);
+
+        $inv->update(array_merge($data, [
+            'modified' => now(),
+            'modified_user_id' => $userId,
+        ]));
+
+        $this->syncRestockStatus($inv->fresh());
+
+        return $inv->fresh(['product', 'warehouse']);
+    }
+
+    public function softDelete(int $id, int $userId): void
+    {
+        $inv = \App\Models\Inventory::query()->active()->findOrFail($id);
+        $inv->update([
+            'deleted_flag' => true,
+            'deleted' => now(),
+            'modified' => now(),
+            'modified_user_id' => $userId,
+        ]);
+    }
 
     public function listInventories(array $filters): LengthAwarePaginator
     {
@@ -55,11 +81,14 @@ class InventoryService
             $before = (int) $inv->quantity;
             $after = $before + $quantity;
 
+            $this->ensureInventoryCode($inv);
             $inv->update([
                 'quantity' => $after,
+                'last_restock_at' => now(),
                 'modified' => now(),
                 'modified_user_id' => $userId,
             ]);
+            $this->syncRestockStatus($inv->fresh());
 
             return $this->stockMovementRepository->create([
                 'movement_type' => 'IN',
@@ -231,5 +260,34 @@ class InventoryService
         if ($inventory) {
             $this->inventoryRepository->release($inventory, $qty);
         }
+    }
+
+    private function ensureInventoryCode(\App\Models\Inventory $inv): void
+    {
+        if ($inv->inventory_cd) {
+            return;
+        }
+
+        $inv->loadMissing(['product', 'warehouse']);
+        $whCd = $inv->warehouse?->warehouse_cd ?? 'WH'.$inv->warehouse_id;
+        $prodCd = $inv->product?->product_cd ?? 'P'.$inv->product_id;
+
+        $inv->update([
+            'inventory_cd' => $this->codeGenerator->inventoryCode($whCd, $prodCd),
+        ]);
+    }
+
+    private function syncRestockStatus(\App\Models\Inventory $inv): void
+    {
+        $available = $inv->availableQty();
+        $min = (int) ($inv->min_stock_qty ?? 5);
+
+        $status = match (true) {
+            $available <= 0 => 'CRITICAL',
+            $available < $min => 'LOW',
+            default => 'NORMAL',
+        };
+
+        $inv->update(['restock_status' => $status]);
     }
 }
