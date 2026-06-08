@@ -1,7 +1,9 @@
 # Product Roadmap
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Phiên bản**: 1.0 | **Ngày**: 2026-06-07
+**Phiên bản**: 1.1 | **Ngày**: 2026-06-08
+
+> **Tiến độ thực tế**: [docs/tasks/STATUS.md](../tasks/STATUS.md) — MVP + Phase 2 ~95%
 
 ---
 
@@ -34,7 +36,9 @@ Phase 1 — MVP          Phase 2 — Extended       Phase 3 — Scale
 | Sprint 6 | 09/2026 W1-W2 | Tỷ giá + Email notification |
 | Sprint 7 | 09/2026 W3-W4 | Bug fix, UAT, Deploy production |
 
-**Deliverable Phase 1**: Hệ thống live trên ConoHa VPS, team sử dụng thực tế
+**Deliverable Phase 1**: Hệ thống live — **hiện tại staging Railway + Vercel** (ConoHa prod M8)
+
+**Tiến độ Phase 1 (2026-06-08)**: S1–S5 ✅ · S6 Dashboard ✅ · Staging live ✅
 
 ---
 

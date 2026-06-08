@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AiChatController;
 use App\Http\Controllers\API\AiProductCandidateController;
 use App\Http\Controllers\API\AiProductSearchController;
 use App\Http\Controllers\API\AiSearchController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\API\HealthController;
 use App\Http\Controllers\API\InvoiceController;
 use App\Http\Controllers\API\InventoryController;
 use App\Http\Controllers\API\MasterDataController;
+use App\Http\Controllers\API\OrderCostController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\ProductImageController;
@@ -71,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::put('/orders/{id}/confirm', [OrderController::class, 'confirm']);
 
+        Route::get('/orders/{id}/costs', [OrderCostController::class, 'index']);
+        Route::post('/orders/{id}/costs', [OrderCostController::class, 'store']);
+        Route::delete('/orders/{id}/costs/{costId}', [OrderCostController::class, 'destroy']);
+
         Route::get('/invoices/debt-summary', [InvoiceController::class, 'debtSummary']);
         Route::post('/invoices', [InvoiceController::class, 'store']);
         Route::put('/invoices/{id}', [InvoiceController::class, 'update']);
@@ -88,6 +94,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/suppliers', [MasterDataController::class, 'suppliers']);
     Route::get('/product-categories', [MasterDataController::class, 'categories']);
     Route::get('/exchange-rates/current', [MasterDataController::class, 'currentExchangeRate']);
+
+    // AI Chat nhân viên — spec: docs/sa/amendments/ai-conversation-upgrade.md
+    Route::post('/ai/chat', [AiChatController::class, 'chat']);
+    Route::get('/ai/conversations', [AiChatController::class, 'conversations']);
+    Route::get('/ai/conversations/{id}/messages', [AiChatController::class, 'messages']);
 
     Route::post('/ai/product-search', [AiProductSearchController::class, 'search']);
     Route::post('/ai/search', [AiSearchController::class, 'store']);
@@ -139,5 +150,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/inventory', [ReportController::class, 'inventory']);
         Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
         Route::get('/reports/revenue', [ReportController::class, 'revenue']);
+        Route::get('/reports/profit', [ReportController::class, 'profit']);
     });
 });

@@ -1,12 +1,33 @@
 "use client";
 
-import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  PageHeader,
+  Select,
+  Table,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@/components/ui";
 import { useIsAdmin, useIsCompany } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
-import type { OrderItem } from "@/types/api";
+import { useAuthStore } from "@/stores/useAuthStore";
+import type { OrderCostItem, OrderItem } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+
+const costTypeOptions = [
+  { value: "shipping", label: "Vận chuyển" },
+  { value: "customs_jp", label: "Hải quan JP" },
+  { value: "customs_vn", label: "Hải quan VN" },
+  { value: "handling", label: "Xử lý kho" },
+  { value: "other", label: "Khác" },
+];
 
 const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "warning" | "success" | "danger" }> = {
   DRAFT: { label: "Nháp", variant: "gray" },
@@ -25,11 +46,29 @@ const INVOICE_ELIGIBLE = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "DE
 export function OrderDetailScreen({ orderId }: { orderId: number }) {
   const isAdmin = useIsAdmin();
   const isCompany = useIsCompany();
+  const userType = useAuthStore((s) => s.user?.user_type);
+  const canConfirmReceipt =
+    isCompany || userType === "branch_manager" || userType === "branch_staff";
   const router = useRouter();
   const [order, setOrder] = useState<OrderItem | null>(null);
+  const [costs, setCosts] = useState<OrderCostItem[]>([]);
+  const [costsTotal, setCostsTotal] = useState(0);
+  const [costType, setCostType] = useState("shipping");
+  const [costAmount, setCostAmount] = useState("");
+  const [costNote, setCostNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [acting, setActing] = useState(false);
+
+  async function loadCosts() {
+    if (!isAdmin) return;
+    const res = await fetch(`/api/proxy/orders/${orderId}/costs`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      setCosts(data.data.items ?? []);
+      setCostsTotal(Number(data.data.total_vnd ?? 0));
+    }
+  }
 
   async function load() {
     const res = await fetch(`/api/proxy/orders/${orderId}`);
@@ -42,9 +81,62 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
     setLoading(false);
   }
 
+  async function addCost(e: FormEvent) {
+    e.preventDefault();
+    if (!costAmount) return;
+    setActing(true);
+    try {
+      const res = await fetch(`/api/proxy/orders/${orderId}/costs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cost_type: costType,
+          amount_vnd: Number(costAmount),
+          note: costNote || null,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(translateMessage(data.message ?? "M0001"));
+        return;
+      }
+      setCostAmount("");
+      setCostNote("");
+      await loadCosts();
+    } catch {
+      setError("Không thể thêm chi phí.");
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function removeCost(costId: number) {
+    if (!confirm("Xóa chi phí này?")) return;
+    setActing(true);
+    try {
+      const res = await fetch(`/api/proxy/orders/${orderId}/costs/${costId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(translateMessage(data.message ?? "M0001"));
+        return;
+      }
+      await loadCosts();
+    } finally {
+      setActing(false);
+    }
+  }
+
   useEffect(() => {
     load();
   }, [orderId]);
+
+  useEffect(() => {
+    if (isAdmin && !loading) {
+      loadCosts();
+    }
+  }, [isAdmin, orderId, loading]);
 
   async function action(path: string, method = "PUT", body?: object) {
     setActing(true);
@@ -130,7 +222,7 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                 </Button>
               </>
             )}
-            {isCompany && order.status === "DELIVERED_ADMIN" && (
+            {canConfirmReceipt && order.status === "DELIVERED_ADMIN" && (
               <Button
                 size="sm"
                 disabled={acting}
@@ -192,6 +284,75 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
           </tbody>
         </Table>
       </Card>
+
+      {isAdmin && (
+        <Card className="p-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium">Chi phí thực tế (net profit)</h3>
+            <span className="text-sm text-brand font-medium">
+              Tổng: {costsTotal.toLocaleString("vi-VN")} ₫
+            </span>
+          </div>
+
+          {costs.length > 0 && (
+            <Table>
+              <Thead>
+                <tr>
+                  <Th>Loại</Th>
+                  <Th>Số tiền</Th>
+                  <Th>Ghi chú</Th>
+                  <Th />
+                </tr>
+              </Thead>
+              <tbody>
+                {costs.map((c) => (
+                  <Tr key={c.id}>
+                    <Td>{costTypeOptions.find((o) => o.value === c.cost_type)?.label ?? c.cost_type}</Td>
+                    <Td>{Number(c.amount_vnd).toLocaleString("vi-VN")} ₫</Td>
+                    <Td className="text-xs">{c.note ?? "—"}</Td>
+                    <Td>
+                      <button
+                        type="button"
+                        onClick={() => removeCost(c.id)}
+                        className="text-xs text-danger hover:underline"
+                        disabled={acting}
+                      >
+                        Xóa
+                      </button>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+
+          <form onSubmit={addCost} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <Select
+              label="Loại chi phí"
+              value={costType}
+              onChange={(e) => setCostType(e.target.value)}
+              options={costTypeOptions}
+            />
+            <Input
+              label="Số tiền VND"
+              type="number"
+              min={1}
+              required
+              value={costAmount}
+              onChange={(e) => setCostAmount(e.target.value)}
+            />
+            <Input
+              label="Ghi chú"
+              optional
+              value={costNote}
+              onChange={(e) => setCostNote(e.target.value)}
+            />
+            <Button type="submit" size="sm" disabled={acting}>
+              Thêm chi phí
+            </Button>
+          </form>
+        </Card>
+      )}
     </div>
   );
 }

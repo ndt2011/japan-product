@@ -2,7 +2,14 @@
 
 > **Cập nhật**: 2026-06-08 | **Repo**: https://github.com/ndt2011/japan-product
 
-Tài liệu được tổ chức theo vai trò. **Nguồn sự thật cho dev** khi code đã triển khai: `tasks/STATUS.md` + code trong `project/`.
+Tài liệu được tổ chức theo vai trò.
+
+**Nguồn sự thật khi code đã chạy** (đọc theo thứ tự):
+
+1. [tasks/STATUS.md](tasks/STATUS.md) — tiến độ + việc còn lại
+2. [sa/amendments/code-vs-docs-audit.md](sa/amendments/code-vs-docs-audit.md) — lệch docs ↔ code
+3. [devops/SERVER_CURRENT.md](devops/SERVER_CURRENT.md) — URL staging, env, Shell
+4. Code trong `project/`
 
 ---
 
@@ -36,13 +43,15 @@ docs/
 │   ├── migrations_guide.md         Thứ tự migration + snippet
 │   ├── design-source-demothietke.md
 │   ├── _schema.json
-│   ├── amendments/                 Thay đổi tạm chờ sync xlsx
-│   │   ├── ai_search-tables.md
-│   │   ├── product_images-table.md
+│   ├── amendments/                 Thay đổi / nâng cấp sau MVP
+│   │   ├── code-vs-docs-audit.md   ★ Audit code ↔ docs (cập nhật thường xuyên)
+│   │   ├── invoice-payment.md      Phase 2: Hóa đơn + dual pricing
+│   │   ├── upgrade-roadmap.md      Tier 1–3 nâng cấp
+│   │   ├── branch-system.md
 │   │   ├── orders-status.md
-│   │   ├── shipment-batches-tables.md
-│   │   ├── rbac-req003.md
-│   │   └── companies_vn-auth-columns.md
+│   │   ├── reports-module.md
+│   │   ├── ai-search-improvement.md
+│   │   └── rbac-req003.md
 │   ├── qa/
 │   │   └── QA_Orders_Batch.md
 │   └── devops/
@@ -61,7 +70,8 @@ docs/
 │   └── bruno-auth-collection.md
 │
 ├── devops/
-│   ├── ENV_STAGING.md              ★ Tổng hợp môi trường cloud (Railway + Vercel)
+│   ├── SERVER_CURRENT.md           ★ Phiếu server staging — URL, env, Shell (mở đầu tiên)
+│   ├── ENV_STAGING.md              Tổng hợp môi trường cloud (Railway + Vercel)
 │   ├── ENV_LOCAL.md                ★ Tổng hợp môi trường local (Windows)
 │   ├── STAGING_DEPLOY_MEMO.md      Checklist deploy từng bước
 │   ├── railway-mysql-variables.md  MySQL + reset DB

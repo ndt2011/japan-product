@@ -11,7 +11,9 @@ use App\Models\ExchangeRate;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Exceptions\WarehouseException;
 use App\Repositories\OrderRepository;
+use App\Repositories\WarehouseRepository;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +25,7 @@ class OrderService
         private readonly InventoryService $inventoryService,
         private readonly OrderMailService $orderMailService,
         private readonly InvoiceService $invoiceService,
+        private readonly WarehouseRepository $warehouseRepository,
     ) {}
 
     public function list(array $filters, Authenticatable $user, string $userType): LengthAwarePaginator
@@ -209,7 +212,11 @@ class OrderService
 
     public function confirmReceipt(int $id, Authenticatable $user, string $userType): Order
     {
-        if ($userType !== 'company' || ! $user instanceof CompanyVn) {
+        // Cho phép: company VN hoặc branch_manager / branch_staff
+        $isCompany = $userType === 'company' && $user instanceof CompanyVn;
+        $isBranch  = str_starts_with($userType, 'branch_') && $user instanceof BranchUser;
+
+        if (! $isCompany && ! $isBranch) {
             throw new OrderException('M0407', 403);
         }
 
@@ -219,13 +226,41 @@ class OrderService
             throw new OrderException('M0402', 409);
         }
 
-        return $this->orderRepository->update($order, [
-            'status' => 'COMPLETED',
-            'delivered_client_at' => now(),
-            'completed_at' => now(),
-            'modified' => now(),
-            'modified_user_id' => $user->id,
-        ]);
+        // DELIVERED_ADMIN → COMPLETED (đại lý xác nhận nhận hàng)
+        // Auto stockOut: hàng rời kho VN vào tay đại lý
+        // spec: fix nhập kho tự động — stockIn khi batch DELIVERED, stockOut khi confirmReceipt
+        $now       = now();
+        $warehouse = $this->warehouseRepository->defaultWarehouse();
+        $order->load('details');
+
+        return DB::transaction(function () use ($order, $user, $now, $warehouse) {
+            if ($warehouse) {
+                foreach ($order->details as $detail) {
+                    try {
+                        // ✅ stockOUT tự động khi đại lý xác nhận nhận hàng
+                        $this->inventoryService->stockOut(
+                            (int) $detail->product_id,
+                            (int) $warehouse->id,
+                            (int) $detail->quantity,
+                            $user->id,
+                            "Xuất kho — đại lý xác nhận nhận đơn {$order->order_no}",
+                            'order',
+                            $order->id,
+                        );
+                    } catch (WarehouseException) {
+                        // Nếu tồn kho không đủ (trường hợp dữ liệu cũ) → bỏ qua, không block
+                    }
+                }
+            }
+
+            return $this->orderRepository->update($order, [
+                'status'              => 'COMPLETED',
+                'delivered_client_at' => $now,
+                'completed_at'        => $now,
+                'modified'            => $now,
+                'modified_user_id'    => $user->id,
+            ]);
+        });
     }
 
     public function cancel(int $id, Authenticatable $user, string $userType): Order

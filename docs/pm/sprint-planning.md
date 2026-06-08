@@ -1,33 +1,32 @@
 # Sprint Planning — Phase 1
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Phiên bản**: 1.0 | **Ngày**: 2026-06-07  
+**Phiên bản**: 1.1 | **Ngày**: 2026-06-08  
 **Sprint length**: 2 tuần | **Velocity**: ~20 points/sprint
+
+> **Trạng thái tổng**: [docs/tasks/STATUS.md](../tasks/STATUS.md)
 
 ---
 
 ## Sprint 1 — Auth & RBAC (2026-06-15 → 2026-06-28)
 
 **Goal**: User có thể đăng nhập, phân quyền hoạt động đúng theo role  
-**Tiến độ 2026-06-07**: ~55% — xem [docs/tasks/STATUS.md](../tasks/STATUS.md)
+**Tiến độ 2026-06-08**: **✅ ~98%**
 
 | ID | Story | Points | Assignee | Trạng thái |
 |----|-------|--------|----------|------------|
 | US-101 | Đăng nhập | 3 | Backend + Frontend | ✅ |
 | US-102 | Lưu đăng nhập (Remember Me) | 2 | Backend + Frontend | ✅ |
 | US-103 | Đăng xuất | 1 | Backend + Frontend | ✅ |
-| US-501 | Quản lý người dùng (CRUD) | 4 | Backend | ⏸ REQ-003 |
-| — | Database migration: users, roles, permissions | 3 | Backend | ⏸ REQ-003 |
+| US-501 | Quản lý người dùng (CRUD) | 4 | Backend + Frontend | ✅ 3-model RBAC |
+| — | Lockout 5 lần / 30 phút | 2 | Backend | ✅ |
 | — | Setup project Laravel + Next.js | 3 | Backend + Frontend | ✅ |
-| — | UI shell 12 màn (demothietke) | 3 | Frontend | 🔄 ~70% |
-| — | Sidebar + menu theo role | 3 | Frontend | ⏸ REQ-003 |
+| — | UI shell + menu theo role | 3 | Frontend | ✅ |
+| — | `/admin` all-users + ma trận quyền | 3 | Frontend | ✅ `29fe4e8` |
 | — | GitHub CI (test + build) | 2 | DevOps | ✅ |
-| — | Setup Railway + Vercel staging | 2 | DevOps | 📋 |
+| — | Railway + Vercel staging | 2 | DevOps | ✅ |
 
-**Total**: 21 points  
-**Definition of Done**: Login/logout hoạt động, middleware RBAC check permission, Admin tạo được user mới
-
-**Việc tiếp không blocked**: Zustand auth store · Products form FE · Railway/Vercel · `GET /health`
+**Definition of Done**: ✅ Đạt — login staging, 4 role, tạo user trên `/admin`
 
 ---
 

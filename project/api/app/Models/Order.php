@@ -74,6 +74,11 @@ class Order extends Model
             ->where('deleted_flag', false);
     }
 
+    public function costs(): HasMany
+    {
+        return $this->hasMany(OrderCost::class, 'order_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('deleted_flag', false);

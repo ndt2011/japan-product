@@ -14,21 +14,23 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     const response = await fetch(`${API_URL}/invoices/${params.id}/pdf`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Accept: "text/html",
+        Accept: "application/pdf, text/html",
       },
       cache: "no-store",
     });
-
-    const html = await response.text();
 
     if (!response.ok) {
       return NextResponse.json({ success: false, message: "M0002" }, { status: response.status });
     }
 
-    return new NextResponse(html, {
+    const contentType = response.headers.get("content-type") ?? "application/octet-stream";
+    const body = await response.arrayBuffer();
+
+    return new NextResponse(body, {
       status: 200,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
+        "Content-Type": contentType,
+        "Content-Disposition": response.headers.get("content-disposition") ?? "inline",
       },
     });
   } catch {

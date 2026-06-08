@@ -35,10 +35,10 @@
         <tbody>
             @foreach ($invoice->items as $item)
             <tr>
-                <td>{{ $item->product_name }}</td>
+                <td>{{ $item->product_name_jp ?? $item->product_name ?? '—' }}</td>
                 <td>{{ $item->quantity }}</td>
                 <td>{{ number_format((int) $item->unit_price_vnd, 0, ',', '.') }}</td>
-                <td>{{ number_format((int) $item->amount, 0, ',', '.') }}</td>
+                <td>{{ number_format((int) ($item->line_total_vnd ?? $item->amount ?? 0), 0, ',', '.') }}</td>
             </tr>
             @endforeach
         </tbody>

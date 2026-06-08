@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Branch;
 use App\Models\CompanyVn;
 use App\Models\ExchangeRate;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -37,6 +38,22 @@ class DashboardService
         $topProducts = $this->topProducts($user, $userType, 5);
         $inventoryAlerts = $userType === 'admin' ? $this->inventoryAlerts(5) : [];
 
+        // KPI: Công nợ chưa thu (Admin only) — spec: docs/sa/0-001_Dashboard.xlsx
+        $outstandingDebt = 0;
+        $lowStockCount   = 0;
+        if ($userType === 'admin') {
+            $outstandingDebt = (int) Invoice::query()
+                ->whereIn('status', ['SENT', 'OVERDUE'])
+                ->sum(DB::raw('CAST(total_amount AS UNSIGNED)'));
+
+            $lowStockCount = (int) DB::table('inventories')
+                ->join('products', 'inventories.product_id', '=', 'products.id')
+                ->where('inventories.deleted_flag', false)
+                ->where('products.deleted_flag', false)
+                ->whereRaw('(inventories.quantity - inventories.reserved_qty) < 10')
+                ->count();
+        }
+
         $rate = ExchangeRate::query()
             ->where('from_currency', 'JPY')
             ->where('to_currency', 'VND')
@@ -45,14 +62,16 @@ class DashboardService
             ->first();
 
         $payload = [
-            'orders_today' => $ordersToday,
-            'orders_month' => $ordersMonth,
-            'revenue_month_vnd' => (int) $revenueMonth,
-            'orders_by_status' => $ordersByStatus,
-            'top_products' => $topProducts,
-            'inventory_alerts' => $inventoryAlerts,
+            'orders_today'         => $ordersToday,
+            'orders_month'         => $ordersMonth,
+            'revenue_month_vnd'    => (int) $revenueMonth,
+            'outstanding_debt_vnd' => $outstandingDebt,    // invoices SENT + OVERDUE
+            'low_stock_count'      => $lowStockCount,       // sản phẩm tồn kho thấp (< 10)
+            'orders_by_status'     => $ordersByStatus,
+            'top_products'         => $topProducts,
+            'inventory_alerts'     => $inventoryAlerts,
             'exchange_rate' => [
-                'jpy_vnd' => (float) ($rate->rate ?? 170.5),
+                'jpy_vnd'    => (float) ($rate->rate ?? 170.5),
                 'updated_at' => $rate?->apply_date?->toDateString(),
             ],
             'products_total' => Product::query()->active()->where('disabled_flag', false)->count(),
@@ -60,7 +79,7 @@ class DashboardService
 
         if ($userType === 'admin') {
             $payload['companies_total'] = CompanyVn::query()->where('deleted_flag', false)->count();
-            $payload['branches_total'] = Branch::query()->where('deleted_flag', false)->count();
+            $payload['branches_total']  = Branch::query()->where('deleted_flag', false)->count();
         }
 
         return $payload;

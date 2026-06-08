@@ -16,7 +16,7 @@ class BranchUserService
         private readonly BranchUserRepository $branchUserRepository,
     ) {}
 
-    public function list(int $branchId, BranchUser $authUser, string $authType): Collection
+    public function list(int $branchId, BranchUser|int $authUser, string $authType): Collection
     {
         $this->assertCanManageBranch($branchId, $authUser, $authType);
 

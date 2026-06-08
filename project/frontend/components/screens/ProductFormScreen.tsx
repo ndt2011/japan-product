@@ -2,9 +2,14 @@
 
 import { ProductImagePicker } from "@/components/ProductImagePicker";
 import { ProductImageUpload } from "@/components/ProductImageUpload";
-import { usePermission } from "@/hooks/usePermission";
+import { useIsAdmin, usePermission } from "@/hooks/usePermission";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
+import {
+  calcUnitPriceVnd,
+  feeRateToPercent,
+  percentToFeeRate,
+} from "@/lib/pricing";
 import type { CategoryOption, ProductFormData, ProductItem, SupplierOption } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,6 +26,9 @@ const emptyForm: ProductFormData = {
   spec: "",
   unit: "",
   cost_jpy: "",
+  cost_price_jpy: "",
+  selling_price_jpy: "",
+  fee_rate_percent: 5,
   price_vnd: "",
   import_tax_rate: "",
   origin: "Nhật Bản",
@@ -41,6 +49,13 @@ function productToForm(product: ProductItem): ProductFormData {
     spec: product.spec ?? "",
     unit: product.unit ?? "",
     cost_jpy: product.cost_jpy ?? "",
+    cost_price_jpy:
+      product.cost_price_jpy != null ? Number(product.cost_price_jpy) : product.cost_jpy ?? "",
+    selling_price_jpy:
+      product.selling_price_jpy != null
+        ? Number(product.selling_price_jpy)
+        : product.cost_jpy ?? "",
+    fee_rate_percent: feeRateToPercent(product.fee_rate),
     price_vnd: product.price_vnd ?? "",
     import_tax_rate: product.import_tax_rate ?? "",
     origin: product.origin ?? "Nhật Bản",
@@ -66,6 +81,7 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
   const [error, setError] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const canUpload = usePermission("products.create");
+  const isAdmin = useIsAdmin();
 
   useEffect(() => {
     async function loadMaster() {
@@ -116,12 +132,37 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function suggestVnd() {
+  function suggestVndFromLegacy() {
     if (!exchangeRate || form.cost_jpy === "") return;
     const jpy = Number(form.cost_jpy);
     const tax = form.import_tax_rate !== "" ? Number(form.import_tax_rate) : 0;
     const vnd = Math.ceil((jpy * exchangeRate * (1 + tax / 100)) / 1000) * 1000;
     updateField("price_vnd", vnd);
+  }
+
+  function suggestVndFromDualPricing() {
+    if (!exchangeRate || form.selling_price_jpy === "") return;
+    const feeRate = percentToFeeRate(form.fee_rate_percent) ?? 0.05;
+    const vnd = calcUnitPriceVnd(Number(form.selling_price_jpy), exchangeRate, feeRate);
+    updateField("price_vnd", vnd);
+  }
+
+  const previewUnitVnd =
+    exchangeRate && form.selling_price_jpy !== ""
+      ? calcUnitPriceVnd(
+          Number(form.selling_price_jpy),
+          exchangeRate,
+          percentToFeeRate(form.fee_rate_percent) ?? 0.05,
+        )
+      : null;
+
+  function dualPricingPayload() {
+    const feeRate = percentToFeeRate(form.fee_rate_percent);
+    return {
+      cost_price_jpy: form.cost_price_jpy !== "" ? Number(form.cost_price_jpy) : null,
+      selling_price_jpy: form.selling_price_jpy !== "" ? Number(form.selling_price_jpy) : null,
+      fee_rate: feeRate ?? 0.05,
+    };
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -145,6 +186,12 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
         if (form.spec) body.append("spec", form.spec);
         if (form.unit) body.append("unit", form.unit);
         if (form.cost_jpy !== "") body.append("cost_jpy", String(form.cost_jpy));
+        if (isAdmin) {
+          const dual = dualPricingPayload();
+          if (dual.cost_price_jpy != null) body.append("cost_price_jpy", String(dual.cost_price_jpy));
+          if (dual.selling_price_jpy != null) body.append("selling_price_jpy", String(dual.selling_price_jpy));
+          body.append("fee_rate", String(dual.fee_rate));
+        }
         if (form.price_vnd !== "") body.append("price_vnd", String(form.price_vnd));
         if (form.import_tax_rate !== "") body.append("import_tax_rate", String(form.import_tax_rate));
         if (form.origin) body.append("origin", form.origin);
@@ -166,6 +213,7 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
           spec: form.spec || null,
           unit: form.unit || null,
           cost_jpy: form.cost_jpy !== "" ? Number(form.cost_jpy) : null,
+          ...(isAdmin ? dualPricingPayload() : {}),
           price_vnd: form.price_vnd !== "" ? Number(form.price_vnd) : null,
           import_tax_rate: form.import_tax_rate !== "" ? Number(form.import_tax_rate) : null,
           origin: form.origin || null,
@@ -276,26 +324,29 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               onChange={(e) => updateField("unit", e.target.value)}
               placeholder="hộp, chai..."
             />
-            <Input
-              label="Giá nhập JPY"
-              type="number"
-              min={0}
-              value={form.cost_jpy}
-              onChange={(e) => updateField("cost_jpy", e.target.value === "" ? "" : Number(e.target.value))}
-              onBlur={suggestVnd}
-            />
-            <div className="flex flex-col gap-1">
+            {!isAdmin && (
               <Input
-                label="Giá bán VND"
+                label="Giá nhập JPY"
+                type="number"
+                min={0}
+                value={form.cost_jpy}
+                onChange={(e) => updateField("cost_jpy", e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={suggestVndFromLegacy}
+              />
+            )}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <Input
+                label="Giá bán VND (catalog)"
                 type="number"
                 min={0}
                 value={form.price_vnd}
                 onChange={(e) => updateField("price_vnd", e.target.value === "" ? "" : Number(e.target.value))}
+                hint={isAdmin ? "Đại lý thấy giá này — có thể gợi ý từ giá kép bên dưới" : undefined}
               />
-              {exchangeRate && (
+              {!isAdmin && exchangeRate && (
                 <button
                   type="button"
-                  onClick={suggestVnd}
+                  onClick={suggestVndFromLegacy}
                   className="text-xs text-brand hover:underline text-left"
                 >
                   Gợi ý từ tỷ giá {exchangeRate} JPY/VND
@@ -314,6 +365,82 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
               }
             />
           </div>
+
+          {isAdmin && (
+            <Card className="p-4 bg-surface-subtle border-brand/20 space-y-4">
+              <div>
+                <p className="text-sm font-medium text-text-primary">Giá kép (Admin only)</p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  Công thức: đơn giá VND = giá bán JPY × tỷ giá × (1 + phí %). Dùng khi lập hóa đơn &amp; báo cáo lãi.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Giá vốn JPY"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  optional
+                  value={form.cost_price_jpy}
+                  onChange={(e) =>
+                    updateField("cost_price_jpy", e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  hint="Chỉ Admin thấy — dùng tính lợi nhuận"
+                />
+                <Input
+                  label="Giá bán JPY"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  optional
+                  value={form.selling_price_jpy}
+                  onChange={(e) =>
+                    updateField("selling_price_jpy", e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  onBlur={suggestVndFromDualPricing}
+                  hint="Giá bán cho đại lý (trước quy đổi VND)"
+                />
+                <Input
+                  label="Phí dịch vụ (%)"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={form.fee_rate_percent}
+                  onChange={(e) =>
+                    updateField("fee_rate_percent", e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  onBlur={suggestVndFromDualPricing}
+                  hint="Mặc định 5% — gộp vào đơn giá VND"
+                />
+                <Input
+                  label="Giá nhập JPY (legacy)"
+                  type="number"
+                  min={0}
+                  optional
+                  value={form.cost_jpy}
+                  onChange={(e) => updateField("cost_jpy", e.target.value === "" ? "" : Number(e.target.value))}
+                  hint="Trường cũ — đồng bộ nếu chưa có giá kép"
+                />
+              </div>
+              {exchangeRate && previewUnitVnd != null && previewUnitVnd > 0 && (
+                <div className="rounded-xl bg-white border border-border px-4 py-3 text-sm">
+                  <span className="text-text-muted">Preview đơn giá VND: </span>
+                  <strong className="text-brand">{previewUnitVnd.toLocaleString("vi-VN")} ₫</strong>
+                  <span className="text-text-muted text-xs ml-2">
+                    (tỷ giá {exchangeRate}, phí {form.fee_rate_percent || 5}%)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={suggestVndFromDualPricing}
+                    className="block mt-2 text-xs text-brand hover:underline"
+                  >
+                    Áp dụng vào Giá bán VND (catalog)
+                  </button>
+                </div>
+              )}
+            </Card>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm text-text-body">Mô tả</label>

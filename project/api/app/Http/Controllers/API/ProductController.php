@@ -24,7 +24,7 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $paginator = $this->productService->list($request->only([
-            'search', 'category_id', 'per_page',
+            'search', 'category_id', 'per_page', 'stock_status',
         ]));
 
         return ApiResponse::success([

@@ -44,20 +44,14 @@ class OrderRepository
         ]);
     }
 
+    /**
+     * Sinh order_no chuẩn format: ORD-{YYYYMM}-{SEQ4}
+     * Ví dụ: ORD-202606-0001
+     * spec: docs/sa/amendments/product-tier-model.md § 2
+     */
     public function generateOrderNo(): string
     {
-        $prefix = 'ORD-'.now()->format('Ymd');
-        $latest = Order::query()
-            ->where('order_no', 'like', "{$prefix}-%")
-            ->orderByDesc('id')
-            ->value('order_no');
-
-        $seq = 1;
-        if ($latest && preg_match('/-(\d+)$/', $latest, $m)) {
-            $seq = (int) $m[1] + 1;
-        }
-
-        return sprintf('%s-%04d', $prefix, $seq);
+        return app(\App\Services\CodeGeneratorService::class)->orderNo();
     }
 
     private function baseQuery(array $filters): Builder

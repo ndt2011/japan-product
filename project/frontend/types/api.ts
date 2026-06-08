@@ -98,6 +98,8 @@ export interface ProductImageItem {
   order_no: number;
 }
 
+export type StockStatus = "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
+
 export interface ProductItem {
   id: number;
   product_category_id?: number | null;
@@ -109,6 +111,10 @@ export interface ProductItem {
   spec?: string | null;
   unit?: string | null;
   cost_jpy: number | null;
+  cost_price_jpy?: number | string | null;
+  selling_price_jpy?: number | string | null;
+  fee_rate?: number | string | null;
+  unit_price_vnd?: number | string | null;
   price_vnd: number | null;
   supplier_id?: number | null;
   supplier_name?: string | null;
@@ -116,10 +122,18 @@ export interface ProductItem {
   origin?: string | null;
   import_tax_rate?: number | null;
   description?: string | null;
+  /** URL ảnh chính (từ product_images, đã qua CDN). spec: product-tier-model.md § 3 */
+  primary_image_url?: string | null;
+  /** Legacy — giữ tương thích ngược */
   image_path?: string | null;
   images?: ProductImageItem[];
   memo?: string | null;
   disabled_flag: boolean;
+  /** Số lượng có thể đặt hàng = quantity − reserved_qty */
+  available_qty?: number;
+  /** IN_STOCK ≥10 | LOW_STOCK 1-9 | OUT_OF_STOCK = 0 */
+  stock_status?: StockStatus;
+  /** Legacy aggregate (admin only) */
   inventory_total?: number | null;
 }
 
@@ -135,6 +149,36 @@ export interface CategoryOption {
 export interface SupplierOption {
   id: number;
   supplier_name: string;
+}
+
+export interface OrderCostItem {
+  id: number;
+  order_id: number;
+  cost_type: string;
+  amount_vnd: string;
+  note?: string | null;
+  created?: string | null;
+}
+
+export interface ProfitReportSummary {
+  total_revenue_vnd: number;
+  total_cost_vnd: number;
+  gross_profit_vnd: number;
+  total_other_costs_vnd: number;
+  net_profit_vnd: number;
+  profit_margin_pct: number;
+  order_count: number;
+}
+
+export interface ProfitReportOrderRow {
+  order_id: number;
+  order_no: string;
+  completed_at: string | null;
+  revenue_vnd: number;
+  cost_vnd: number;
+  gross_profit_vnd: number;
+  other_costs_vnd: number;
+  net_profit_vnd: number;
 }
 
 export interface ExchangeRateData {
@@ -154,6 +198,9 @@ export interface ProductFormData {
   spec: string;
   unit: string;
   cost_jpy: number | "";
+  cost_price_jpy: number | "";
+  selling_price_jpy: number | "";
+  fee_rate_percent: number | "";
   price_vnd: number | "";
   import_tax_rate: number | "";
   origin: string;

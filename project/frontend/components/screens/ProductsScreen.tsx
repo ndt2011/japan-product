@@ -14,10 +14,59 @@ import {
   Tr,
 } from "@/components/ui";
 import { usePermission } from "@/hooks/usePermission";
-import type { CategoryOption, ProductItem } from "@/types/api";
+import type { CategoryOption, ProductItem, StockStatus } from "@/types/api";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+// ─── Stock badge ──────────────────────────────────────────────────────────────
+const STOCK_LABEL: Record<StockStatus, string> = {
+  IN_STOCK: "Còn hàng",
+  LOW_STOCK: "Sắp hết",
+  OUT_OF_STOCK: "Hết hàng",
+};
+const STOCK_VARIANT: Record<StockStatus, "success" | "warning" | "gray"> = {
+  IN_STOCK: "success",
+  LOW_STOCK: "warning",
+  OUT_OF_STOCK: "gray",
+};
+
+function StockBadge({ product }: { product: ProductItem }) {
+  const status = product.stock_status ?? "OUT_OF_STOCK";
+  const qty = product.available_qty ?? 0;
+  const label =
+    status === "LOW_STOCK"
+      ? `Sắp hết (${qty})`
+      : STOCK_LABEL[status];
+  return (
+    <Badge variant={STOCK_VARIANT[status]}>
+      {label}
+    </Badge>
+  );
+}
+
+// ─── Product thumbnail ────────────────────────────────────────────────────────
+function ProductThumb({ src, name }: { src?: string | null; name: string }) {
+  if (!src) {
+    return (
+      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+        🖼
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={src}
+      alt={name}
+      width={40}
+      height={40}
+      className="w-10 h-10 rounded-lg object-cover border border-border"
+      unoptimized
+    />
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 export function ProductsScreen() {
   const canCreate = usePermission("products.create");
   const [products, setProducts] = useState<ProductItem[]>([]);
@@ -26,6 +75,7 @@ export function ProductsScreen() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, last_page: 1 });
 
@@ -36,6 +86,7 @@ export function ProductsScreen() {
       const params = new URLSearchParams({ page: String(page), per_page: "20" });
       if (search.trim()) params.set("search", search.trim());
       if (categoryId) params.set("category_id", categoryId);
+      if (stockFilter) params.set("stock_status", stockFilter);
 
       const res = await fetch(`/api/proxy/products?${params}`);
       const data = await res.json();
@@ -53,7 +104,7 @@ export function ProductsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, categoryId]);
+  }, [page, search, categoryId, stockFilter]);
 
   useEffect(() => {
     fetch("/api/proxy/product-categories")
@@ -70,7 +121,7 @@ export function ProductsScreen() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, categoryId]);
+  }, [search, categoryId, stockFilter]);
 
   return (
     <div className="space-y-4">
@@ -111,6 +162,17 @@ export function ProductsScreen() {
               </option>
             ))}
           </select>
+          {/* Filter tồn kho — spec: product-tier-model.md § 2 */}
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-border text-sm bg-white text-text-body"
+          >
+            <option value="">Tất cả tồn kho</option>
+            <option value="IN_STOCK">🟢 Còn hàng</option>
+            <option value="LOW_STOCK">🟡 Sắp hết</option>
+            <option value="OUT_OF_STOCK">🔴 Hết hàng</option>
+          </select>
         </div>
       </Card>
 
@@ -126,18 +188,27 @@ export function ProductsScreen() {
             <Table>
               <Thead>
                 <tr>
+                  <Th>Ảnh</Th>
                   <Th>Mã HH</Th>
                   <Th>Tên (VN)</Th>
                   <Th>Tên (JP)</Th>
                   <Th>Giá JPY</Th>
                   <Th>Giá VND</Th>
-                  <Th>NCC</Th>
+                  <Th>Tồn kho</Th>
                   <Th>Trạng thái</Th>
                 </tr>
               </Thead>
               <tbody>
                 {products.map((product) => (
                   <Tr key={product.id}>
+                    {/* Ảnh chính */}
+                    <Td>
+                      <ProductThumb
+                        src={product.primary_image_url ?? product.image_path}
+                        name={product.product_name}
+                      />
+                    </Td>
+                    {/* Mã hàng hóa */}
                     <Td>
                       <Link
                         href={`/products/${product.id}`}
@@ -150,7 +221,11 @@ export function ProductsScreen() {
                     <Td className="text-text-muted">{product.product_name_jp ?? "—"}</Td>
                     <Td>{product.cost_jpy?.toLocaleString("vi-VN") ?? "—"}</Td>
                     <Td>{product.price_vnd?.toLocaleString("vi-VN") ?? "—"}</Td>
-                    <Td>{product.supplier_name ?? "—"}</Td>
+                    {/* Tồn kho (available_qty) — spec: product-tier-model.md § 3 */}
+                    <Td>
+                      <StockBadge product={product} />
+                    </Td>
+                    {/* Trạng thái sản phẩm */}
                     <Td>
                       <Badge variant={product.disabled_flag ? "gray" : "success"}>
                         {product.disabled_flag ? "Ngừng" : "Hoạt động"}

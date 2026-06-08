@@ -216,4 +216,92 @@ class ReportController extends Controller
             'items' => $items,
         ], 'M1100');
     }
+
+    /**
+     * GET /reports/profit — Báo cáo lợi nhuận Admin
+     * spec: docs/sa/amendments/invoice-payment.md § 5
+     *
+     * Query params:
+     *   date_from (Y-m-d), date_to (Y-m-d), company_id (optional)
+     */
+    public function profit(Request $request): JsonResponse
+    {
+        $from      = $request->input('date_from');
+        $to        = $request->input('date_to');
+        $companyId = $request->input('company_id');
+
+        // Lấy các order đã COMPLETED trong khoảng thời gian
+        $query = Order::query()
+            ->with(['details.product', 'costs'])
+            ->where('deleted_flag', false)
+            ->whereIn('status', ['COMPLETED'])
+            ->when($from, fn ($q) => $q->where('completed_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('completed_at', '<=', $to . ' 23:59:59'))
+            ->when($companyId, fn ($q) => $q->where('company_vn_id', $companyId));
+
+        $orders = $query->get();
+
+        $summary = [
+            'total_revenue_vnd'    => 0,
+            'total_cost_vnd'       => 0,
+            'gross_profit_vnd'     => 0,
+            'total_other_costs_vnd' => 0,
+            'net_profit_vnd'       => 0,
+            'profit_margin_pct'    => 0,
+            'order_count'          => $orders->count(),
+        ];
+
+        $byOrder = [];
+
+        foreach ($orders as $order) {
+            $lockedRate = (float) ($order->exchange_rate ?? 0);
+            $revVnd     = 0;
+            $costVnd    = 0;
+
+            foreach ($order->details as $detail) {
+                $product         = $detail->product;
+                $sellingJpy      = (float) ($product?->selling_price_jpy ?? $product?->cost_jpy ?? 0);
+                $costJpy         = (float) ($product?->cost_price_jpy ?? $product?->cost_jpy ?? 0);
+                $feeRate         = (float) ($product?->fee_rate ?? 0.05);
+                $qty             = (int) $detail->quantity;
+
+                $revVnd  += (int) round($sellingJpy * $lockedRate * (1 + $feeRate) * $qty);
+                $costVnd += (int) round($costJpy * $lockedRate * $qty);
+            }
+
+            $grossProfit  = $revVnd - $costVnd;
+            $otherCosts   = (int) ($order->costs?->sum('amount_vnd') ?? 0);
+            $netProfit    = $grossProfit - $otherCosts;
+
+            $summary['total_revenue_vnd']     += $revVnd;
+            $summary['total_cost_vnd']         += $costVnd;
+            $summary['gross_profit_vnd']       += $grossProfit;
+            $summary['total_other_costs_vnd']  += $otherCosts;
+            $summary['net_profit_vnd']         += $netProfit;
+
+            $byOrder[] = [
+                'order_id'         => $order->id,
+                'order_no'         => $order->order_no,
+                'completed_at'     => $order->completed_at?->toDateString(),
+                'revenue_vnd'      => $revVnd,
+                'cost_vnd'         => $costVnd,
+                'gross_profit_vnd' => $grossProfit,
+                'other_costs_vnd'  => $otherCosts,
+                'net_profit_vnd'   => $netProfit,
+            ];
+        }
+
+        if ($summary['total_revenue_vnd'] > 0) {
+            $summary['profit_margin_pct'] = round(
+                $summary['net_profit_vnd'] / $summary['total_revenue_vnd'] * 100,
+                2
+            );
+        }
+
+        return ApiResponse::success([
+            'filters'  => compact('from', 'to', 'companyId'),
+            'summary'  => $summary,
+            'by_order' => $byOrder,
+        ]);
+    }
 }

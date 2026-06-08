@@ -11,6 +11,15 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
+      animation: {
+        "slide-up": "slideUp 0.2s ease-out",
+      },
+      keyframes: {
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(12px) scale(0.97)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+      },
       colors: {
         brand: {
           DEFAULT: "var(--brand)",

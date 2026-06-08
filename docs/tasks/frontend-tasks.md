@@ -1,7 +1,7 @@
 # Frontend Tasks — Next.js 14
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Cập nhật**: 2026-06-07 | **Assignee**: Frontend Developer  
+**Cập nhật**: 2026-06-08 | **Assignee**: Frontend Developer  
 **Repo**: https://github.com/ndt2011/japan-product (`project/frontend/`)  
 **UI reference**: `project/demothietke` — [design-source-demothietke.md](../sa/design-source-demothietke.md)  
 **Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
@@ -89,12 +89,13 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| FE-P2-001 | `/invoices` — danh sách, filter status/date, badge overdue | P0 | BE-P2-005 | 1.5d | 📋 |
-| FE-P2-002 | `/invoices/{id}` — chi tiết items + PDF preview + nút "Gửi HĐ" / "Ghi nhận TT" (Admin) | P0 | BE-P2-006 | 2d | 📋 |
-| FE-P2-003 | `/orders/{id}` — thêm nút **"✅ Đã nhận hàng"** khi status=`DELIVERED_ADMIN` (Đại lý) | P0 | BE-P2-007 | 0.5d | 📋 |
-| FE-P2-004 | `/products/new` + `/products/{id}/edit` — section Admin: `cost_price_jpy`, `selling_price_jpy`, `fee_rate`; preview `unit_price_vnd` tự tính | P0 | BE-P2-001 | 1d | 📋 |
-| FE-P2-005 | `/reports/profit` — Recharts biểu đồ lãi/lỗ theo tháng + bảng chi tiết per order (Admin only) | P1 | BE-P2-010 | 1.5d | 📋 |
-| FE-P2-006 | Notification badge header khi có invoice `overdue` hoặc đơn `DELIVERED_ADMIN` chờ xác nhận | P1 | BE-P2-008 | 0.5d | 📋 |
+| FE-P2-001 | `/invoices` — danh sách, filter status/date, badge overdue | P0 | BE-P2-005 | 1.5d | ✅ |
+| FE-P2-002 | `/invoices/{id}` — chi tiết + gửi HĐ + ghi nhận TT + HTML preview | P0 | BE-P2-005 | 2d | ✅ |
+| FE-P2-003 | `/orders/{id}` — nút **"Đã nhận hàng"** khi `DELIVERED_ADMIN` | P0 | BE-P2-007 | 0.5d | ✅ |
+| FE-P2-004 | Product form Admin: dual pricing + preview VND | P0 | BE-P2-001 | 1d | ✅ |
+| FE-P2-005 | Tab Lợi nhuận `/reports` + filter date | P1 | BE-P2-010 | 1.5d | ✅ |
+| FE-P2-006 | Badge 🔔 header (overdue + DELIVERED_ADMIN) | P1 | BE-P2-008 | 0.5d | ✅ |
+| FE-408 | `/admin` — all users, search, ma trận quyền, form hints | P0 | BE-008 | 1d | ✅ commit `29fe4e8` |
 
 **Lưu ý FE-P2-004**: `cost_price_jpy` và `selling_price_jpy` render chỉ khi `userType === 'admin'`. Đại lý thấy `unit_price_vnd` (đã bao phí).
 

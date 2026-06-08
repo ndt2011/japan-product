@@ -1,5 +1,7 @@
 "use client";
 
+import { AiStaffChatWidget } from "@/components/layout/AiStaffChatWidget";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 import { getNavForUser, type NavItem } from "@/lib/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { clsx } from "clsx";
@@ -22,6 +24,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const notifications = useNotificationCounts();
 
   const navItems = getNavForUser(user?.user_type);
   const groups = Array.from(new Set(navItems.map((i) => i.group || ""))).filter(Boolean);
@@ -97,13 +100,22 @@ export function AppShell({ children }: AppShellProps) {
         <header className="h-14 bg-white border-b border-border flex items-center justify-between px-6 shrink-0">
           <h2 className="text-sm text-text-primary font-medium">{pageTitle}</h2>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Link
+              href={notifications.overdueInvoices > 0 ? "/debts" : "/orders?status=DELIVERED_ADMIN"}
+              title={
+                notifications.total > 0
+                  ? `${notifications.overdueInvoices} HĐ quá hạn · ${notifications.pendingReceipt} đơn chờ xác nhận`
+                  : "Không có thông báo"
+              }
               className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface-subtle text-text-muted"
             >
               🔔
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full" />
-            </button>
+              {notifications.total > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                  {notifications.total > 9 ? "9+" : notifications.total}
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={handleLogout}
@@ -118,6 +130,9 @@ export function AppShell({ children }: AppShellProps) {
         </header>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
+
+      {/* AI Staff Chat — floating widget, hiển thị với mọi role */}
+      <AiStaffChatWidget />
     </div>
   );
 }

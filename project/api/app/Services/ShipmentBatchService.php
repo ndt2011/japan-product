@@ -154,6 +154,9 @@ class ShipmentBatchService
             ]);
 
             if ($newStatus === 'DELIVERED') {
+                // Hàng về kho Việt Nam từ Nhật → auto NHẬP KHO (stockIn)
+                // Xuất kho sẽ xảy ra khi đại lý xác nhận nhận hàng (confirmReceipt → COMPLETED)
+                // spec: docs/sa/amendments/ai-conversation-upgrade.md, 0-001_Dashboard.xlsx
                 $warehouse = $this->warehouseRepository->defaultWarehouse();
                 $orderIds = $updated->items->pluck('order_id');
                 $orders = Order::query()
@@ -165,26 +168,27 @@ class ShipmentBatchService
                     if ($warehouse) {
                         foreach ($order->details as $detail) {
                             try {
-                                $this->inventoryService->stockOut(
+                                // ✅ stockIN — nhập kho tự động khi hàng về từ Nhật
+                                $this->inventoryService->stockIn(
                                     (int) $detail->product_id,
                                     (int) $warehouse->id,
                                     (int) $detail->quantity,
                                     $admin->id,
-                                    "Xuất theo đơn {$order->order_no}",
-                                    'order',
-                                    $order->id,
+                                    "Nhập kho theo chuyến hàng #{$updated->id} — đơn {$order->order_no}",
+                                    'shipment_batch',
+                                    $updated->id,
                                 );
                             } catch (WarehouseException) {
-                                // Bỏ qua nếu chưa có tồn kho — vẫn cập nhật trạng thái đơn
+                                // Hiếm xảy ra với stockIn — log nhưng không block flow
                             }
                         }
                     }
 
                     $order->update([
-                        'status' => 'DELIVERED_ADMIN',
-                        'delivered_admin_at' => now(),
-                        'modified' => now(),
-                        'modified_user_id' => $admin->id,
+                        'status'              => 'DELIVERED_ADMIN',
+                        'delivered_admin_at'  => now(),
+                        'modified'            => now(),
+                        'modified_user_id'    => $admin->id,
                     ]);
                 }
             }

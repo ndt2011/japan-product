@@ -1,7 +1,7 @@
 # Backend Tasks — Laravel 11
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Cập nhật**: 2026-06-07 | **Assignee**: Backend Developer  
+**Cập nhật**: 2026-06-08 | **Assignee**: Backend Developer  
 **Repo**: https://github.com/ndt2011/japan-product (`project/api/`)  
 **Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
 
@@ -50,7 +50,7 @@
 | BE-016 | API: `/ai/search`, candidates approve/reject | P0 | BE-015 | 1d | ✅ |
 | BE-016b | `POST /ai/product-search` — embedding semantic search | P1 | BE-011 | 2d | ✅ + `products:embed` |
 | BE-016c | Catalog VN: name_vi + QueryExpansion (amendment Ph1–2) | P1 | BE-016b | 1d | ✅ |
-| BE-030 | Hybrid FULLTEXT search (amendment Phase 3) | P2 | BE-016c | 3d | 📋 |
+| BE-030 | Hybrid FULLTEXT search (amendment Phase 3) | P2 | BE-016c | 3d | ✅ `AI_SEARCH_HYBRID_ENABLED` |
 
 ---
 
@@ -82,19 +82,21 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| BE-P2-001 | Migration: `products` thêm `cost_price_jpy`, `selling_price_jpy`, `fee_rate` | P0 | — | 2h | 📋 |
-| BE-P2-002 | Migration: tạo `invoices` + `invoice_items` + `order_costs` | P0 | — | 3h | 📋 |
-| BE-P2-003 | Migration: `orders` thêm `delivered_admin_at`, `delivered_client_at`, `completed_at` + status mới | P0 | — | 1h | 📋 |
-| BE-P2-004 | `InvoiceService::createFromOrder()` — gọi tự động từ `OrderController::confirm()` | P0 | BE-P2-001~003 | 1d | 📋 |
-| BE-P2-005 | `InvoiceController`: CRUD + `send` + `pay` + `pdf` + phân quyền | P0 | BE-P2-004 | 1.5d | 📋 |
-| BE-P2-006 | DomPDF integration — PDF template hóa đơn (logo, items, tổng) | P0 | BE-P2-005 | 1d | 📋 |
-| BE-P2-007 | `OrderController::confirmReceipt()` — `PUT /orders/{id}/confirm-receipt` | P0 | BE-P2-003 | 0.5d | 📋 |
-| BE-P2-008 | Scheduler: `invoice:check-overdue` — chạy 9h JST, đổi `sent`→`overdue` | P0 | BE-P2-005 | 3h | 📋 |
-| BE-P2-009 | Scheduler: `order:auto-complete` — 8h JST, sau 7 ngày `DELIVERED_ADMIN`→`COMPLETED` | P0 | BE-P2-007 | 3h | 📋 |
-| BE-P2-010 | `ReportController::profit()` — `GET /reports/profit` + `by-product` (Admin only) | P1 | BE-P2-004 | 1d | 📋 |
-| BE-P2-011 | `ProductResource` ẩn `cost_price_jpy` trong response cho non-admin | P0 | BE-P2-001 | 2h | 📋 |
+| BE-P2-001 | Migration: `products` thêm `cost_price_jpy`, `selling_price_jpy`, `fee_rate` | P0 | — | 2h | ✅ migration 100060 |
+| BE-P2-002 | Migration: `invoices` + `invoice_items` + patch 100070/100071 | P0 | — | 3h | ✅ |
+| BE-P2-002b | Migration: `order_costs` + model `OrderCost` | P0 | — | 2h | ✅ · CRUD API ⏳ |
+| BE-P2-003 | Migration: `orders` tracking + status `DELIVERED_ADMIN` | P0 | — | 1h | ✅ migration 100061 |
+| BE-P2-004 | `InvoiceService::createFromOrder()` — fee + snapshot | P0 | BE-P2-001~003 | 1d | ✅ |
+| BE-P2-005 | `InvoiceController`: CRUD + `send` + `pay` + `pdf` | P0 | BE-P2-004 | 1.5d | ✅ pdf=HTML ⏳ |
+| BE-P2-006 | DomPDF — PDF thật (`dompdf/dompdf`) | P1 | BE-P2-005 | 1d | ✅ · `pdf_path` persist ⏳ |
+| BE-P2-007 | `PUT /orders/{id}/confirm-receipt` (company + branch) | P0 | BE-P2-003 | 0.5d | ✅ |
+| BE-P2-008 | Scheduler `invoices:check-overdue` 9h JST | P0 | BE-P2-005 | 3h | ✅ |
+| BE-P2-009 | Scheduler `orders:auto-complete` 8h JST | P0 | BE-P2-007 | 3h | ✅ |
+| BE-P2-010 | `GET /reports/profit` (Admin) | P1 | BE-P2-004 | 1d | ✅ · by-product ⏳ |
+| BE-P2-011 | `ProductResource` ẩn `cost_price_jpy` non-admin | P0 | BE-P2-001 | 2h | ✅ |
+| BE-P2-012 | API `order_costs` list/create/delete | P1 | BE-P2-002b | 0.5d | ✅ |
 
-**Thứ tự implement**: BE-P2-001~003 → BE-P2-004 → BE-P2-005~006 → BE-P2-007~009 → BE-P2-010~011
+**Việc tiếp**: BE-P2-006 (DomPDF) → BE-P2-012 (order_costs API) → BE-P2-010 by-product
 
 ---
 

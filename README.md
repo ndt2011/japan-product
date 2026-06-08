@@ -11,7 +11,7 @@
 | Tên dự án | Hệ thống quản lý hàng hóa Nhật-Việt |
 | Loại hệ thống | B2B — Đại lý Nhật Bản → Chi nhánh Việt Nam |
 | Ngành hàng | Thực phẩm chức năng Nhật Bản |
-| Trạng thái | 🟢 **Đang phát triển** (S1–S5 core ~70%) |
+| Trạng thái | 🟢 **Staging live** — MVP + Phase 2 ~95% ([STATUS.md](docs/tasks/STATUS.md)) |
 | Repo | https://github.com/ndt2011/japan-product |
 | Ngày bắt đầu | 2026-06-07 |
 
@@ -43,7 +43,8 @@ Hệ thống có **hai luồng AI** (tách biệt):
 | **Database** | MySQL 8 |
 | **AI** | OpenAI (GPT-4o mock / Embeddings luồng B) |
 | **Storage** | Local `public` · Cloudflare R2 (config sẵn) |
-| **CI** | GitHub Actions — 33 PHPUnit + FE build |
+| **CI** | GitHub Actions — PHPUnit + FE build |
+| **Staging** | [SERVER_CURRENT.md](docs/devops/SERVER_CURRENT.md) — Vercel + Railway |
 
 ---
 
@@ -68,7 +69,9 @@ npm install
 npm run dev            # → http://localhost:3000
 ```
 
-**Tài khoản seed**: Admin `admin` / `Admin@123` · Company `vn_company01` / `Company@123`
+**Tài khoản seed**: Admin `admin` / `Admin@123` · Company `vn_company01` / `Company@123` · Branch `hn_manager` / `Manager@123`
+
+**Server staging (URL, env, Shell):** [docs/devops/SERVER_CURRENT.md](docs/devops/SERVER_CURRENT.md)
 
 ---
 

@@ -39,6 +39,9 @@ class InvoiceTest extends TestCase
             'product_cd' => 'INV-P1',
             'product_name' => 'Invoice Product',
             'price_vnd' => 100000,
+            'cost_price_jpy' => 800,
+            'selling_price_jpy' => 1000,
+            'fee_rate' => 0.05,
             'deleted_flag' => false,
         ]);
 
@@ -75,13 +78,17 @@ class InvoiceTest extends TestCase
         $response = $this->withHeader('Authorization', "Bearer {$token}")
             ->postJson('/api/invoices', ['order_id' => $order->id]);
 
+        // unit_price_vnd = selling_price_jpy × locked_rate × (1 + fee_rate)
+        // = 1000 × 170 × 1.05 = 178500; qty 2 → total 357000
+        $expectedTotal = (string) (178500 * 2);
+
         $response->assertCreated()
             ->assertJsonPath('data.invoice.order_id', $order->id)
             ->assertJsonPath('data.invoice.status', 'draft')
-            ->assertJsonPath('data.invoice.total_amount', '220000');
+            ->assertJsonPath('data.invoice.total_amount', $expectedTotal);
 
         $this->assertDatabaseHas('invoice_items', [
-            'product_name' => 'Invoice Product',
+            'product_name_jp' => 'Invoice Product',
             'quantity' => 2,
         ]);
     }
@@ -141,6 +148,6 @@ class InvoiceTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.invoice_count', 1)
-            ->assertJsonPath('data.total_unpaid_vnd', 220000);
+            ->assertJsonPath('data.total_unpaid_vnd', 357000);
     }
 }

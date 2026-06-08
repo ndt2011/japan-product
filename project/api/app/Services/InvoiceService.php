@@ -122,11 +122,12 @@ class InvoiceService
             throw new InvoiceException('M0002', 404);
         }
 
-        if (! in_array($order->status, ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'], true)) {
+        if (! in_array($order->status, ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'DELIVERED_ADMIN'], true)) {
             throw new InvoiceException('M0510', 409);
         }
 
-        if (! $order->company_vn_id) {
+        // Cho phép branch order (company_vn_id nullable nhưng phải có branch_id)
+        if (! $order->company_vn_id && ! $order->branch_id) {
             throw new InvoiceException('M0511', 409);
         }
 
@@ -135,39 +136,68 @@ class InvoiceService
         }
 
         return DB::transaction(function () use ($order, $admin, $note) {
-            $amountVnd = (int) $order->total_vnd;
-            $taxAmount = (int) round($amountVnd * self::TAX_RATE);
-            $totalAmount = $amountVnd + $taxAmount;
-            $invoiceDate = now()->toDateString();
+            $now         = now();
+            $lockedRate  = (float) ($order->exchange_rate ?? 0);
+            $globalFee   = 0.05; // fallback nếu product chưa có fee_rate
 
-            $invoice = Invoice::query()->create([
-                'order_id' => $order->id,
-                'company_vn_id' => $order->company_vn_id,
-                'invoice_no' => $this->generateInvoiceNo(),
-                'invoice_date' => $invoiceDate,
-                'due_date' => now()->addDays(self::DUE_DAYS)->toDateString(),
-                'amount_vnd' => $amountVnd,
-                'tax_amount' => $taxAmount,
-                'total_amount' => $totalAmount,
-                'status' => 'draft',
-                'note' => $note,
-                'created' => now(),
-                'created_user_id' => $admin->id,
-                'deleted_flag' => false,
-            ]);
+            $subtotalVnd  = 0;
+            $feeAmountVnd = 0;
+            $itemsData    = [];
 
             foreach ($order->details as $detail) {
-                $unitVnd = (int) $detail->unit_price_vnd;
-                $qty = (int) $detail->quantity;
+                $product         = $detail->product;
+                $sellingPriceJpy = (float) ($product?->selling_price_jpy ?? $product?->cost_jpy ?? 0);
+                $costPriceJpy    = (float) ($product?->cost_price_jpy ?? $product?->cost_jpy ?? 0);
+                $feeRate         = (float) ($product?->fee_rate ?? $globalFee);
+                $qty             = (int) $detail->quantity;
 
-                InvoiceItem::query()->create([
-                    'invoice_id' => $invoice->id,
-                    'order_detail_id' => $detail->id,
-                    'product_name' => $detail->product?->product_name ?? "SP #{$detail->product_id}",
-                    'quantity' => $qty,
-                    'unit_price_vnd' => $unitVnd,
-                    'amount' => $unitVnd * $qty,
-                ]);
+                // unit_price_vnd = selling_price_jpy × locked_rate × (1 + fee_rate)
+                $unitPriceVnd  = (int) round($sellingPriceJpy * $lockedRate * (1 + $feeRate));
+                $lineFeeVnd    = (int) round($sellingPriceJpy * $lockedRate * $feeRate * $qty);
+                $lineTotalVnd  = $unitPriceVnd * $qty;
+
+                $subtotalVnd  += $unitPriceVnd * $qty;
+                $feeAmountVnd += $lineFeeVnd;
+
+                $itemsData[] = [
+                    'order_detail_id'   => $detail->id,
+                    'product_name_jp'   => $product?->product_name ?? "SP #{$detail->product_id}",
+                    'product_name_vi'   => $product?->product_name_vi ?? null,
+                    'product_sku'       => $product?->product_cd ?? null,
+                    'quantity'          => $qty,
+                    'cost_price_jpy'    => $costPriceJpy ?: null,
+                    'selling_price_jpy' => $sellingPriceJpy ?: null,
+                    'unit_price_vnd'    => $unitPriceVnd,
+                    'fee_amount_vnd'    => $lineFeeVnd,
+                    'line_total_vnd'    => $lineTotalVnd,
+                ];
+            }
+
+            $totalAmount = $subtotalVnd; // Total = subtotal (phí đã gộp vào unit_price)
+
+            $invoice = Invoice::query()->create([
+                'order_id'       => $order->id,
+                'company_vn_id'  => $order->company_vn_id ?? null,
+                'branch_id'      => $order->branch_id ?? null,
+                'invoice_no'     => $this->generateInvoiceNo(),
+                'invoice_date'   => $now->toDateString(),
+                'due_date'       => $now->copy()->addDays(self::DUE_DAYS)->toDateString(),
+                'locked_rate'    => $lockedRate ?: null,
+                'fee_rate'       => $globalFee,
+                'amount_vnd'     => $subtotalVnd,
+                'subtotal_vnd'   => $subtotalVnd,
+                'fee_amount_vnd' => $feeAmountVnd,
+                'tax_amount'     => 0,
+                'total_amount'   => $totalAmount,
+                'status'         => 'draft',
+                'note'           => $note,
+                'created'        => $now,
+                'created_user_id' => $admin->id,
+                'deleted_flag'   => false,
+            ]);
+
+            foreach ($itemsData as $item) {
+                InvoiceItem::query()->create(array_merge(['invoice_id' => $invoice->id], $item));
             }
 
             return $invoice->load(['items', 'company', 'order']);
@@ -201,9 +231,10 @@ class InvoiceService
         }
 
         $invoice->update([
-            'status' => 'sent',
-            'modified' => now(),
-            'modified_user_id' => $admin->id,
+            'status'             => 'sent',
+            'sent_at'            => now(),
+            'modified'           => now(),
+            'modified_user_id'   => $admin->id,
         ]);
 
         $this->invoiceMailService->notifyCompanyInvoiceSent($invoice->fresh(['company', 'order']));

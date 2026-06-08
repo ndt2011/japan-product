@@ -1,7 +1,7 @@
 # QA Tasks
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Cập nhật**: 2026-06-07 | **Assignee**: QA Engineer  
+**Cập nhật**: 2026-06-08 | **Assignee**: QA Engineer  
 **Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
 
 **Legend**: ✅ Done | 🔄 Partial | ⏸ Blocked | 📋 Todo

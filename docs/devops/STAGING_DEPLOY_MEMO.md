@@ -5,35 +5,38 @@
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Đọc khi**: Sau khi login local OK, trước khi lên cloud
 
-Tài liệu này là **hướng dẫn từng bước + phiếu ghi nhớ** — điền URL/thông tin vào bảng memo bên dưới để tra cứu sau.
+Tài liệu này là **hướng dẫn deploy lần đầu** (từng bước chi tiết).
+
+**Lần sau chỉ cần tra cứu nhanh** → mở [SERVER_CURRENT.md](./SERVER_CURRENT.md) (URL, env copy-paste, lệnh Shell).
 
 ---
 
-## Memo của bạn (điền sau khi deploy)
+## Memo server staging (đã điền — cập nhật 2026-06-08)
 
-| Mục | Giá trị (điền tay) | Ghi chú |
-|-----|-------------------|---------|
-| Railway Project | | Tên project trên dashboard |
-| API public URL | `https://` | Tab Settings → Networking → Generate Domain |
-| MySQL service | | Tên service MySQL trên Railway |
-| Redis service | | Tên service Redis trên Railway |
-| Vercel project | | Tên project Vercel |
-| Frontend URL | `https://` | Domain production Vercel |
-| `APP_KEY` đã tạo | ☐ Có | `php artisan key:generate --show` |
-| `db:seed` đã chạy | ☐ Có | Railway Shell hoặc CLI |
-| Login staging OK | ☐ Có | `admin` / `Admin@123` |
-| Health check OK | ☐ Có | `GET .../api/health` |
-| Rakuten env Railway | ☐ Có | `RAKUTEN_*`, `OPENAI_API_KEY` — RAW Editor |
-| Rakuten IP whitelist | ☐ Có | `curl api.ipify.org` trong Railway Shell |
-| AI Rakuten search OK | ☐ Có | /ai-center → Khám phá web |
-| R2 ảnh SP OK | ☐ Có | health `r2_configured: true` |
-| Branch seed OK | ☐ Có | `db:seed --class=BranchSeeder` |
-| Tạo user `/admin` OK | ☐ Có | Tab Admin / Công ty VN |
-| Chi nhánh `/admin/branches` OK | ☐ Có | Tạo CN + nhân viên |
-| SP tab "Theo chi nhánh" OK | ☐ Có | `/products/{id}` admin only |
-| AI embed OK | ☐ Có | `products:generate-vi` + `products:embed --force` |
-| Ngày deploy | | |
-| Người deploy | | |
+> **Tra cứu đầy đủ:** [SERVER_CURRENT.md](./SERVER_CURRENT.md) — copy env, URL, lệnh Shell.
+
+| Mục | Giá trị hiện tại | Ghi chú |
+|-----|------------------|---------|
+| Railway Project | `japan-product-staging` | Dashboard Railway |
+| API public URL | https://product-production-7e4e.up.railway.app | Service `product` |
+| API path | `/api/*` | Health: `/api/health` |
+| MySQL service | `MySQL` | Plugin Railway |
+| Redis service | `Redis` | Plugin Railway |
+| Vercel project | `japan-product` | Root: `project/frontend` |
+| Frontend URL | https://japan-product.vercel.app | Production |
+| `API_URL` (Vercel) | `https://product-production-7e4e.up.railway.app/api` | Bắt buộc |
+| `APP_KEY` đã tạo | ☑ Có | Tạo local: `php artisan key:generate --show` |
+| `db:seed` đã chạy | ☑ Có | `AuthOnlySeeder` + có thể thêm `BranchSeeder` |
+| Login staging OK | ☑ Có | `admin` / `Admin@123` |
+| Health check OK | ☑ Có | `db:mysql`, `r2_configured:true` |
+| Rakuten env Railway | ☑ Có | `RAKUTEN_*`, `OPENAI_API_KEY` |
+| Rakuten IP whitelist | ☑ Có | `GET /api/health?ip=1` |
+| AI Rakuten search OK | ☑ Có | /ai-center → Khám phá web |
+| R2 ảnh SP OK | ☑ Có | `PRODUCT_IMAGE_DISK=r2` |
+| Branch seed OK | ☐ Kiểm tra | `php artisan db:seed --class=BranchSeeder` |
+| Tạo user `/admin` OK | ☑ Có | Commit `29fe4e8` — tất cả user + quyền |
+| Chi nhánh `/admin/branches` OK | ☑ Có | Tạo CN + nhân viên |
+| Commit deploy mới nhất | `29fe4e8` | `main` auto-deploy |
 
 **Tài khoản demo** (sau `db:seed`):
 

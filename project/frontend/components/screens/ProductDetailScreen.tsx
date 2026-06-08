@@ -4,6 +4,7 @@ import { ProductImageUpload } from "@/components/ProductImageUpload";
 import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { feeRateToPercent } from "@/lib/pricing";
 import type { ProductBranchStat, ProductItem } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -102,8 +103,15 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
     { label: "NCC", value: product.supplier_name ?? "—" },
     { label: "Quy cách", value: product.spec ?? "—" },
     { label: "Đơn vị", value: product.unit ?? "—" },
-    { label: "Giá JPY", value: product.cost_jpy?.toLocaleString("vi-VN") ?? "—" },
-    { label: "Giá VND", value: product.price_vnd?.toLocaleString("vi-VN") ?? "—" },
+    { label: "Giá VND (catalog)", value: product.price_vnd?.toLocaleString("vi-VN") ?? "—" },
+    ...(isAdmin
+      ? [
+          { label: "Giá vốn JPY", value: product.cost_price_jpy != null ? Number(product.cost_price_jpy).toLocaleString("vi-VN") : "—" },
+          { label: "Giá bán JPY", value: product.selling_price_jpy != null ? Number(product.selling_price_jpy).toLocaleString("vi-VN") : "—" },
+          { label: "Phí dịch vụ", value: product.fee_rate != null ? `${feeRateToPercent(product.fee_rate)}%` : "—" },
+          { label: "Giá JPY (legacy)", value: product.cost_jpy?.toLocaleString("vi-VN") ?? "—" },
+        ]
+      : [{ label: "Giá JPY", value: product.cost_jpy?.toLocaleString("vi-VN") ?? "—" }]),
     { label: "Thuế nhập", value: product.import_tax_rate != null ? `${product.import_tax_rate}%` : "—" },
     { label: "Xuất xứ", value: product.origin ?? "—" },
     { label: "Tồn kho", value: product.inventory_total?.toLocaleString("vi-VN") ?? "0" },

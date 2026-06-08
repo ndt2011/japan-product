@@ -361,34 +361,39 @@ GET /api/reports/profit/by-product
 | `/invoices/{id}` | Chi tiết HĐ + items + nút actions | Admin + Đại lý |
 | `/invoices/{id}/pdf` | Preview PDF inline | Admin + Đại lý |
 | `/orders/{id}` | Thêm nút "✅ Đã nhận hàng" | Đại lý (khi DELIVERED_ADMIN) |
-| `/reports/profit` | Báo cáo lãi/lỗ — biểu đồ + bảng | Admin only |
+| `/reports` (tab Lợi nhuận) | Báo cáo lãi/lỗ — bảng + summary cards | Admin only |
 | `/products/new` (sửa) | Thêm field cost_price_jpy, fee_rate | Admin only |
 
 ---
 
-## 8. Checklist implement (theo thứ tự)
+## 8. Checklist implement (cập nhật 2026-06-08)
+
+> **Trạng thái**: ✅ ~98% — chi tiết [STATUS.md](../../tasks/STATUS.md) · audit [code-vs-docs-audit.md](./code-vs-docs-audit.md)
 
 ```
 Backend:
-  □ BE-P2-001: Migration products thêm cost_price_jpy, selling_price_jpy, fee_rate
-  □ BE-P2-002: Migration invoices + invoice_items + order_costs
-  □ BE-P2-003: Migration orders thêm delivered_admin_at, delivered_client_at, completed_at
-  □ BE-P2-004: InvoiceService::createFromOrder() — gọi từ OrderController::confirm()
-  □ BE-P2-005: InvoiceController (CRUD + send + pay + pdf)
-  □ BE-P2-006: DomPDF integration — PDF template hóa đơn
-  □ BE-P2-007: OrderController::confirmReceipt() — PUT /orders/{id}/confirm-receipt
-  □ BE-P2-008: Scheduler: invoice:check-overdue (9h JST)
-  □ BE-P2-009: Scheduler: order:auto-complete (8h JST, 7 ngày)
-  □ BE-P2-010: ReportController::profit() — GET /reports/profit
-  □ BE-P2-011: ProductController: ẩn cost_price_jpy trong API response cho non-admin
+  ☑ BE-P2-001: Migration products dual pricing
+  ☑ BE-P2-002: Migration invoices + invoice_items + order_costs + patch
+  ☑ BE-P2-003: Migration orders delivery tracking
+  ☑ BE-P2-004: InvoiceService::createFromOrder()
+  ☑ BE-P2-005: InvoiceController (CRUD + send + pay + pdf)
+  ☑ BE-P2-006: DomPDF — dompdf/dompdf
+  ☑ BE-P2-007: confirmReceipt (company + branch)
+  ☑ BE-P2-008: invoices:check-overdue 9h JST
+  ☑ BE-P2-009: orders:auto-complete 8h JST
+  ☑ BE-P2-010: GET /reports/profit
+  ☑ BE-P2-011: ProductResource ẩn cost non-admin
+  ☑ BE-P2-012: order_costs API (GET/POST/DELETE)
+  □ BE-P2-013: GET /reports/profit/by-product (P2)
 
 Frontend:
-  □ FE-P2-001: /invoices — danh sách + filter + status badge
-  □ FE-P2-002: /invoices/{id} — chi tiết + PDF preview + actions
-  □ FE-P2-003: /orders/{id} — thêm nút "Đã nhận hàng" (DELIVERED_ADMIN)
-  □ FE-P2-004: /products/new|edit — thêm section cost_price_jpy, fee_rate (Admin only)
-  □ FE-P2-005: /reports/profit — Recharts + bảng chi tiết
-  □ FE-P2-006: Notification badge khi có invoice overdue
+  ☑ FE-P2-001: /invoices
+  ☑ FE-P2-002: /invoices/{id} + PDF
+  ☑ FE-P2-003: Nút "Đã nhận hàng"
+  ☑ FE-P2-004: Product form dual pricing (Admin)
+  ☑ FE-P2-005: Tab Lợi nhuận trong /reports (bảng + cards)
+  ☑ FE-P2-006: Badge 🔔 header
+  □ FE-P2-007: Recharts chart profit (P2)
 
 QA:
   □ TC-INV-001: Tạo invoice tự động khi confirm đơn

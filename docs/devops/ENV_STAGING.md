@@ -58,10 +58,14 @@ Frontend **không** gọi Railway trực tiếp từ browser.
 
 ## 3. Tài khoản hệ thống (sau seed)
 
+> **Phiếu tra cứu đầy đủ:** [SERVER_CURRENT.md](./SERVER_CURRENT.md)
+
 | Login ID | Mật khẩu | Vai trò |
 |----------|----------|---------|
 | `admin` | `Admin@123` | Super Admin |
-| `vn_company01` | `Company@123` | Chi nhánh VN |
+| `vn_company01` | `Company@123` | Công ty VN (đại lý) |
+| `hn_manager` | `Manager@123` | Branch Manager (sau `BranchSeeder`) |
+| `hn_staff` | `Staff@123` | Branch Staff (sau `BranchSeeder`) |
 
 **Seed chỉ account (DB sạch):**
 
@@ -321,7 +325,7 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 |------|------------|
 | `.github/workflows/ci.yml` | ✅ PHPUnit + FE build |
 | Branch protection `main` | 📋 Chưa |
-| Auto-deploy Railway/Vercel | 📋 Chưa (cần tokens) |
+| Auto-deploy Railway/Vercel | ✅ Push `main` → auto deploy |
 | Production VPS (ConoHa) | 📋 Sprint 7 |
 
 ---
@@ -330,6 +334,7 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 
 | File | Mục đích |
 |------|----------|
+| **[SERVER_CURRENT.md](./SERVER_CURRENT.md)** | ★ URL + env + Shell — tra cứu nhanh |
 | [ENV_LOCAL.md](./ENV_LOCAL.md) | Môi trường local |
 | [STAGING_DEPLOY_MEMO.md](./STAGING_DEPLOY_MEMO.md) | Checklist deploy từng bước |
 | [railway-mysql-variables.md](./railway-mysql-variables.md) | Gắn MySQL + reset DB |

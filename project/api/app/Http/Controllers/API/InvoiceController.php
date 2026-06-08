@@ -11,6 +11,8 @@ use App\Support\ApiResponse;
 use App\Support\AuthContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Response;
 
 class InvoiceController extends Controller
@@ -164,11 +166,31 @@ class InvoiceController extends Controller
             return ApiResponse::error($e->messageCode, null, $e->status);
         }
 
+        $invoice->loadMissing(['items', 'company', 'order']);
         $html = view('invoices.pdf', ['invoice' => $invoice])->render();
+        $filename = $invoice->invoice_no;
 
-        return response($html, 200, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-            'Content-Disposition' => 'inline; filename="'.$invoice->invoice_no.'.html"',
-        ]);
+        try {
+            $options = new Options();
+            $options->set('isRemoteEnabled', false);
+            $options->set('defaultFont', 'DejaVu Sans');
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+
+            return response($dompdf->output(), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="'.$filename.'.html"',
+            ]);
+        }
     }
 }

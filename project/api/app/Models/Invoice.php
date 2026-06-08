@@ -15,17 +15,25 @@ class Invoice extends Model
     protected $fillable = [
         'order_id',
         'company_vn_id',
+        'branch_id',
         'invoice_no',
         'invoice_date',
         'due_date',
+        'locked_rate',
+        'fee_rate',
         'amount_vnd',
+        'subtotal_vnd',
+        'fee_amount_vnd',
         'tax_amount',
         'total_amount',
         'status',
+        'sent_at',
         'paid_at',
         'paid_amount',
         'payment_method',
+        'payment_note',
         'note',
+        'pdf_path',
         'created',
         'created_user_id',
         'modified',
@@ -36,16 +44,21 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
-            'invoice_date' => 'date',
-            'due_date' => 'date',
-            'amount_vnd' => 'decimal:0',
-            'tax_amount' => 'decimal:0',
-            'total_amount' => 'decimal:0',
-            'paid_amount' => 'decimal:0',
-            'paid_at' => 'datetime',
-            'deleted_flag' => 'boolean',
-            'created' => 'datetime',
-            'modified' => 'datetime',
+            'invoice_date'   => 'date',
+            'due_date'       => 'date',
+            'locked_rate'    => 'decimal:4',
+            'fee_rate'       => 'decimal:4',
+            'amount_vnd'     => 'decimal:0',
+            'subtotal_vnd'   => 'decimal:0',
+            'fee_amount_vnd' => 'decimal:0',
+            'tax_amount'     => 'decimal:0',
+            'total_amount'   => 'decimal:0',
+            'paid_amount'    => 'decimal:0',
+            'sent_at'        => 'datetime',
+            'paid_at'        => 'datetime',
+            'deleted_flag'   => 'boolean',
+            'created'        => 'datetime',
+            'modified'       => 'datetime',
         ];
     }
 
@@ -57,6 +70,11 @@ class Invoice extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(CompanyVn::class, 'company_vn_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function items(): HasMany

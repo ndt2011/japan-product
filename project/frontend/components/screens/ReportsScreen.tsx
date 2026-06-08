@@ -1,10 +1,21 @@
 "use client";
 
-import { Badge, Card, EmptyState, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, Card, EmptyState, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
+import type { ProfitReportOrderRow, ProfitReportSummary } from "@/types/api";
 import { useCallback, useEffect, useState } from "react";
 
-type ReportTab = "orders" | "inventory" | "movements" | "revenue";
+type ReportTab = "orders" | "inventory" | "movements" | "revenue" | "profit";
+
+const profitLabels: Record<string, string> = {
+  total_revenue_vnd: "Doanh thu",
+  total_cost_vnd: "Giá vốn",
+  gross_profit_vnd: "Lãi gộp",
+  total_other_costs_vnd: "Chi phí khác",
+  net_profit_vnd: "Lãi ròng",
+  profit_margin_pct: "Biên lợi nhuận (%)",
+  order_count: "Số đơn hoàn tất",
+};
 
 export function ReportsScreen() {
   const isAdmin = useIsAdmin();
@@ -13,12 +24,17 @@ export function ReportsScreen() {
   const [error, setError] = useState("");
   const [summary, setSummary] = useState<Record<string, unknown>>({});
   const [items, setItems] = useState<Record<string, unknown>[]>([]);
+  const [profitSummary, setProfitSummary] = useState<ProfitReportSummary | null>(null);
+  const [profitOrders, setProfitOrders] = useState<ProfitReportOrderRow[]>([]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const tabs: { id: ReportTab; label: string; adminOnly?: boolean }[] = [
     { id: "orders", label: "Đơn hàng" },
     { id: "inventory", label: "Tồn kho", adminOnly: true },
     { id: "movements", label: "Xuất nhập", adminOnly: true },
     { id: "revenue", label: "Doanh thu", adminOnly: true },
+    { id: "profit", label: "Lợi nhuận", adminOnly: true },
   ];
 
   const visibleTabs = tabs.filter((t) => !t.adminOnly || isAdmin);
@@ -26,8 +42,10 @@ export function ReportsScreen() {
   const loadReport = useCallback(async () => {
     setLoading(true);
     setError("");
+    setProfitSummary(null);
+    setProfitOrders([]);
 
-    const paths: Record<ReportTab, string> = {
+    const paths: Record<Exclude<ReportTab, "profit">, string> = {
       orders: "/api/proxy/reports/orders",
       inventory: "/api/proxy/reports/inventory",
       movements: "/api/proxy/reports/stock-movements",
@@ -35,6 +53,25 @@ export function ReportsScreen() {
     };
 
     try {
+      if (tab === "profit") {
+        const params = new URLSearchParams();
+        if (dateFrom) params.set("date_from", dateFrom);
+        if (dateTo) params.set("date_to", dateTo);
+        const qs = params.toString();
+        const res = await fetch(qs ? `/api/proxy/reports/profit?${qs}` : "/api/proxy/reports/profit");
+        const data = await res.json();
+        if (!data.success) {
+          setError(data.message ?? "Không tải được báo cáo lợi nhuận");
+          setItems([]);
+          return;
+        }
+        setProfitSummary(data.data?.summary ?? null);
+        setProfitOrders(data.data?.by_order ?? []);
+        setSummary({});
+        setItems([]);
+        return;
+      }
+
       const res = await fetch(paths[tab]);
       const data = await res.json();
       if (!data.success) {
@@ -49,7 +86,7 @@ export function ReportsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [tab]);
+  }, [tab, dateFrom, dateTo]);
 
   useEffect(() => {
     loadReport();
@@ -57,7 +94,7 @@ export function ReportsScreen() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Báo Cáo" subtitle="Theo amendment reports-module.md" />
+      <PageHeader title="Báo Cáo" subtitle="Đơn hàng · Tồn kho · Doanh thu · Lợi nhuận (Admin)" />
 
       <div className="flex flex-wrap gap-2">
         {visibleTabs.map((t) => (
@@ -74,7 +111,48 @@ export function ReportsScreen() {
         ))}
       </div>
 
-      {Object.keys(summary).length > 0 && (
+      {tab === "profit" && isAdmin && (
+        <Card className="p-4 flex flex-wrap gap-3 items-end">
+          <Input
+            label="Từ ngày"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+          <Input
+            label="Đến ngày"
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={loadReport}
+            className="px-4 py-2 rounded-xl text-sm bg-brand text-white"
+          >
+            Lọc
+          </button>
+        </Card>
+      )}
+
+      {tab === "profit" && profitSummary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Object.entries(profitSummary).map(([key, value]) => (
+            <Card key={key} className="p-4">
+              <p className="text-xs text-text-muted">{profitLabels[key] ?? key}</p>
+              <p className={`text-lg font-medium mt-1 ${key.includes("profit") ? "text-brand" : ""}`}>
+                {key === "profit_margin_pct"
+                  ? `${value}%`
+                  : key === "order_count"
+                    ? String(value)
+                    : `${Number(value).toLocaleString("vi-VN")} ₫`}
+              </p>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {tab !== "profit" && Object.keys(summary).length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(summary).map(([key, value]) => (
             <Card key={key} className="p-4">
@@ -92,6 +170,39 @@ export function ReportsScreen() {
           <EmptyState message="Đang tải báo cáo..." icon="⏳" />
         ) : error ? (
           <EmptyState message={error} icon="⚠️" />
+        ) : tab === "profit" ? (
+          profitOrders.length === 0 ? (
+            <EmptyState message="Chưa có đơn COMPLETED trong khoảng thời gian này." />
+          ) : (
+            <Table>
+              <Thead>
+                <tr>
+                  <Th>Mã đơn</Th>
+                  <Th>Hoàn tất</Th>
+                  <Th>Doanh thu</Th>
+                  <Th>Giá vốn</Th>
+                  <Th>Lãi gộp</Th>
+                  <Th>CP khác</Th>
+                  <Th>Lãi ròng</Th>
+                </tr>
+              </Thead>
+              <tbody>
+                {profitOrders.map((row) => (
+                  <Tr key={row.order_id}>
+                    <Td className="font-medium">{row.order_no}</Td>
+                    <Td>{row.completed_at ?? "—"}</Td>
+                    <Td>{row.revenue_vnd.toLocaleString("vi-VN")} ₫</Td>
+                    <Td>{row.cost_vnd.toLocaleString("vi-VN")} ₫</Td>
+                    <Td>{row.gross_profit_vnd.toLocaleString("vi-VN")} ₫</Td>
+                    <Td>{row.other_costs_vnd.toLocaleString("vi-VN")} ₫</Td>
+                    <Td className="text-brand font-medium">
+                      {row.net_profit_vnd.toLocaleString("vi-VN")} ₫
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          )
         ) : items.length === 0 ? (
           <EmptyState message="Không có dữ liệu trong khoảng thời gian này." />
         ) : tab === "orders" ? (
