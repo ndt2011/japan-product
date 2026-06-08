@@ -1,6 +1,6 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-08 (lần 5 — Inventory Known Issues)  
+> **Cập nhật**: 2026-06-08 (lần 6 — Quy trình dạy AI catalog)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
 > **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp**  
@@ -14,7 +14,7 @@
 |----------------|----------|---------|---------|
 | **S1** Auth & RBAC | Login, 4 role, user mgmt | **✅ ~98%** | Lockout · Admin all-users |
 | **S2** Sản phẩm | CRUD + ảnh R2 + dual pricing | **✅** | Form giá kép Admin ✅ |
-| **S3** AI Search | Luồng A+B + hybrid | **✅ ~98%** | GPT re-rank ⏳ P2 |
+| **S3** AI Search | Luồng A+B + hybrid + dạy VN | **✅ ~99%** | GPT re-rank ⏳ P2 · OPS embed staging |
 | **S4–S5** Orders + Shipments | 2-step delivery | **✅ ~95%** | auto-complete ✅ |
 | **S6–S7** Kho + Báo cáo | Reports + profit | **✅ ~95%** | Tab Lợi nhuận ✅ |
 | **DevOps** | Railway + Vercel staging | **✅** | Auto-deploy `main` |
@@ -102,6 +102,19 @@
 
 ---
 
+## ✅ Lần 6 — Hoàn thành (2026-06-08)
+
+| Nội dung | File | Ghi chú |
+|----------|------|---------|
+| Quy trình dạy AI catalog (Luồng B) | `docs/sa/amendments/ai-catalog-teaching-process.md` | generate-vi → embed → few-shot query |
+| WF-01b workflow BA | `docs/ba/workflow.md` | Sơ đồ Admin → User |
+| QueryExpansion few-shot | `QueryExpansionService.php` + FE gợi ý catalog | Commit `2f9f11f` |
+| System Overview Luồng B | `docs/sa/00_System_Overview.md` | Đánh dấu ✅ đã code |
+
+**OPS còn lại:** Railway Shell `products:generate-vi` + `products:embed --force` trên staging.
+
+---
+
 ## 🔄 Còn lại (P2 — không blocking staging)
 
 | ID | Việc | Priority |
@@ -111,6 +124,7 @@
 | FE-P2-007 | Recharts chart tab Lợi nhuận | P2 |
 | INV-001 | reserve/release thêm warehouseId (khi có kho thứ 2) | P2 — xem `inventory-known-issues.md` |
 | INV-002 | Pre-order support (khi BA yêu cầu) | P3 — xem `inventory-known-issues.md` |
+| **AI-P** | **AI Purchasing Specialist** — BE 8 tasks + FE 7 tasks | **P1 — xem `ai-purchasing-specialist.md`** |
 | OPS | Railway: `php artisan migrate` (bao gồm ai_conversations + ai_messages) | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
 | OPS | Vercel: cập nhật domain R2 trong `next.config.mjs` | P1 |

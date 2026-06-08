@@ -19,7 +19,9 @@ class AiConversation extends Model
         'session_id',
         'user_type',
         'user_id',
+        'branch_id',
         'title',
+        'session_context',
         'created',
         'modified',
     ];
@@ -27,6 +29,7 @@ class AiConversation extends Model
     protected function casts(): array
     {
         return [
+            'session_context' => 'array',
             'created'  => 'datetime',
             'modified' => 'datetime',
         ];

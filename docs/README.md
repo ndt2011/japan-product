@@ -51,6 +51,7 @@ docs/
 │   │   ├── orders-status.md
 │   │   ├── reports-module.md
 │   │   ├── ai-search-improvement.md
+│   │   ├── ai-catalog-teaching-process.md  ★ Quy trình dạy AI catalog (Luồng B)
 │   │   └── rbac-req003.md
 │   ├── qa/
 │   │   └── QA_Orders_Batch.md

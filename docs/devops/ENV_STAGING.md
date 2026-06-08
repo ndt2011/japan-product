@@ -199,7 +199,7 @@ php artisan products:generate-vi    # GPT sinh name_vi + description_vi
 php artisan products:embed --force  # Re-embed sau khi có tên VN
 ```
 
-> Chi tiết: [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md) · Prompt few-shot: `docs/sa/code/backend/Services/QueryExpansionService.php`
+> Chi tiết: [../sa/amendments/ai-catalog-teaching-process.md](../sa/amendments/ai-catalog-teaching-process.md) · [../sa/AI_Setup_Guide.md](../sa/AI_Setup_Guide.md)
 
 ---
 
@@ -381,5 +381,6 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 | 2026-06-07 | `AuthOnlySeeder` — DB sạch chỉ account                      |
 | 2026-06-08 | Rakuten AI search staging OK — IP Railway whitelist         |
 | 2026-06-08 | Railway Variables: RAKUTEN_*, OPENAI, QUEUE_CONNECTION=sync |
+| 2026-06-08 | Doc quy trình dạy AI catalog (`ai-catalog-teaching-process.md`) + few-shot QueryExpansion |
 
 

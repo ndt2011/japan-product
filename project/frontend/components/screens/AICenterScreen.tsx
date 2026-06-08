@@ -18,10 +18,12 @@ type Message = {
 };
 
 const suggestedPrompts = [
+  "DHC",
+  "mỹ phẩm tốt",
+  "collagen uống nhật",
+  "vitamin c nhật bản",
   "コラーゲン サプリ",
   "ビタミンC ファンケル",
-  "オメガ3 大塚",
-  "TPCN bán chạy Nhật Bản",
 ];
 
 function itemKey(item: AiSearchItem, index: number) {
@@ -85,8 +87,15 @@ function WebSearchPanel() {
         };
       }
 
+      // Hiển thị keyword JP đã dùng nếu khác keyword gốc (dịch từ VI → JP)
+      const keywordJp = session.keyword_jp as string | undefined;
+      const keywordLabel =
+        keywordJp && keywordJp !== keyword
+          ? `"${keyword}" → 🇯🇵 ${keywordJp}`
+          : `"${keyword}"`;
+
       return {
-        text: `Tìm thấy ${session.items.length} sản phẩm cho "${keyword}". Chọn sản phẩm cần gửi duyệt:`,
+        text: `Tìm thấy ${session.items.length} sản phẩm cho ${keywordLabel}. Chọn sản phẩm cần gửi duyệt:`,
         products: session.items as AiSearchItem[],
       };
     }

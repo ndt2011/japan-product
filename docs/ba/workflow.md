@@ -7,7 +7,7 @@
 
 ## WF-01: Quy trình thêm sản phẩm mới qua AI (Luồng A — đã triển khai)
 
-> **Luồng B** (tìm trong catalog có sẵn): `POST /ai/product-search` — chưa code, xem `docs/sa/AI_Search_Implementation.md`
+> **Luồng B** (tìm catalog nội bộ): `POST /ai/product-search` — ✅ đã triển khai. Quy trình **dạy AI** tiếng Việt: [ai-catalog-teaching-process.md](../sa/amendments/ai-catalog-teaching-process.md)
 
 ```
 VN Branch Staff          Hệ thống (AI)              JP Agency Owner
@@ -27,6 +27,28 @@ VN Branch Staff          Hệ thống (AI)              JP Agency Owner
 ```
 
 **Trạng thái ai_product_candidates**: PENDING → APPROVED / REJECTED
+
+---
+
+## WF-01b: Quy trình dạy AI tìm catalog (Luồng B — đã triển khai)
+
+> Chi tiết đầy đủ: `docs/sa/amendments/ai-catalog-teaching-process.md`
+
+```
+Admin / DevOps                    Hệ thống                         User (VN)
+      │                               │                                │
+      │── products:generate-vi ──────>│ GPT sinh name_vi, description_vi
+      │── products:embed --force ────>│ OpenAI embedding → products.embedding
+      │                               │                                │
+      │                               │<── User gõ "bổ gan" ───────────│
+      │                               │── QueryExpansion (few-shot)      │
+      │                               │── Hybrid search catalog        │
+      │                               │── expanded_query + kết quả ───>│
+```
+
+**Chu kỳ lặp lại:** Mỗi khi có sản phẩm mới (duyệt luồng A hoặc tạo tay) → `generate-vi` + `embed` cho SP đó.
+
+**Màn hình:** `/ai-center` → tab **Tìm catalog nội bộ** (gợi ý: bổ gan, vitamin C, collagen…)
 
 ---
 

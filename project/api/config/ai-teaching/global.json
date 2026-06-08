@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "cosmetics-premium",
+      "name_vi": "Mỹ phẩm cao cấp",
+      "keywords_vi": ["mỹ phẩm tốt", "mỹ phẩm nhật cao cấp", "skincare nhật"],
+      "rakuten_jp": "コスメ スキンケア おすすめ",
+      "catalog_hints": ["shiseido", "sk-ii", "fancl"],
+      "staff_note": "Ưu tiên Shiseido, SK-II, Fancl khi khách hỏi mỹ phẩm tốt / cao cấp"
+    },
+    {
+      "id": "supplement-liver",
+      "name_vi": "Bổ gan",
+      "keywords_vi": ["bổ gan", "gan nhật", "thuốc bổ gan"],
+      "rakuten_jp": "肝臓サポート オルニチン",
+      "catalog_hints": ["orihiro", "dhc"],
+      "staff_note": "Hay kết hợp Ornithine + DHC; hỏi khách uống bao lâu / liều dùng"
+    },
+    {
+      "id": "vitamin-c",
+      "name_vi": "Vitamin C",
+      "keywords_vi": ["vitamin c", "vitamin c nhật", "vitamin c giá rẻ"],
+      "rakuten_jp": "ビタミンC サプリメント",
+      "catalog_hints": ["dhc", "fancl"],
+      "staff_note": "So sánh DHC vs Fancl; gợi ý lô ≥10 hộp nếu nhập sỉ"
+    },
+    {
+      "id": "baby-care",
+      "name_vi": "Đồ cho bé",
+      "keywords_vi": ["tã giấy", "sữa bột nhật", "đồ cho bé nhật"],
+      "rakuten_jp": "ベビー用品 おむつ",
+      "catalog_hints": ["pigeon", "merries", "goon"],
+      "staff_note": "Merries/Pigeon phổ biến; hỏi size tã hoặc độ tuổi bé"
+    }
+  ],
+  "vi_to_jp": {
+    "kem chống nắng nhật": "日焼け止め UVケア 日本",
+    "dầu gội nhật": "シャンプー ヘアケア 日本"
+  },
+  "brands": {},
+  "session_hints": {
+    "default_greeting": "Em có thể tìm sản phẩm, báo giá, hoặc kiểm tra đơn hàng cho anh/chị.",
+    "upsell_notes": [
+      "Nếu khách hay đặt vitamin C → gợi ý thêm collagen hoặc vitamin nhóm B",
+      "Mỹ phẩm + TPCN cùng thương hiệu (DHC/Fancl) thường được đặt kèm"
+    ]
+  }
+}

@@ -16,6 +16,35 @@ Nâng cấp AI từ "công cụ tìm kiếm" → **"nhân viên ảo thông minh
 - Nhớ ngữ cảnh trong phiên chat
 - Đưa ra thông tin chi tiết, đúng nghiệp vụ
 
+### 1.1 Huấn luyện như nhân viên thực thụ (không fine-tune model)
+
+| Lớp | Cách "dạy" | File / lệnh |
+|-----|------------|-------------|
+| **Vai trò** | System prompt: phong cách tư vấn, ví dụ câu trả lời | `AiChatService::buildSystemPrompt()` |
+| **Hiểu câu tự nhiên** | Tách "tìm cho tôi mỹ phẩm tốt" → `mỹ phẩm tốt` | `SearchQueryNormalizer` |
+| **Nhận diện nhu cầu** | Intent: mỹ phẩm, vitamin, gợi ý, tìm cho... | `IntentClassifier` |
+| **Tra catalog** | Embedding + hybrid + `expanded_query` | `ProductEmbeddingService` |
+| **Tra Rakuten** | Map VI→JP (`mỹ phẩm tốt` → `コスメ おすすめ`) | `RakutenKeywordTranslatorService` |
+| **Dữ liệu SP** | `name_vi` + embed | [ai-catalog-teaching-process.md](./ai-catalog-teaching-process.md) |
+
+**Luồng chat khi khách hỏi sản phẩm (2026-06-08):** catalog trước → nếu ít kết quả → gọi Rakuten → GPT tổng hợp trả lời như nhân viên.
+
+### 1.2 Bộ nhớ nghiệp vụ (2026-06-08)
+
+| Lớp | Mô tả | Service / storage |
+|-----|--------|-------------------|
+| **Phiên** | Sở thích, brand, SP vừa xem, từ khóa tìm gần nhất | `ai_conversations.session_context` + `AiSessionMemoryService` |
+| **Lịch sử đơn** | Top SP / danh mục 6 tháng (company / branch) | `AiOrderHistoryInsightService` |
+| **Teaching file** | Danh mục mới, map VI→JP, ghi chú nhân viên theo CN | `config/ai-teaching/*.json` (+ override `storage/app/ai-teaching/`) |
+
+**Câu mơ hồ được xử lý:**
+
+- "gợi ý thêm" → dùng `interests` hoặc `last_search_query` trong phiên
+- "tương tự" / "sản phẩm đó" → `last_search_query` + "tương tự"
+- Company/branch có đơn cũ → ưu tiên gợi ý cùng nhóm SP khi tìm kiếm
+
+**Teaching JSON** — merge: `global.json` → `branch_{id}.json`. Ví dụ thêm danh mục mới không cần deploy code, chỉ sửa JSON và `php artisan cache:clear` (hoặc đợi TTL 5 phút).
+
 ---
 
 ## 2. Kiến trúc
@@ -296,3 +325,74 @@ Knowledge base tĩnh (hardcoded trong system prompt + có thể mở rộng từ
 | AI-FE-004 | SuggestionChips component | MED | 2h |
 | AI-FE-005 | ConversationHistory sidebar | LOW | 4h |
 | AI-FE-006 | Typing indicator animation | LOW | 1h |
+
+---
+
+## 11. Bộ nhớ nghiệp vụ — chi tiết kỹ thuật
+
+### 11.1 `session_context` (JSON trên `ai_conversations`)
+
+```json
+{
+  "interests": ["mỹ phẩm", "vitamin c"],
+  "brands": ["DHC"],
+  "last_search_query": "mỹ phẩm tốt",
+  "last_product_ids": [12, 45],
+  "last_product_names": ["Kem dưỡng X"],
+  "budget_hint": "dưới 2 triệu",
+  "quantity_hint": "10 hộp",
+  "updated_at": "2026-06-08T10:00:00+07:00"
+}
+```
+
+### 11.2 Lịch sử đơn hàng
+
+- Phạm vi: 180 ngày, trạng thái từ PENDING trở đi (không DRAFT/CANCELLED)
+- `company` → filter `company_vn_id`
+- `branch_*` → filter `branch_id`
+- `admin` → không inject lịch sử (tra toàn hệ thống qua màn khác)
+
+### 11.3 Teaching file schema
+
+Đặt tại `project/api/config/ai-teaching/global.json` và tùy chọn `branch_{id}.json`:
+
+```json
+{
+  "version": 1,
+  "branch_name": "Chi nhánh Hà Nội",
+  "categories": [
+    {
+      "id": "local-favorite",
+      "name_vi": "Hàng địa phương ưa chuộng",
+      "keywords_vi": ["hàng hn hot", "best seller hn"],
+      "rakuten_jp": "人気 おすすめ",
+      "staff_note": "Chi nhánh HN hay bán collagen + vitamin C kèm"
+    }
+  ],
+  "vi_to_jp": { "kem dưỡng premium": "保湿クリーム 高級" },
+  "brands": { "shop local": "ローカルブランド" },
+  "session_hints": {
+    "upsell_notes": ["Gợi ý combo vitamin C + collagen"]
+  }
+}
+```
+
+Override runtime (không cần redeploy): `storage/app/ai-teaching/branch_{id}.json`
+
+### 11.4 API response bổ sung
+
+`POST /ai/chat` trả thêm `memory`:
+
+```json
+{
+  "memory": {
+    "interests": ["mỹ phẩm"],
+    "brands": ["DHC"],
+    "last_search_query": "mỹ phẩm tốt",
+    "order_insights": {
+      "top_products": [{ "name": "Vitamin C Nhật", "order_count": 3 }],
+      "top_categories": [{ "category": "Vitamin", "order_count": 5 }]
+    }
+  }
+}
+```

@@ -42,6 +42,10 @@ class IntentClassifier
         self::INTERNAL_SEARCH => [
             'tìm', 'có không', 'catalog', 'sản phẩm nào', 'kiếm', 'tìm kiếm',
             'có sản phẩm', 'bán sản phẩm', 'danh sách', 'sản phẩm bổ',
+            'tìm cho', 'giúp tôi tìm', 'gợi ý', 'đề xuất', 'muốn mua', 'cần tìm',
+            'mỹ phẩm', 'cosmetic', 'skincare', 'vitamin', 'collagen', 'bổ gan',
+            'thực phẩm chức năng', 'tpbvsk', 'kem dưỡng', 'son môi', 'sản phẩm tốt',
+            'hàng nào', 'loại nào', 'nên dùng', 'nên nhập',
         ],
     ];
 

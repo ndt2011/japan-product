@@ -47,8 +47,11 @@
 | TC-AI-006 | Từ chối không có lý do | Từ chối không nhập lý do | HTTP 422, validation error | P0 |
 | TC-AI-007 | Từ chối có lý do | Nhập lý do tối thiểu 10 ký tự | HTTP 200, candidate.status=REJECTED | P0 |
 | TC-AI-008 | Semantic search catalog | `POST /ai/product-search` query hợp lệ | HTTP 200, items từ DB + `image_url` | P1 |
+| TC-AI-009 | Tìm catalog tiếng Việt | Query `"bổ gan"` sau `generate-vi` + `embed` | Match `name_vi`, `expanded_query` trong response | P1 |
+| TC-AI-010 | Gợi ý UI catalog | Tab Tìm catalog → chọn gợi ý "Bổ gan" | Có kết quả hoặc M0201; hiển thị GPT mở rộng nếu có OpenAI | P2 |
 
-> **Luồng A**: `AiSearchTest` — 6 tests · **Luồng B**: `AiProductSearchTest` — 4 tests
+> **Luồng A**: `AiSearchTest` — 6 tests · **Luồng B**: `AiProductSearchTest` — 5 tests  
+> **Quy trình dạy AI (OPS):** `docs/sa/amendments/ai-catalog-teaching-process.md`
 
 ---
 

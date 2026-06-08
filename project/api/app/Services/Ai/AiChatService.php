@@ -5,10 +5,11 @@ namespace App\Services\Ai;
 use App\Models\AiConversation;
 use App\Models\AiMessage;
 use App\Models\Admin;
+use App\Models\BranchUser;
 use App\Models\ExchangeRate;
 use App\Models\Invoice;
 use App\Models\Order;
-use App\Models\Product;
+use App\Services\ProductEmbeddingService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,13 @@ class AiChatService
 {
     public function __construct(
         private readonly IntentClassifier $classifier,
+        private readonly SearchQueryNormalizer $queryNormalizer,
+        private readonly ProductEmbeddingService $embeddingService,
+        private readonly AiWebProductSearchService $webSearchService,
+        private readonly RakutenKeywordTranslatorService $keywordTranslator,
+        private readonly AiSessionMemoryService $sessionMemory,
+        private readonly AiOrderHistoryInsightService $orderInsights,
+        private readonly AiTeachingCatalogService $teachingCatalog,
     ) {}
 
     /**
@@ -30,7 +38,7 @@ class AiChatService
      * @param  string  $userType  (admin / company / branch_manager / branch_staff)
      * @param  string  $message
      * @param  int|null  $conversationId
-     * @return array{conversation_id: int, message_id: int, reply: string, intent: string, data: array, suggestions: string[]}
+     * @return array{conversation_id: int, message_id: int, reply: string, intent: string, data: array, suggestions: string[], memory: array}
      */
     public function chat(
         Authenticatable $user,
@@ -38,31 +46,51 @@ class AiChatService
         string $message,
         ?int $conversationId = null,
     ): array {
+        $branchId = $this->resolveBranchId($user, $userType);
+
         // 1. Lấy hoặc tạo conversation
         $conversation = $conversationId
             ? AiConversation::findOrFail($conversationId)
             : AiConversation::create([
                 'user_type' => $userType,
                 'user_id'   => $user->id,
+                'branch_id' => $branchId,
                 'title'     => mb_substr($message, 0, 50),
             ]);
 
+        $sessionContext = (array) ($conversation->session_context ?? []);
+        $effectiveMessage = $this->sessionMemory->resolveMessageWithContext($message, $sessionContext);
+
         // 2. Lưu tin nhắn user
-        $userMsg = AiMessage::create([
+        AiMessage::create([
             'conversation_id' => $conversation->id,
             'role'            => 'user',
             'content'         => $message,
         ]);
 
-        // 3. Phân loại intent
-        $intent = $this->classifier->classify($message);
+        // 3. Phân loại intent (dùng câu đã bổ sung ngữ cảnh phiên)
+        $intent = $this->classifier->classify($effectiveMessage);
 
         // 4. Xử lý intent → lấy data
-        $data        = [];
-        $suggestions = [];
+        $orderHistory = $this->orderInsights->insightsForUser($user, $userType);
         [$contextText, $data, $suggestions] = $this->handleIntent(
-            $intent, $message, $user, $userType
+            $intent,
+            $effectiveMessage,
+            $user,
+            $userType,
+            $branchId,
+            $sessionContext,
+            $orderHistory,
         );
+
+        // 4b. Cập nhật bộ nhớ phiên
+        $sessionContext = $this->sessionMemory->updateFromTurn(
+            $sessionContext,
+            $message,
+            $intent,
+            $data,
+        );
+        $conversation->update(['session_context' => $sessionContext]);
 
         // 5. Build GPT messages (context 10 tin gần nhất)
         $history = $conversation->messages()
@@ -74,7 +102,12 @@ class AiChatService
             ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
             ->all();
 
-        $systemPrompt = $this->buildSystemPrompt($userType, $contextText);
+        $memoryContext = $this->buildMemoryContext(
+            $sessionContext,
+            $orderHistory,
+            $branchId,
+        );
+        $systemPrompt = $this->buildSystemPrompt($userType, $contextText."\n\n".$memoryContext);
 
         $gptMessages = array_merge(
             [['role' => 'system', 'content' => $systemPrompt]],
@@ -101,29 +134,51 @@ class AiChatService
             'intent'          => $intent,
             'data'            => $data,
             'suggestions'     => $suggestions,
+            'memory'          => [
+                'interests' => (array) ($sessionContext['interests'] ?? []),
+                'brands' => (array) ($sessionContext['brands'] ?? []),
+                'last_search_query' => $sessionContext['last_search_query'] ?? null,
+                'order_insights' => [
+                    'top_products' => $orderHistory['top_products'],
+                    'top_categories' => $orderHistory['top_categories'],
+                ],
+            ],
         ];
     }
 
     /**
      * @return array{0: string, 1: array, 2: string[]}
      */
+    /**
+     * @param  array<string, mixed>  $sessionContext
+     * @param  array{top_products: array, top_categories: array, summary: string}  $orderHistory
+     */
     private function handleIntent(
         string $intent,
         string $message,
         Authenticatable $user,
         string $userType,
+        ?int $branchId,
+        array $sessionContext,
+        array $orderHistory,
     ): array {
         $isAdmin = $userType === 'admin';
 
         return match ($intent) {
 
-            IntentClassifier::INTERNAL_SEARCH => $this->handleInternalSearch($message, $isAdmin),
+            IntentClassifier::INTERNAL_SEARCH => $this->handleInternalSearch(
+                $message, $isAdmin, $branchId, $sessionContext, $orderHistory,
+            ),
 
             IntentClassifier::PRICE_INQUIRY => $this->handlePriceInquiry($message, $isAdmin),
 
             IntentClassifier::ORDER_STATUS => $this->handleOrderStatus($user, $userType),
 
             IntentClassifier::INVOICE_INQUIRY => $this->handleInvoiceInquiry($user, $userType, $isAdmin),
+
+            IntentClassifier::RAKUTEN_DISCOVER => $this->handleProductDiscovery(
+                $message, false, $branchId, $sessionContext, $orderHistory,
+            ),
 
             IntentClassifier::POLICY_QUESTION => [
                 "Chính sách hệ thống:\n- Phí dịch vụ mặc định: 5%\n- Thời gian giao hàng: 7-14 ngày\n- Thanh toán: chuyển khoản sau khi nhận hóa đơn",
@@ -135,48 +190,139 @@ class AiChatService
         };
     }
 
-    /** @return array{0: string, 1: array, 2: string[]} */
-    private function handleInternalSearch(string $query, bool $isAdmin): array
-    {
-        $products = Product::query()
-            ->where('deleted_flag', false)
-            ->where('disabled_flag', false)
-            ->where(function ($q) use ($query) {
-                $q->where('product_name', 'LIKE', "%{$query}%")
-                  ->orWhere('product_name_vi', 'LIKE', "%{$query}%")
-                  ->orWhere('product_cd', 'LIKE', "%{$query}%");
-            })
-            ->select(['id', 'product_name', 'product_name_vi', 'selling_price_jpy', 'cost_price_jpy', 'price_vnd', 'fee_rate'])
-            ->limit(5)
-            ->get();
+    /**
+     * @param  array<string, mixed>  $sessionContext
+     * @param  array{top_products: array, top_categories: array, summary: string}  $orderHistory
+     * @return array{0: string, 1: array, 2: string[]}
+     */
+    private function handleInternalSearch(
+        string $message,
+        bool $isAdmin,
+        ?int $branchId,
+        array $sessionContext,
+        array $orderHistory,
+    ): array {
+        return $this->handleProductDiscovery(
+            $message, $isAdmin, $branchId, $sessionContext, $orderHistory,
+        );
+    }
 
+    /**
+     * Nhân viên ảo: catalog (embedding) trước → Rakuten nếu catalog trống.
+     *
+     * @return array{0: string, 1: array, 2: string[]}
+     */
+    /**
+     * @param  array<string, mixed>  $sessionContext
+     * @param  array{top_products: array, top_categories: array, summary: string}  $orderHistory
+     */
+    private function handleProductDiscovery(
+        string $message,
+        bool $isAdmin,
+        ?int $branchId,
+        array $sessionContext,
+        array $orderHistory,
+    ): array {
+        $searchQuery = $this->queryNormalizer->extract($message);
+        $searchQuery = $this->enrichSearchQuery(
+            $searchQuery,
+            $sessionContext,
+            $orderHistory,
+            $branchId,
+        );
+        $rakutenKeyword = $this->keywordTranslator->buildRakutenKeyword($searchQuery, $branchId);
+
+        $meta = $this->embeddingService->searchWithMeta($searchQuery, 5);
+        $catalogItems = $meta['items'];
         $rate = $this->currentRate();
 
-        $productData = $products->map(function ($p) use ($rate, $isAdmin) {
-            $item = [
-                'id'              => $p->id,
-                'product_name'    => $p->product_name,
-                'product_name_vi' => $p->product_name_vi,
-                'selling_price_jpy' => (int) $p->selling_price_jpy,
-                'price_vnd'       => (int) ($p->price_vnd ?? 0),
-                'image_url'       => null,
+        $productData = array_map(function (array $item) use ($isAdmin) {
+            $row = [
+                'id' => $item['id'],
+                'product_name' => $item['product_name'] ?? '',
+                'name_vi' => $item['name_vi'] ?? null,
+                'product_name_jp' => $item['product_name_jp'] ?? null,
+                'price_vnd' => (int) ($item['price_vnd'] ?? 0),
+                'cost_jpy' => isset($item['cost_jpy']) ? (int) $item['cost_jpy'] : null,
+                'image_url' => $item['image_url'] ?? null,
+                'source' => 'catalog',
             ];
-            if ($isAdmin) {
-                $item['cost_price_jpy'] = (int) $p->cost_price_jpy;
-            }
-            return $item;
-        })->all();
+            return $row;
+        }, $catalogItems);
 
-        $context = $products->isEmpty()
-            ? 'Không tìm thấy sản phẩm nào trong catalog nội bộ phù hợp.'
-            : 'Tìm thấy ' . $products->count() . ' sản phẩm trong catalog: ' .
-              $products->pluck('product_name')->join(', ');
+        $rakutenItems = [];
+        $rakutenError = null;
 
-        $suggestions = $products->isEmpty()
-            ? ['Tìm sản phẩm mới trên Rakuten', 'Thử từ khóa khác', 'Xem toàn bộ catalog']
-            : ['Xem chi tiết sản phẩm đầu tiên', 'Tìm thêm sản phẩm tương tự', 'Tạo đơn hàng ngay'];
+        if (count($catalogItems) < 3) {
+            $webMeta = $this->webSearchService->searchWithMeta($searchQuery);
+            $rakutenError = $webMeta['rakuten_error'];
+            $rakutenItems = array_slice($webMeta['items'], 0, 5);
+        }
 
-        return [$context, ['products' => $productData, 'exchange_rate' => $rate], $suggestions];
+        $contextParts = [
+            "Yêu cầu khách: \"{$message}\"",
+            "Từ khóa tìm: \"{$searchQuery}\"",
+            "GPT mở rộng catalog: \"{$meta['expanded_query']}\"",
+            "Từ khóa Rakuten (JP): \"{$rakutenKeyword}\"",
+            'Chế độ tìm catalog: '.($meta['search_mode'] ?? 'keyword'),
+        ];
+
+        if ($orderHistory['summary'] !== '') {
+            $contextParts[] = $orderHistory['summary'];
+        }
+
+        if ($productData !== []) {
+            $names = collect($productData)->map(fn ($p) => $p['name_vi'] ?: $p['product_name'])->join(', ');
+            $contextParts[] = 'Catalog nội bộ ('.count($productData).' SP): '.$names;
+        } else {
+            $contextParts[] = 'Catalog nội bộ: không có kết quả phù hợp.';
+        }
+
+        if ($rakutenItems !== []) {
+            $rakutenNames = collect($rakutenItems)->pluck('product_name_vn')->filter()->take(5)->join(', ');
+            $contextParts[] = 'Gợi ý từ Rakuten ('.count($rakutenItems).' SP): '.$rakutenNames;
+            $contextParts[] = 'Hướng dẫn khách vào màn AI Center → Khám phá web để xem đầy đủ và gửi duyệt.';
+        } elseif ($rakutenError) {
+            $contextParts[] = "Rakuten chưa tra cứu được (mã {$rakutenError}).";
+        }
+
+        $context = implode("\n", $contextParts);
+
+        $suggestions = match (true) {
+            $productData !== [] && $rakutenItems !== [] => [
+                'So sánh giá catalog vs Rakuten',
+                'Tạo đơn từ catalog',
+                'Khám phá thêm trên Rakuten',
+            ],
+            $productData !== [] => [
+                'Xem chi tiết sản phẩm đầu tiên',
+                'Tìm thêm sản phẩm tương tự',
+                'Tạo đơn hàng',
+            ],
+            $rakutenItems !== [] => [
+                'Mở AI Center — Khám phá web',
+                'Thử từ khóa khác',
+                'Liên hệ admin nhập hàng',
+            ],
+            default => [
+                'Thử từ khóa ngắn hơn (vd: mỹ phẩm, vitamin C)',
+                'Mở AI Center — Khám phá web',
+                'Xem toàn bộ sản phẩm',
+            ],
+        };
+
+        return [
+            $context,
+            [
+                'search_query' => $searchQuery,
+                'expanded_query' => $meta['expanded_query'],
+                'rakuten_keyword' => $rakutenKeyword,
+                'products' => $productData,
+                'rakuten_suggestions' => $rakutenItems,
+                'exchange_rate' => $rate,
+            ],
+            $suggestions,
+        ];
     }
 
     /** @return array{0: string, 1: array, 2: string[]} */
@@ -330,6 +476,63 @@ class AiChatService
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $sessionContext
+     * @param  array{top_products: array, top_categories: array, summary: string}  $orderHistory
+     */
+    private function buildMemoryContext(
+        array $sessionContext,
+        array $orderHistory,
+        ?int $branchId,
+    ): string {
+        $parts = array_filter([
+            $this->sessionMemory->buildContextSummary($sessionContext),
+            $orderHistory['summary'] !== '' ? $orderHistory['summary'] : null,
+            $this->teachingCatalog->buildPromptContext($branchId) ?: null,
+        ]);
+
+        return $parts === [] ? '' : "Bộ nhớ nghiệp vụ:\n".implode("\n", $parts);
+    }
+
+    /**
+     * @param  array<string, mixed>  $sessionContext
+     * @param  array{top_products: array, top_categories: array, summary: string}  $orderHistory
+     */
+    private function enrichSearchQuery(
+        string $searchQuery,
+        array $sessionContext,
+        array $orderHistory,
+        ?int $branchId,
+    ): string {
+        if (mb_strlen($searchQuery) >= 4) {
+            return $searchQuery;
+        }
+
+        $interests = (array) ($sessionContext['interests'] ?? []);
+        $fromTeaching = $this->teachingCatalog->suggestSearchFromInterests($interests, $branchId);
+        if ($fromTeaching !== null) {
+            return $fromTeaching;
+        }
+
+        $topProduct = $orderHistory['top_products'][0]['name'] ?? null;
+        if ($topProduct && mb_strlen($searchQuery) < 3) {
+            return (string) $topProduct;
+        }
+
+        $lastQuery = (string) ($sessionContext['last_search_query'] ?? '');
+
+        return $lastQuery !== '' ? $lastQuery : $searchQuery;
+    }
+
+    private function resolveBranchId(Authenticatable $user, string $userType): ?int
+    {
+        if (str_starts_with($userType, 'branch_') && $user instanceof BranchUser) {
+            return (int) $user->branch_id;
+        }
+
+        return null;
+    }
+
     private function buildSystemPrompt(string $userType, string $dataContext): string
     {
         $roleDesc = match (true) {
@@ -340,25 +543,34 @@ class AiChatService
         };
 
         return <<<PROMPT
-Bạn là nhân viên tư vấn của công ty vận chuyển hàng hóa Nhật-Việt.
-Nhiệm vụ: tư vấn sản phẩm chức năng thực phẩm Nhật Bản cho đại lý Việt Nam.
+Bạn là nhân viên tư vấn thu mua hàng Nhật Bản — làm việc như nhân viên thật, không như bot tìm kiếm.
 
 {$roleDesc}
 
-Kiến thức nghiệp vụ:
-- Phí dịch vụ mặc định: 5% (có thể khác theo sản phẩm)
-- Tỷ giá JPY/VND: cập nhật hàng ngày
-- Quy trình: Đại lý tạo đơn → Admin xác nhận → Đóng hàng → Giao hàng (7-14 ngày)
-- Hàng hóa: thực phẩm chức năng, dược phẩm OTC, mỹ phẩm Nhật
+Phong cách nhân viên:
+- Lắng nghe yêu cầu tự nhiên ("tìm mỹ phẩm tốt", "vitamin C Nhật") → hiểu nhu cầu, không yêu cầu từ khóa kỹ thuật
+- Ưu tiên catalog có sẵn (giao nhanh); nếu không có → gợi ý Rakuten + hướng AI Center
+- Trình bày 2–5 lựa chọn, nêu giá ¥ và ước tính ₫, ưu điểm ngắn gọn
+- Hỏi lại 1 câu nếu thiếu thông tin (ngân sách, số lượng, mục đích dùng)
+- Dùng "Bộ nhớ nghiệp vụ" (sở thích phiên + lịch sử đơn) để cá nhân hóa gợi ý
+- Khi khách nói "gợi ý thêm" / "tương tự" → dựa vào SP vừa xem hoặc hay đặt
 
-Dữ liệu ngữ cảnh từ hệ thống:
+Kiến thức nghiệp vụ:
+- Phí dịch vụ mặc định: 5% | Tỷ giá JPY/VND cập nhật hàng ngày
+- Quy trình: Đặt đơn → Admin xác nhận → Giao 7–14 ngày
+- Hàng: TPCN, mỹ phẩm, đồ gia dụng Nhật (DHC, Shiseido, Orihiro, Fancl...)
+
+Ví dụ cách trả lời:
+- Khách: "Tìm mỹ phẩm tốt" → Gợi ý 2–3 dòng mỹ phẩm từ dữ liệu; nếu chỉ có Rakuten → "Em tra trên Rakuten thấy... Anh/chị vào AI Center > Khám phá web để xem ảnh và gửi duyệt nhé."
+- Khách: "Vitamin C Nhật giá rẻ" → So sánh vài SP, nêu giá, khuyên lô ≥10 hộp nếu nhập sỉ
+
+Dữ liệu hệ thống (đã tra cứu giúp bạn — chỉ dùng số liệu này):
 {$dataContext}
 
 Quy tắc:
-- Trả lời bằng cùng ngôn ngữ người dùng dùng (Việt/Nhật/Anh)
-- Không bịa thông tin, không chắc → nói rõ cần kiểm tra lại
-- Format số tiền: ¥3,200 (JPY), 890.000 ₫ (VND)
-- Không tạo đơn hàng thay user — chỉ tư vấn và hướng dẫn vào màn hình tương ứng
+- Cùng ngôn ngữ khách dùng (Việt/Nhật/Anh)
+- Không bịa tên SP hoặc giá — chỉ dùng dữ liệu ngữ cảnh
+- Không tạo đơn thay khách — hướng dẫn vào Đơn hàng / AI Center
 PROMPT;
     }
 }

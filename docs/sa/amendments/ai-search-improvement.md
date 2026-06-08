@@ -1,6 +1,8 @@
 # Amendment — AI Product Search: Cải thiện tìm kiếm tiếng Việt
 
-> **Ngày**: 2026-06-07 | **Liên quan**: `AI_Search_Implementation.md` (Luồng B)  
+> **Ngày**: 2026-06-07 | **Cập nhật quy trình dạy**: 2026-06-08  
+> **Liên quan**: `AI_Search_Implementation.md` (Luồng B)  
+> **Quy trình OPS (đọc trước):** [ai-catalog-teaching-process.md](./ai-catalog-teaching-process.md)  
 > **Vấn đề**: User tìm bằng tiếng Việt nhưng dữ liệu sản phẩm chủ yếu tiếng Nhật/Anh  
 > **Mục tiêu**: Tìm "vitamin c nhật bản" → tìm đúng sản phẩm dù tên SP là "ビタミンC Orihiro"
 

@@ -108,7 +108,7 @@
 | GET | `/ai/search/{id}` | Poll kết quả tìm kiếm |
 | POST/GET | `/ai/candidates` | Gửi / list sản phẩm chờ duyệt |
 | PUT | `/ai/candidates/{id}/approve\|reject` | Duyệt / từ chối → tạo `products` |
-| POST | `/ai/product-search` | Semantic search catalog (📋 chưa code) |
+| POST | `/ai/product-search` | Hybrid search catalog (embedding + keyword, `expanded_query`) ✅ |
 | GET/POST | `/orders` … | CRUD đơn hàng |
 | GET/POST | `/shipment-batches` … | Quản lý chuyến hàng |
 
@@ -123,17 +123,22 @@ Luồng A (đã code) — Khám phá sản phẩm mới từ web
   User nhập từ khóa → POST /ai/search → poll GET /ai/search/{id}
   → Chọn kết quả → POST /ai/candidates → Admin duyệt → products
 
-Luồng B (chưa code) — Tìm trong catalog có sẵn
-  User nhập câu hỏi → POST /ai/product-search
-  → OpenAI embedding + cosine similarity trên products.embedding
-  → Top 10–20 sản phẩm + ảnh
+Luồng B (đã code) — Tìm trong catalog có sẵn + dạy AI tiếng Việt
+  User nhập câu hỏi (VN/JP) → POST /ai/product-search
+  → QueryExpansionService (few-shot GPT) → expanded_query
+  → Hybrid: embedding cosine + keyword (name_vi, product_name_jp)
+  → Top 10–15 sản phẩm + ảnh + search_mode
+  OPS: products:generate-vi → products:embed --force (xem quy trình dạy)
 ```
 
 | Tài liệu | Nội dung |
 |----------|----------|
 | `04_API_Contract.md` Module 3 | Contract cả hai luồng |
 | `amendments/ai_search-tables.md` | Schema `ai_*` (luồng A) |
-| `AI_Search_Implementation.md` | Hướng dẫn code luồng B |
+| `amendments/ai-catalog-teaching-process.md` | ★ Quy trình dạy AI catalog (OPS) |
+| `amendments/ai-search-improvement.md` | Phase 1–4 kỹ thuật |
+| `AI_Search_Implementation.md` | Hướng dẫn code embedding |
+| `AI_Setup_Guide.md` | Cấu hình env + checklist |
 
 ---
 
@@ -162,7 +167,8 @@ Luồng B (chưa code) — Tìm trong catalog có sẵn
 | 17 | `shipment_batches` | Chuyến hàng JP→VN ✅ |
 | 18 | `batch_order_items` | Đơn trong chuyến ✅ |
 | 19 | `stock_movements` | Lịch sử nhập/xuất/kiểm kê kho 📋 |
-| — | `products.embedding` | Vector semantic search (luồng B) 📋 |
+| — | `products.embedding` | Vector semantic search (luồng B) ✅ |
+| — | `products.name_vi`, `description_vi` | Dạy catalog tiếng Việt ✅ |
 
 > Amendments: `product_images`, `ai_*`, `shipment_*`, `orders.status`, `stock_movements` — chờ sync `03_Thiết_kế_CSDL.xlsx`
 

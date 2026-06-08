@@ -13,6 +13,7 @@ class AiSearchSession extends Model
 
     protected $fillable = [
         'keyword',
+        'keyword_jp',
         'status',
         'user_type',
         'user_id',

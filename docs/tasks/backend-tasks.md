@@ -100,6 +100,31 @@
 
 ---
 
+## SPRINT AI-P — AI Purchasing Specialist
+
+> Spec đầy đủ: `docs/sa/amendments/ai-purchasing-specialist.md`  
+> Phụ thuộc: OpenAI API key + Rakuten App ID đã set
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| BE-AI-001 | Migration: `purchasing_sessions` + `purchasing_results` | P0 | — | 2h | 📋 |
+| BE-AI-002 | `PurchasingSpecialistService::parseRequest()` — GPT parse VI/JP → JSON structured | P0 | BE-AI-001 | 3h | 📋 |
+| BE-AI-003 | `PurchasingSpecialistService::searchProducts()` — gọi Rakuten + internal catalog song song | P0 | BE-AI-002 | 4h | 📋 |
+| BE-AI-004 | `ProductScoringService::scoreAll()` — GPT chấm điểm 5 tiêu chí + tính weighted score | P0 | BE-AI-003 | 3h | 📋 |
+| BE-AI-005 | `PurchasingSpecialistService::generateReport()` — GPT sinh báo cáo tiếng Việt | P0 | BE-AI-004 | 2h | 📋 |
+| BE-AI-006 | `PurchasingController` — `POST /ai/purchasing`, `GET /ai/purchasing/{id}`, `GET /ai/purchasing/history` | P0 | BE-AI-005 | 2h | 📋 |
+| BE-AI-007 | Rate limiting: max 10 request/user/giờ (throttle middleware) | P1 | BE-AI-006 | 1h | 📋 |
+| BE-AI-008 | Cache: translation 24h, Rakuten results 1h (Redis hoặc DB cache) | P1 | BE-AI-003 | 2h | 📋 |
+
+**Thứ tự implement**: BE-AI-001 → BE-AI-002 → BE-AI-003 → BE-AI-004 → BE-AI-005 → BE-AI-006
+
+**System Prompts** (xem đầy đủ trong spec):
+- Parse prompt: dịch yêu cầu VI/JP → JSON keywords
+- Score prompt: chấm điểm 5 tiêu chí (Price 30%, Quality 30%, Review 20%, Warranty 10%, Brand 10%)
+- Report prompt: sinh báo cáo tiếng Việt + đề xuất tối ưu
+
+---
+
 ## Coding Standards
 
 - PSR-12 · Repository + Service · Form Request · API Resource

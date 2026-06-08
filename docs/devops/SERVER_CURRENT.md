@@ -227,9 +227,9 @@ php artisan migrate:status
 # 2. User chi nhánh demo (hn_manager, hn_staff)
 php artisan db:seed --class=BranchSeeder
 
-# 3. AI tiếng Việt + embedding catalog
-php artisan products:generate-vi
-php artisan products:embed --force
+# 3. Dạy AI catalog (Luồng B) — xem docs/sa/amendments/ai-catalog-teaching-process.md
+php artisan products:generate-vi    # Bước 1: name_vi + description_vi
+php artisan products:embed --force  # Bước 2: vector embedding
 
 # 4. (Tùy chọn) Reset DB sạch — XÓA HẾT DỮ LIỆU
 # php artisan migrate:fresh --force
@@ -272,7 +272,7 @@ start https://japan-product.vercel.app/login
 | 5 | `/orders` | vn_company01 |
 | 6 | `/dashboard` | admin |
 | 7 | `/invoices` | admin |
-| 8 | `/ai-center` | admin — tab Khám phá web |
+| 8 | `/ai-center` | admin — tab Khám phá web + **Tìm catalog** (gợi ý bổ gan / vitamin C) |
 | 9 | `/my-branch` | hn_manager |
 
 ---

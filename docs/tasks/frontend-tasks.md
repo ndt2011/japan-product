@@ -103,6 +103,44 @@
 
 ---
 
+## SPRINT AI-P — AI Purchasing Specialist (Frontend)
+
+> Spec đầy đủ: `docs/sa/amendments/ai-purchasing-specialist.md`
+
+| ID | Mô tả | P | Dep | Est | Trạng thái |
+|----|-------|---|-----|-----|------------|
+| FE-AI-001 | Proxy route `POST /api/proxy/ai/purchasing` + `GET /api/proxy/ai/purchasing/[id]` | P0 | BE-AI-006 | 1h | 📋 |
+| FE-AI-002 | `PurchasingScreen.tsx` — form nhập yêu cầu tự do (VI/JP), loading state, polling kết quả | P0 | FE-AI-001 | 4h | 📋 |
+| FE-AI-003 | `ProductCompareCard.tsx` — card sản phẩm: ảnh + tên VI + tên JP + giá JPY/VND + badge khuyến nghị | P0 | FE-AI-002 | 3h | 📋 |
+| FE-AI-004 | `ScoreBar.tsx` — thanh điểm 5 tiêu chí với màu gradient (xanh-vàng-đỏ theo điểm) | P1 | FE-AI-003 | 1h | 📋 |
+| FE-AI-005 | `ProfitCalculator.tsx` — nhập giá bán đề xuất → tính biên lợi nhuận realtime | P1 | FE-AI-003 | 2h | 📋 |
+| FE-AI-006 | Thêm "Tư vấn thu mua" vào sidebar navigation (chỉ admin + company) | P0 | FE-AI-002 | 0.5h | 📋 |
+| FE-AI-007 | Màn hình lịch sử tìm kiếm `/purchasing/history` | P2 | FE-AI-002 | 2h | 📋 |
+
+**Màn hình chính** (`/purchasing`):
+```
+┌─ Tư vấn thu mua ────────────────────────────────────────────┐
+│ Nhập yêu cầu (tiếng Việt hoặc tiếng Nhật):                  │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ Vd: "Tìm vitamin C Nhật, ngân sách 500k/hộp, mua 20 hộp"│ │
+│ └──────────────────────────────────────────────────────────┘ │
+│ [🔍 Tìm kiếm & So sánh]                                     │
+├──────────────────────────────────────────────────────────────┤
+│ KẾT QUẢ SO SÁNH                                              │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───┐  │
+│ │ #1 ⭐⭐⭐ │ │   #2 ⭐⭐ │ │   #3 ⭐⭐ │ │    #4 ⭐  │ │#5 │  │
+│ │ Orihiro  │ │   DHC    │ │  Fancl   │ │ Now Foods│ │...│  │
+│ │ ¥1,980   │ │ ¥2,200   │ │ ¥2,500   │ │ ¥3,200   │ │   │  │
+│ │ Score:   │ │ Score:   │ │ Score:   │ │ Score:   │ │   │  │
+│ │  8.45    │ │  8.10    │ │  7.80    │ │  6.50    │ │   │  │
+│ │[Xem link]│ │[Xem link]│ │[Xem link]│ │[Xem link]│ │   │  │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘ └───┘  │
+│ 💡 ĐỀ XUẤT: Orihiro — Lợi nhuận ước tính 15.9%             │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Backlog P1
 
 | ID | Mô tả | Trạng thái |

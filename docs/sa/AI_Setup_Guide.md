@@ -81,22 +81,31 @@ POST /ai/search → session processing → job (afterResponse)
 
 ---
 
-## 5. Luồng B — Catalog embedding + tìm tiếng Việt
+## 5. Luồng B — Catalog + quy trình dạy AI tiếng Việt
+
+> **Quy trình đầy đủ (OPS / Admin):** [amendments/ai-catalog-teaching-process.md](./amendments/ai-catalog-teaching-process.md)
+
+### Tóm tắt 3 bước dạy
+
+| Bước | Lệnh / hành động | Dạy gì |
+|------|------------------|--------|
+| **1. Catalog** | `php artisan products:generate-vi` | GPT sinh `name_vi` + `description_vi` (few-shot dịch SP) |
+| **2. Vector** | `php artisan products:embed --force` | Embed JP + EN + VN vào `products.embedding` |
+| **3. Query** | (tự động khi search) | `QueryExpansionService` few-shot mở rộng query VN → Nhật/Anh |
 
 ```bash
 cd project/api
 php artisan migrate
 
-# Phase 1: sinh tên/mô tả VN cho SP (amendment ai-search-improvement)
 php artisan products:generate-vi
-
-# Embed lại sau khi có name_vi
 php artisan products:embed --force
 ```
 
-Luồng B tự **mở rộng query** (QueryExpansionService) trước khi embed/search — response có `expanded_query`.
+Mỗi lần user search: query → **mở rộng** → hybrid search → response có `expanded_query`, `search_mode` (`hybrid` | `keyword`).
 
-Test: tab **Tìm catalog nội bộ** hoặc `POST /api/ai/product-search`.
+**UI:** `/ai-center` → tab **Tìm catalog** — gợi ý *bổ gan*, *vitamin c nhật bản*, *collagen*.
+
+Test API: `POST /api/ai/product-search` body `{"query":"bổ gan","limit":10}`.
 
 ---
 

@@ -30,11 +30,13 @@ class AiProductSearchJob implements ShouldQueue
 
         try {
             $meta = $searchService->searchWithMeta($session->keyword);
-            $results = $meta['items'];
+            $results      = $meta['items'];
             $rakutenError = $meta['rakuten_error'];
+            $keywordJp    = $meta['keyword_used'] ?? null;
 
             $sessionRepository->update($session, [
-                'status' => 'completed',
+                'status'       => 'completed',
+                'keyword_jp'   => $keywordJp,   // lưu keyword JP đã dùng để debug
                 'results_json' => $results,
                 'error_message' => $rakutenError,
                 'completed_at' => now(),
