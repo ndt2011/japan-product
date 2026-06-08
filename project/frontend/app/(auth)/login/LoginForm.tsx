@@ -1,5 +1,6 @@
 "use client";
 
+import { AppLogo } from "@/components/AppLogo";
 import { Button, Input } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -54,9 +55,7 @@ export function LoginForm() {
     <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand to-purple-accent p-12 flex-col justify-between text-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-lg backdrop-blur">
-            🇯🇵
-          </div>
+          <AppLogo size="md" />
           <div>
             <p className="text-lg font-semibold">SupplyFlow</p>
             <p className="text-sm text-white/70">Nhật-Việt ERP</p>
@@ -78,7 +77,7 @@ export function LoginForm() {
       <div className="flex-1 flex items-center justify-center bg-surface px-6 py-12">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white">🇯🇵</div>
+            <AppLogo size="md" />
             <div>
               <p className="font-semibold text-text-primary">SupplyFlow</p>
               <p className="text-xs text-text-muted">Nhật-Việt ERP</p>

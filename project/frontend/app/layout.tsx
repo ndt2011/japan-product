@@ -10,6 +10,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SupplyFlow — Nhật-Việt ERP",
   description: "Hệ thống quản lý hàng hóa B2B Nhật-Việt",
+  icons: {
+    icon: "/logo-tt.svg",
+  },
 };
 
 export default function RootLayout({

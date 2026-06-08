@@ -34,12 +34,20 @@ class AiChatController extends Controller
 
         $auth = AuthContext::from($request);
 
-        $result = $this->chatService->chat(
-            user:           $auth['user'],
-            userType:       $auth['type'],
-            message:        $validated['message'],
-            conversationId: $validated['conversation_id'] ?? null,
-        );
+        try {
+            $result = $this->chatService->chat(
+                user:           $auth['user'],
+                userType:       $auth['type'],
+                message:        $validated['message'],
+                conversationId: $validated['conversation_id'] ?? null,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return ApiResponse::error('M0001', [
+                'ai_chat' => [$e->getMessage()],
+            ], 500);
+        }
 
         return ApiResponse::success($result, 'M0200');
     }

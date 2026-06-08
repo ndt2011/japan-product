@@ -155,7 +155,11 @@ export function AiStaffChatWidget() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.message ?? "M0001");
+        const detail =
+          (data.errors as { ai_chat?: string[] } | null)?.ai_chat?.[0] ??
+          data.message ??
+          "M0001";
+        throw new Error(detail);
       }
 
       const result = data.data as SendResult;
@@ -174,13 +178,22 @@ export function AiStaffChatWidget() {
 
       // Nếu panel đang đóng → tăng unread badge
       if (!open) setUnread((n) => n + 1);
-    } catch {
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "M0001";
+      const content =
+        code === "API_OFFLINE"
+          ? "Không kết nối được máy chủ API. Vui lòng kiểm tra mạng hoặc thử lại sau."
+          : code === "M0101"
+            ? "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại."
+            : code.includes("ai_conversations") || code.includes("doesn't exist")
+              ? "Hệ thống AI chưa sẵn sàng (thiếu migration DB). Liên hệ quản trị viên chạy migrate trên server."
+              : "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.";
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 2).toString(),
           role: "assistant",
-          content: "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.",
+          content,
           timestamp: ts(),
         },
       ]);

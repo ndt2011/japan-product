@@ -1,5 +1,6 @@
 "use client";
 
+import { AppLogo } from "@/components/AppLogo";
 import { AiStaffChatWidget } from "@/components/layout/AiStaffChatWidget";
 import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 import { getNavForUser, type NavItem } from "@/lib/navigation";
@@ -47,9 +48,7 @@ export function AppShell({ children }: AppShellProps) {
         )}
       >
         <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-          <div className="w-8 h-8 bg-brand rounded-xl flex items-center justify-center text-white text-sm shrink-0">
-            🇯🇵
-          </div>
+          <AppLogo size="sm" />
           {!collapsed && (
             <div>
               <p className="text-sm text-text-primary leading-tight font-medium">SupplyFlow</p>

@@ -9,10 +9,9 @@ use App\Models\ExchangeRate;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
-use App\Support\AuthContext;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\DB;
-use OpenAI\Laravel\Facades\OpenAI;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * AI Chat nhân viên service
@@ -83,16 +82,8 @@ class AiChatService
             [['role' => 'user', 'content' => $message]],
         );
 
-        // 6. Gọi GPT-4o
-        $response   = OpenAI::chat()->create([
-            'model'       => 'gpt-4o',
-            'messages'    => $gptMessages,
-            'max_tokens'  => 800,
-            'temperature' => 0.4,
-        ]);
-
-        $reply      = $response->choices[0]->message->content ?? 'Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này.';
-        $tokensUsed = $response->usage?->totalTokens;
+        // 6. Gọi OpenAI (HTTP — cùng pattern với AiProductEnrichmentService)
+        [$reply, $tokensUsed] = $this->callOpenAi($gptMessages);
 
         // 7. Lưu reply của AI
         $aiMsg = AiMessage::create([
@@ -155,7 +146,7 @@ class AiChatService
                   ->orWhere('product_name_vi', 'LIKE', "%{$query}%")
                   ->orWhere('product_cd', 'LIKE', "%{$query}%");
             })
-            ->select(['id', 'product_name', 'product_name_vi', 'selling_price_jpy', 'cost_price_jpy', 'price_vnd', 'fee_rate', 'primary_image_url'])
+            ->select(['id', 'product_name', 'product_name_vi', 'selling_price_jpy', 'cost_price_jpy', 'price_vnd', 'fee_rate'])
             ->limit(5)
             ->get();
 
@@ -168,7 +159,7 @@ class AiChatService
                 'product_name_vi' => $p->product_name_vi,
                 'selling_price_jpy' => (int) $p->selling_price_jpy,
                 'price_vnd'       => (int) ($p->price_vnd ?? 0),
-                'image_url'       => $p->primary_image_url,
+                'image_url'       => null,
             ];
             if ($isAdmin) {
                 $item['cost_price_jpy'] = (int) $p->cost_price_jpy;
@@ -283,6 +274,60 @@ class AiChatService
             ->value('rate');
 
         return (float) ($rate ?? 170.5);
+    }
+
+    /**
+     * @param  array<int, array{role: string, content: string}>  $messages
+     * @return array{0: string, 1: int|null}
+     */
+    private function callOpenAi(array $messages): array
+    {
+        $apiKey = config('services.openai.api_key');
+        if (! $apiKey) {
+            return [
+                'AI nhân viên chưa được cấu hình (thiếu OPENAI_API_KEY). Vui lòng liên hệ quản trị viên.',
+                null,
+            ];
+        }
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->timeout(60)
+                ->post('https://api.openai.com/v1/chat/completions', [
+                    'model'       => config('services.openai.model', 'gpt-4o-mini'),
+                    'messages'    => $messages,
+                    'max_tokens'  => 800,
+                    'temperature' => 0.4,
+                ]);
+
+            if (! $response->successful()) {
+                Log::warning('AI chat OpenAI failed', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+
+                return [
+                    'Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này. Vui lòng thử lại sau.',
+                    null,
+                ];
+            }
+
+            $body = $response->json();
+            $reply = $body['choices'][0]['message']['content']
+                ?? 'Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này.';
+            $tokensUsed = isset($body['usage']['total_tokens'])
+                ? (int) $body['usage']['total_tokens']
+                : null;
+
+            return [$reply, $tokensUsed];
+        } catch (\Throwable $e) {
+            Log::warning('AI chat OpenAI exception', ['error' => $e->getMessage()]);
+
+            return [
+                'Xin lỗi, tôi đang gặp sự cố kết nối AI. Vui lòng thử lại sau.',
+                null,
+            ];
+        }
     }
 
     private function buildSystemPrompt(string $userType, string $dataContext): string
