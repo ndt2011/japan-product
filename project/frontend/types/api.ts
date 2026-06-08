@@ -404,10 +404,16 @@ export interface ProductListData {
 export interface InvoiceLineItem {
   id: number;
   order_detail_id?: number | null;
-  product_name: string;
+  product_name_jp?: string | null;
+  product_name_vi?: string | null;
+  product_sku?: string | null;
+  /** @deprecated use product_name_vi || product_name_jp */
+  product_name?: string | null;
   quantity: number;
   unit_price_vnd: string;
-  amount: string;
+  line_total_vnd?: string;
+  /** @deprecated use line_total_vnd */
+  amount?: string;
 }
 
 export interface InvoiceItem {

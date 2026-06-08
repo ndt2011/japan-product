@@ -12,11 +12,14 @@ class InvoiceItemResource extends JsonResource
     {
         $isAdmin = $request->user() instanceof Admin;
 
+        $displayName = $this->product_name_vi ?: $this->product_name_jp;
+
         return [
             'id'                => $this->id,
             'order_detail_id'   => $this->order_detail_id,
             'product_name_jp'   => $this->product_name_jp,
             'product_name_vi'   => $this->product_name_vi,
+            'product_name'      => $displayName,
             'product_sku'       => $this->product_sku,
             'quantity'          => (int) $this->quantity,
             // Giá gốc — chỉ Admin thấy
@@ -26,6 +29,7 @@ class InvoiceItemResource extends JsonResource
             'unit_price_vnd'    => (string) $this->unit_price_vnd,
             'fee_amount_vnd'    => (string) $this->fee_amount_vnd,
             'line_total_vnd'    => (string) $this->line_total_vnd,
+            'amount'            => (string) $this->line_total_vnd,
         ];
     }
 }

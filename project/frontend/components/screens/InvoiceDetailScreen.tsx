@@ -4,7 +4,7 @@ import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/com
 import { useIsAdmin } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
 import { toast } from "@/lib/toast";
-import type { InvoiceItem } from "@/types/api";
+import type { InvoiceItem, InvoiceLineItem } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -16,8 +16,17 @@ const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "
   cancelled: { label: "Hủy", variant: "gray" },
 };
 
-function formatVnd(value: string | number) {
-  return `${Number(value).toLocaleString("vi-VN")} ₫`;
+function formatVnd(value: string | number | null | undefined) {
+  const n = Number(value ?? 0);
+  return `${(Number.isFinite(n) ? n : 0).toLocaleString("vi-VN")} ₫`;
+}
+
+function lineProductName(line: InvoiceLineItem) {
+  return line.product_name_vi || line.product_name_jp || line.product_name || "—";
+}
+
+function lineAmount(line: InvoiceLineItem) {
+  return line.line_total_vnd ?? line.amount ?? "0";
 }
 
 export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
@@ -169,10 +178,10 @@ export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
           <tbody>
             {(invoice.items ?? []).map((line) => (
               <Tr key={line.id}>
-                <Td>{line.product_name}</Td>
+                <Td>{lineProductName(line)}</Td>
                 <Td className="text-right">{line.quantity}</Td>
                 <Td className="text-right">{formatVnd(line.unit_price_vnd)}</Td>
-                <Td className="text-right">{formatVnd(line.amount)}</Td>
+                <Td className="text-right">{formatVnd(lineAmount(line))}</Td>
               </Tr>
             ))}
           </tbody>

@@ -162,7 +162,7 @@ class InvoiceService
                 $itemsData[] = [
                     'order_detail_id'   => $detail->id,
                     'product_name_jp'   => $product?->product_name ?? "SP #{$detail->product_id}",
-                    'product_name_vi'   => $product?->product_name_vi ?? null,
+                    'product_name_vi'   => $product?->name_vi ?? null,
                     'product_sku'       => $product?->product_cd ?? null,
                     'quantity'          => $qty,
                     'cost_price_jpy'    => $costPriceJpy ?: null,
