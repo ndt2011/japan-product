@@ -1,18 +1,17 @@
 "use client";
 
-import { Button, Card } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
+import { AI_CATALOG_SEARCH_PROMPTS } from "@/lib/ai-catalog-prompts";
 import { translateMessage } from "@/lib/messages";
 import type { AiCatalogSearchItem } from "@/types/api";
 import Link from "next/link";
 import { useState } from "react";
 
-const catalogPrompts = [
-  "collagen",
-  "vitamin",
-  "コラーゲン",
-  "DHC",
-  "thực phẩm chức năng",
-];
+const searchModeLabel: Record<string, string> = {
+  hybrid: "Hybrid (semantic + keyword)",
+  keyword: "Từ khóa",
+  semantic: "Semantic",
+};
 
 export function AICatalogSearchPanel() {
   const [query, setQuery] = useState("");
@@ -21,6 +20,7 @@ export function AICatalogSearchPanel() {
   const [error, setError] = useState("");
   const [lastQuery, setLastQuery] = useState("");
   const [expandedQuery, setExpandedQuery] = useState("");
+  const [searchMode, setSearchMode] = useState("");
 
   async function search(text?: string) {
     const q = (text ?? query).trim();
@@ -30,6 +30,7 @@ export function AICatalogSearchPanel() {
     setLoading(true);
     setError("");
     setLastQuery(q);
+    setSearchMode("");
 
     try {
       const res = await fetch("/api/proxy/ai/product-search", {
@@ -47,6 +48,7 @@ export function AICatalogSearchPanel() {
 
       const items = (data.data?.items ?? []) as AiCatalogSearchItem[];
       setExpandedQuery((data.data?.expanded_query as string) ?? "");
+      setSearchMode((data.data?.search_mode as string) ?? "");
       setResults(items);
 
       if (data.message === "M0201" || items.length === 0) {
@@ -62,27 +64,41 @@ export function AICatalogSearchPanel() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
-      <aside className="w-64 shrink-0">
-        <Card className="p-4 h-full flex flex-col">
-          <p className="text-xs text-text-placeholder mb-2">Gợi ý tìm catalog:</p>
+      <aside className="w-72 shrink-0">
+        <Card className="p-4 h-full flex flex-col gap-3">
+          <div>
+            <p className="text-sm font-medium text-text-primary">Gợi ý tìm kiếm</p>
+            <p className="text-xs text-text-muted mt-1 leading-relaxed">
+              Hệ thống dạy AI bằng ví dụ: query tiếng Việt được GPT mở rộng sang Nhật/Anh trước khi tìm trong catalog.
+            </p>
+          </div>
+
           <div className="space-y-2 flex-1 overflow-y-auto">
-            {catalogPrompts.map((prompt) => (
+            {AI_CATALOG_SEARCH_PROMPTS.map((prompt) => (
               <button
-                key={prompt}
+                key={prompt.query}
                 type="button"
                 onClick={() => {
-                  setQuery(prompt);
-                  search(prompt);
+                  setQuery(prompt.query);
+                  search(prompt.query);
                 }}
-                className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-text-body hover:bg-brand-light hover:text-brand border border-border transition-all"
+                className="w-full text-left px-3 py-2.5 rounded-xl text-xs border border-border hover:border-brand/50 hover:bg-brand-light/40 transition-all"
               >
-                {prompt}
+                <p className="font-medium text-text-primary">{prompt.label}</p>
+                <p className="text-text-muted mt-0.5 truncate">&quot;{prompt.query}&quot;</p>
+                {prompt.hint && (
+                  <p className="text-text-placeholder mt-1 text-[11px]">{prompt.hint}</p>
+                )}
               </button>
             ))}
           </div>
-          <p className="text-xs text-text-muted mt-3 leading-relaxed">
-            Tìm trong sản phẩm đã có trên hệ thống. Có OpenAI key → semantic search; không có → tìm theo từ khóa.
-          </p>
+
+          <div className="rounded-xl bg-surface-subtle p-3 text-[11px] text-text-muted leading-relaxed space-y-1">
+            <p className="font-medium text-text-body">Cách hoạt động</p>
+            <p>1. GPT mở rộng từ khóa (few-shot)</p>
+            <p>2. Tìm semantic + keyword (hybrid)</p>
+            <p>3. Ưu tiên sản phẩm có <code className="text-[10px]">name_vi</code></p>
+          </div>
         </Card>
       </aside>
 
@@ -92,7 +108,7 @@ export function AICatalogSearchPanel() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && search()}
-            placeholder="VD: thuốc bổ gan, collagen, ビタミン..."
+            placeholder="VD: thuốc bổ gan, vitamin c nhật bản, ビタミン..."
             className="flex-1 px-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
           <Button onClick={() => search()} disabled={!query.trim() || loading}>
@@ -104,13 +120,23 @@ export function AICatalogSearchPanel() {
           <Card className="p-3 mb-3 text-sm text-danger border-danger/30 bg-red-50">{error}</Card>
         )}
 
-        {lastQuery && !loading && results.length > 0 && (
+        {lastQuery && !loading && (
           <div className="text-xs text-text-muted mb-2 px-1 space-y-1">
-            <p>
-              {results.length} kết quả cho &quot;{lastQuery}&quot;
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span>
+                {results.length} kết quả cho &quot;{lastQuery}&quot;
+              </span>
+              {searchMode && (
+                <Badge variant={searchMode === "hybrid" ? "primary" : "gray"}>
+                  {searchModeLabel[searchMode] ?? searchMode}
+                </Badge>
+              )}
+            </div>
             {expandedQuery && expandedQuery !== lastQuery && (
-              <p className="line-clamp-2">GPT mở rộng: {expandedQuery}</p>
+              <p className="line-clamp-3 rounded-lg bg-surface-subtle px-2 py-1.5">
+                <span className="font-medium text-text-body">GPT mở rộng: </span>
+                {expandedQuery}
+              </p>
             )}
           </div>
         )}
@@ -120,7 +146,7 @@ export function AICatalogSearchPanel() {
             <p className="text-sm text-text-muted text-center py-12">Đang tìm trong catalog...</p>
           ) : results.length === 0 ? (
             <p className="text-sm text-text-muted text-center py-12">
-              Nhập từ khóa để tìm sản phẩm trong hệ thống.
+              Chọn gợi ý bên trái hoặc nhập từ khóa tiếng Việt / Nhật.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -147,6 +173,9 @@ export function AICatalogSearchPanel() {
                     </p>
                     {item.product_name_jp && (
                       <p className="text-xs text-text-muted truncate">{item.product_name_jp}</p>
+                    )}
+                    {item.description_vi && (
+                      <p className="text-xs text-text-muted mt-1 line-clamp-2">{item.description_vi}</p>
                     )}
                     <p className="text-xs font-mono text-text-placeholder mt-0.5">{item.product_cd}</p>
                     <div className="flex flex-wrap gap-2 mt-1 text-xs">

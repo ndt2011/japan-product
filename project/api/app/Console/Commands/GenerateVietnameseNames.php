@@ -92,8 +92,12 @@ class GenerateVietnameseNames extends Command
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'Dịch sản phẩm Nhật sang tiếng Việt cho tìm kiếm. JSON: {"name_vi":"...","description_vi":"..."}. '
-                            .'name_vi ngắn gọn (max 100 ký tự), description_vi mô tả công dụng (max 300 ký tự).',
+                        'content' => 'Bạn là chuyên gia dịch sản phẩm Nhật Bản sang tiếng Việt cho tìm kiếm AI. '
+                            .'JSON: {"name_vi":"...","description_vi":"..."}. '
+                            .'name_vi ngắn gọn (max 100 ký tự), dùng từ người Việt hay tìm. '
+                            .'description_vi mô tả công dụng (max 300 ký tự). '
+                            .'Ví dụ: 肝臓サポート → name_vi "Viên uống bổ gan", description_vi "Hỗ trợ chức năng gan, giải độc". '
+                            .'Ví dụ: ビタミンC → name_vi "Vitamin C Nhật Bản", description_vi "Bổ sung vitamin C, tăng sức đề kháng".',
                     ],
                     ['role' => 'user', 'content' => "Dịch:\n{$info}"],
                 ],

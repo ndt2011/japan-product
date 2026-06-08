@@ -595,6 +595,8 @@ Phase 1:
 [x] Cập nhật ProductResource: trả name_vi trong response
 [x] Thêm field "Tên VN (AI search)" vào form tạo/sửa SP (FE)
 [x] Artisan: `products:generate-vi` (tự động dịch bằng GPT)
+[x] QueryExpansionService few-shot teaching prompt (docs/sa/code + BE)
+[x] FE gợi ý tìm catalog + hiển thị expanded_query / search_mode
 [ ] Chạy trên staging: `products:generate-vi` → `products:embed --force`
 [x] Test: tìm "bổ gan" → match name_vi
 

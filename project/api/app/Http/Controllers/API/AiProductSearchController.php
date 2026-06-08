@@ -21,20 +21,18 @@ class AiProductSearchController extends Controller
         $meta = $this->embeddingService->searchWithMeta($query, $limit);
         $items = $meta['items'];
 
-        if ($items === []) {
-            return ApiResponse::success([
-                'query' => $query,
-                'expanded_query' => $meta['expanded_query'],
-                'count' => 0,
-                'items' => [],
-            ], 'M0201');
-        }
-
-        return ApiResponse::success([
+        $payload = [
             'query' => $query,
             'expanded_query' => $meta['expanded_query'],
+            'search_mode' => $meta['search_mode'] ?? 'keyword',
             'count' => count($items),
             'items' => $items,
-        ]);
+        ];
+
+        if ($items === []) {
+            return ApiResponse::success($payload, 'M0201');
+        }
+
+        return ApiResponse::success($payload);
     }
 }
