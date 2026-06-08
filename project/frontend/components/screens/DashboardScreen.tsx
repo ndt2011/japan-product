@@ -3,7 +3,6 @@
 import { Badge, Card, EmptyState, PageHeader, StatCard } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
 import { getOrderStatus, ORDER_STATUS_ORDER } from "@/lib/status";
-import type { OrderItem } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -52,7 +51,6 @@ export function DashboardScreen() {
   const isAdmin = useIsAdmin();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
-  const [recentOrders, setRecentOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,14 +59,12 @@ export function DashboardScreen() {
     async function load() {
       setLoading(true);
       try {
-        const [statsRes, chartRes, ordersRes] = await Promise.all([
+        const [statsRes, chartRes] = await Promise.all([
           fetch("/api/proxy/dashboard/stats"),
           fetch("/api/proxy/dashboard/charts/orders?period=30"),
-          fetch("/api/proxy/orders?per_page=5"),
         ]);
         const statsData = await statsRes.json();
         const chartData = await chartRes.json();
-        const ordersData = await ordersRes.json();
 
         if (!cancelled) {
           if (statsData.success && statsData.data) {
@@ -76,9 +72,6 @@ export function DashboardScreen() {
           }
           if (chartData.success && chartData.data?.points) {
             setChartPoints(chartData.data.points);
-          }
-          if (ordersData.success && ordersData.data?.items) {
-            setRecentOrders(ordersData.data.items);
           }
         }
       } finally {
@@ -315,82 +308,34 @@ export function DashboardScreen() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-text-primary">Top sản phẩm đặt hàng</h3>
-            <Link href="/products" className="text-xs text-brand hover:underline">
-              Xem hàng hóa
-            </Link>
-          </div>
-          {loading ? (
-            <p className="text-sm text-text-muted">Đang tải...</p>
-          ) : !stats?.top_products?.length ? (
-            <EmptyState message="Chưa có dữ liệu bán hàng." />
-          ) : (
-            <div className="space-y-3">
-              {stats.top_products.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-lg bg-brand-light text-brand text-xs flex items-center justify-center shrink-0 font-semibold">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-primary truncate">{p.name}</p>
-                    <p className="text-xs text-text-muted">{p.order_count} đơn</p>
-                  </div>
-                  <p className="text-sm text-text-primary shrink-0">{fmtVnd(p.revenue_vnd)}</p>
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-text-primary">Top sản phẩm đặt hàng</h3>
+          <Link href="/products" className="text-xs text-brand hover:underline">
+            Xem hàng hóa
+          </Link>
+        </div>
+        {loading ? (
+          <p className="text-sm text-text-muted">Đang tải...</p>
+        ) : !stats?.top_products?.length ? (
+          <EmptyState message="Chưa có dữ liệu bán hàng." />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {stats.top_products.map((p, i) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                <span className="w-6 h-6 rounded-lg bg-brand-light text-brand text-xs flex items-center justify-center shrink-0 font-semibold">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-text-primary truncate">{p.name}</p>
+                  <p className="text-xs text-text-muted">{p.order_count} đơn</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-text-primary">Đơn hàng gần đây</h3>
-            <Link href="/orders" className="text-xs text-brand hover:underline">
-              Xem tất cả
-            </Link>
+                <p className="text-sm text-text-primary shrink-0">{fmtVnd(p.revenue_vnd)}</p>
+              </div>
+            ))}
           </div>
-          {loading ? (
-            <EmptyState message="Đang tải..." icon="⏳" />
-          ) : recentOrders.length === 0 ? (
-            <EmptyState message="Chưa có đơn hàng." />
-          ) : (
-            <div className="space-y-3">
-              {recentOrders.map((order) => {
-                const status = getOrderStatus(order.status);
-                return (
-                  <Link
-                    key={order.id}
-                    href={`/orders/${order.id}`}
-                    className="flex items-center gap-3 rounded-xl p-2 -mx-2 hover:bg-surface-subtle transition-colors"
-                  >
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
-                      style={{ backgroundColor: `${status.color}18`, color: status.color }}
-                    >
-                      🛒
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-primary">{order.order_no}</p>
-                      <p className="text-xs text-text-muted truncate">
-                        {order.company_name ?? order.branch_name ?? "—"}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0 space-y-1">
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                      <p className="text-xs text-text-muted">
-                        {order.total_vnd ? fmtVnd(Number(order.total_vnd)) : "—"}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-      </div>
+        )}
+      </Card>
     </div>
   );
 }

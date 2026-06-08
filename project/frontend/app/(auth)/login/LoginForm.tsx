@@ -3,9 +3,10 @@
 import { AppLogo } from "@/components/AppLogo";
 import { Button, Input } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
+import { loadSavedLogin, persistSavedLogin } from "@/lib/saved-login";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -18,6 +19,12 @@ export function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const saved = loadSavedLogin();
+    if (saved.loginId) setLoginId(saved.loginId);
+    if (saved.rememberMe) setRememberMe(true);
+  }, []);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -42,6 +49,7 @@ export function LoginForm() {
       if (data.data?.user) {
         setUser(data.data.user);
       }
+      persistSavedLogin(loginId, rememberMe);
       router.push("/dashboard");
       router.refresh();
     } catch {

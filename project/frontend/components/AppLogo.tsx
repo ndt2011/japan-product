@@ -12,13 +12,16 @@ interface AppLogoProps {
 }
 
 export function AppLogo({ size = "sm", className }: AppLogoProps) {
+  const px = size === "lg" ? 48 : size === "md" ? 40 : 32;
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- SVG logo; middleware allows /logo-tt.svg
     <img
       src="/logo-tt.svg"
-      alt="TT"
-      width={size === "lg" ? 48 : size === "md" ? 40 : 32}
-      height={size === "lg" ? 48 : size === "md" ? 40 : 32}
-      className={clsx(sizeClass[size], "rounded-xl shrink-0", className)}
+      alt="Logo TT"
+      width={px}
+      height={px}
+      decoding="async"
+      className={clsx(sizeClass[size], "rounded-xl shrink-0 object-contain", className)}
     />
   );
 }

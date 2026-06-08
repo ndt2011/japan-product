@@ -3,6 +3,10 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/api/auth/login"];
 
+function isPublicAsset(pathname: string): boolean {
+  return /\.(?:svg|png|jpe?g|gif|webp|ico|woff2?|ttf)$/i.test(pathname);
+}
+
 function isTokenExpired(request: NextRequest): boolean {
   const expiresAt = request.cookies.get("auth_expires_at")?.value;
   if (!expiresAt) return false;
@@ -21,7 +25,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value;
   const isPublic = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
   const isStaticOrApi =
-    pathname.startsWith("/_next") || pathname.startsWith("/api/");
+    pathname.startsWith("/_next") || pathname.startsWith("/api/") || isPublicAsset(pathname);
 
   if (token && isTokenExpired(request) && !isStaticOrApi) {
     const loginUrl = new URL("/login", request.url);
@@ -47,5 +51,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo-tt\\.svg).*)"],
 };
