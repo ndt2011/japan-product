@@ -8,6 +8,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { OrderItem } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -74,13 +75,18 @@ export function ShipmentFormScreen() {
       });
       const data = await res.json();
       if (data.success && data.data?.batch?.id) {
+        toast.success("Đã tạo chuyến hàng.");
         router.push(`/shipments/${data.data.batch.id}`);
         router.refresh();
         return;
       }
-      setError(translateMessage(data.message ?? "M0001"));
+      const msg = translateMessage(data.message ?? "M0001");
+      setError(msg);
+      toast.error(msg);
     } catch {
-      setError("Tạo chuyến thất bại.");
+      const msg = "Tạo chuyến thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

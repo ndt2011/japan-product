@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { useIsAdmin, useIsCompany } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { getOrderStatus } from "@/lib/status";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { OrderCostItem, OrderItem } from "@/types/api";
@@ -88,14 +89,19 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã thêm chi phí đơn hàng.");
       setCostAmount("");
       setCostNote("");
       await loadCosts();
     } catch {
-      setError("Không thể thêm chi phí.");
+      const msg = "Không thể thêm chi phí.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActing(false);
     }
@@ -110,9 +116,10 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        toast.error(translateMessage(data.message ?? "M0001"));
         return;
       }
+      toast.success("Đã xóa chi phí.");
       await loadCosts();
     } finally {
       setActing(false);
@@ -129,7 +136,7 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
     }
   }, [isAdmin, orderId, loading]);
 
-  async function action(path: string, method = "PUT", body?: object) {
+  async function action(path: string, method = "PUT", body?: object, successMsg = "Đã cập nhật đơn hàng.") {
     setActing(true);
     setError("");
     try {
@@ -140,17 +147,23 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
       if (data.data?.invoice?.id) {
+        toast.success("Đã ghi nhận thanh toán — mở hóa đơn.");
         router.push(`/invoices/${data.data.invoice.id}`);
         return;
       }
+      toast.success(successMsg);
       await load();
       router.refresh();
     } catch {
-      setError("Thao tác thất bại.");
+      const msg = "Thao tác thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActing(false);
     }
@@ -194,12 +207,20 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
           <Badge variant={s.variant}>{s.label}</Badge>
           <div className="flex gap-2 flex-wrap">
             {order.status === "DRAFT" && (
-              <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/orders/${orderId}/submit`)}>
+              <Button
+                size="sm"
+                disabled={acting}
+                onClick={() => action(`/api/proxy/orders/${orderId}/submit`, "PUT", undefined, "Đã gửi đơn — chờ duyệt.")}
+              >
                 Gửi đơn
               </Button>
             )}
             {order.status === "PENDING" && isAdmin && (
-              <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/orders/${orderId}/approve`)}>
+              <Button
+                size="sm"
+                disabled={acting}
+                onClick={() => action(`/api/proxy/orders/${orderId}/approve`, "PUT", undefined, "Đã duyệt đơn hàng.")}
+              >
                 Duyệt đơn
               </Button>
             )}
@@ -208,7 +229,7 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                 variant="danger"
                 size="sm"
                 disabled={acting}
-                onClick={() => action(`/api/proxy/orders/${orderId}/cancel`)}
+                onClick={() => action(`/api/proxy/orders/${orderId}/cancel`, "PUT", undefined, "Đã hủy đơn hàng.")}
               >
                 Hủy
               </Button>
@@ -217,7 +238,9 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
               <Button
                 size="sm"
                 disabled={acting}
-                onClick={() => action(`/api/proxy/orders/${orderId}/confirm-receipt`)}
+                onClick={() =>
+                  action(`/api/proxy/orders/${orderId}/confirm-receipt`, "PUT", undefined, "Đã xác nhận nhận hàng.")
+                }
               >
                 Đã nhận hàng
               </Button>
@@ -227,7 +250,9 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                 size="sm"
                 variant="secondary"
                 disabled={acting}
-                onClick={() => action("/api/proxy/invoices", "POST", { order_id: orderId })}
+                onClick={() =>
+                  action("/api/proxy/invoices", "POST", { order_id: orderId }, "Đã tạo hóa đơn.")
+                }
               >
                 Lập hóa đơn
               </Button>
@@ -268,10 +293,15 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
                   size="sm"
                   disabled={acting}
                   onClick={() =>
-                    action(`/api/proxy/orders/${orderId}/record-payment`, "PUT", {
-                      payment_method: paymentMethod,
-                      payment_ref: paymentRef || null,
-                    })
+                    action(
+                      `/api/proxy/orders/${orderId}/record-payment`,
+                      "PUT",
+                      {
+                        payment_method: paymentMethod,
+                        payment_ref: paymentRef || null,
+                      },
+                      "Đã ghi nhận thanh toán.",
+                    )
                   }
                 >
                   Xác nhận đã thanh toán

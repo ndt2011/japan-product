@@ -9,6 +9,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 interface WarehouseOption { id: number; warehouse_name: string; }
@@ -124,10 +125,20 @@ export function InventoryScreen() {
         }),
       });
       const data = await res.json();
-      if (!data.success) { setEditError(translateMessage(data.message ?? "M0001")); return; }
+      if (!data.success) {
+        const msg = translateMessage(data.message ?? "M0001");
+        setEditError(msg);
+        toast.error(msg);
+        return;
+      }
+      toast.success("Đã cập nhật tồn kho.");
       setEditing(null);
       await loadData();
-    } catch { setEditError("Lưu thất bại."); }
+    } catch {
+      const msg = "Lưu thất bại.";
+      setEditError(msg);
+      toast.error(msg);
+    }
     finally { setEditSaving(false); }
   }
 
@@ -137,8 +148,15 @@ export function InventoryScreen() {
     try {
       const res = await fetch(`/api/proxy/inventories/${deleting.id}`, { method: "DELETE" });
       const data = await res.json();
-      if (data.success) { setDeleting(null); await loadData(); }
-      else setError(translateMessage(data.message ?? "M0001"));
+      if (data.success) {
+        toast.success("Đã xóa bản ghi tồn kho.");
+        setDeleting(null);
+        await loadData();
+      } else {
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
+      }
     } finally { setDeleteLoading(false); }
   }
 
@@ -157,8 +175,16 @@ export function InventoryScreen() {
         errors: result.errors ?? [],
         total_rows: result.total_rows ?? 0,
       });
-      if ((result.imported ?? 0) > 0) await loadData();
-    } catch { setImportResult({ imported: 0, errors: ["Lỗi kết nối"], total_rows: 0 }); }
+      if ((result.imported ?? 0) > 0) {
+        toast.success(`Import thành công ${result.imported} dòng.`);
+        await loadData();
+      } else if ((result.errors ?? []).length > 0) {
+        toast.warning("Import xong nhưng có dòng lỗi — xem chi tiết bên dưới.");
+      }
+    } catch {
+      setImportResult({ imported: 0, errors: ["Lỗi kết nối"], total_rows: 0 });
+      toast.error("Import CSV thất bại.");
+    }
     finally { setImportLoading(false); }
   }
 
@@ -183,10 +209,20 @@ export function InventoryScreen() {
         }),
       });
       const data = await res.json();
-      if (!data.success) { setError(translateMessage(data.message ?? "M0001")); return; }
+      if (!data.success) {
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      toast.success("Đã ghi nhận kiểm kê.");
       setCheckForm((f) => ({ ...f, product_id: "", actual_qty: "" }));
       await loadData();
-    } catch { setError("Kiểm kê thất bại."); }
+    } catch {
+      const msg = "Kiểm kê thất bại.";
+      setError(msg);
+      toast.error(msg);
+    }
     finally { setSaving(false); }
   }
 

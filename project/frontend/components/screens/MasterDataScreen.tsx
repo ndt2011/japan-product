@@ -9,6 +9,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { CategoryOption } from "@/types/api";
 import { FormEvent, useEffect, useState } from "react";
 
@@ -83,9 +84,12 @@ export function MasterDataScreen() {
     });
     const data = await res.json();
     if (!data.success) {
-      setError(translateMessage(data.message ?? "M0002"));
+      const msg = translateMessage(data.message ?? "M0002");
+      setError(msg);
+      toast.error(msg);
       return;
     }
+    toast.success("Đã thêm danh mục.");
     setCatName("");
     await loadCategories();
   }
@@ -112,9 +116,12 @@ export function MasterDataScreen() {
     });
     const data = await res.json();
     if (!data.success) {
-      setError(translateMessage(data.message ?? "M0002"));
+      const msg = translateMessage(data.message ?? "M0002");
+      setError(msg);
+      toast.error(msg);
       return;
     }
+    toast.success("Đã thêm kho.");
     setWhForm({ warehouse_name: "", country: "JP", location_type: "JP", address: "" });
     await loadWarehouses();
   }

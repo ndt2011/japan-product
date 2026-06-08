@@ -2,6 +2,7 @@
 
 import { Badge, Button, Card, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ShipmentBatchItem } from "@/types/api";
 import Link from "next/link";
@@ -75,12 +76,17 @@ export function ShipmentDetailScreen({ batchId }: { batchId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0505"));
+        const msg = translateMessage(data.message ?? "M0505");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã cập nhật mã vận đơn.");
       setBatch(data.data.batch);
     } catch {
-      setError("Cập nhật tracking thất bại.");
+      const msg = "Cập nhật tracking thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActing(false);
     }
@@ -101,12 +107,17 @@ export function ShipmentDetailScreen({ batchId }: { batchId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0505"));
+        const msg = translateMessage(data.message ?? "M0505");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã cập nhật trạng thái chuyến hàng.");
       setBatch(data.data.batch);
     } catch {
-      setError("Cập nhật trạng thái thất bại.");
+      const msg = "Cập nhật trạng thái thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActing(false);
     }

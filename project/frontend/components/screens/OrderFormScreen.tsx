@@ -8,6 +8,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { ProductItem } from "@/types/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -71,14 +72,19 @@ export function OrderFormScreen() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success(submit ? "Đã gửi đơn hàng — chờ duyệt." : "Đã lưu đơn nháp.");
       const id = data.data?.order?.id;
       router.push(id ? `/orders/${id}` : "/orders");
       router.refresh();
     } catch {
-      setError("Không tạo được đơn hàng.");
+      const msg = "Không tạo được đơn hàng.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

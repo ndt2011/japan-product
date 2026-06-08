@@ -11,6 +11,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import {
   calcUnitPriceVnd,
   feeRateToPercent,
@@ -257,15 +258,20 @@ export function ProductFormScreen({ mode, productId }: ProductFormScreenProps) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
 
+      toast.success(mode === "create" ? "Đã thêm sản phẩm." : "Đã lưu thay đổi sản phẩm.");
       const id = data.data?.product?.id ?? productId;
       router.push(id ? `/products/${id}` : "/products");
       router.refresh();
     } catch {
-      setError("Không thể lưu sản phẩm. Kiểm tra API backend.");
+      const msg = "Không thể lưu sản phẩm. Kiểm tra API backend.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

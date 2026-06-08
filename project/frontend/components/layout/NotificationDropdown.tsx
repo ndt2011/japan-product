@@ -61,7 +61,7 @@ export function NotificationDropdown({ legacyTotal, legacyTitle }: Props) {
 
   useEffect(() => {
     loadCount();
-    const interval = setInterval(loadCount, 60_000);
+    const interval = setInterval(loadCount, 30_000);
     return () => clearInterval(interval);
   }, []);
 

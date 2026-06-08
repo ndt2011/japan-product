@@ -8,6 +8,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 interface WarehouseOption {
@@ -93,13 +94,18 @@ export function StockInScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã nhập kho thành công.");
       setForm({ warehouse_id: "", product_id: "", quantity: "", reason: "" });
       await loadData();
     } catch {
-      setError("Không thể nhập kho.");
+      const msg = "Không thể nhập kho.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

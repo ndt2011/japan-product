@@ -3,6 +3,8 @@
 import { AppLogo } from "@/components/AppLogo";
 import { AiStaffChatWidget } from "@/components/layout/AiStaffChatWidget";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { NotificationPoller } from "@/components/layout/NotificationPoller";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 import { getNavForUser, type NavItem } from "@/lib/navigation";
@@ -145,6 +147,8 @@ export function AppShell({ children }: AppShellProps) {
       </nav>
 
       <AiStaffChatWidget />
+      <ToastContainer />
+      <NotificationPoller />
     </div>
   );
 }

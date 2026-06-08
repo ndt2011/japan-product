@@ -123,6 +123,13 @@ class OrderService
 
         if ($order->status === 'PENDING') {
             $this->orderMailService->notifyAdminsNewOrder($order);
+            $this->notificationService->notifyAllAdmins(
+                'ORDER_NEW',
+                "Đơn mới #{$order->order_no}",
+                'Cần duyệt đơn hàng.',
+                'order',
+                $order->id,
+            );
         }
 
         return $order;
@@ -199,6 +206,13 @@ class OrderService
         });
 
         $this->orderMailService->notifyAdminsNewOrder($updated);
+        $this->notificationService->notifyAllAdmins(
+            'ORDER_NEW',
+            "Đơn mới #{$updated->order_no}",
+            'Cần duyệt đơn hàng.',
+            'order',
+            $updated->id,
+        );
 
         return $updated;
     }

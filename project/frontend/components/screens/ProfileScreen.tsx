@@ -8,6 +8,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { FormEvent, useEffect, useState } from "react";
 
@@ -102,12 +103,15 @@ export function ProfileScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0002"));
+        const msg = translateMessage(data.message ?? "M0002");
+        setError(msg);
+        toast.error(msg);
         return;
       }
       const p = data.data.profile as ProfileData;
       setProfile(p);
       setMessage("Đã cập nhật hồ sơ.");
+      toast.success("Đã lưu hồ sơ cá nhân.");
       setForm((f) => ({ ...f, password: "", password_confirmation: "" }));
 
       const meRes = await fetch("/api/proxy/auth/me");
@@ -116,7 +120,9 @@ export function ProfileScreen() {
         setUser(meData.data.user);
       }
     } catch {
-      setError("Lưu thất bại.");
+      const msg = "Lưu thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

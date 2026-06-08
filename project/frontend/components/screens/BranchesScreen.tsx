@@ -20,6 +20,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { BranchItem } from "@/types/api";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -87,9 +88,12 @@ export function BranchesScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã tạo chi nhánh.");
       setShowForm(false);
       setForm({
         branch_cd: "",

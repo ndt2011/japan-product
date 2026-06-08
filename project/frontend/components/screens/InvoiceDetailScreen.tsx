@@ -3,6 +3,7 @@
 import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { InvoiceItem } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -41,7 +42,7 @@ export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
     load();
   }, [invoiceId]);
 
-  async function action(path: string, method = "POST", body?: object) {
+  async function action(path: string, method = "POST", body?: object, successMsg = "Đã cập nhật hóa đơn.") {
     setActing(true);
     setError("");
     try {
@@ -52,13 +53,18 @@ export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success(successMsg);
       setLoading(true);
       await load();
     } catch {
-      setError("Thao tác thất bại.");
+      const msg = "Thao tác thất bại.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActing(false);
     }
@@ -99,12 +105,27 @@ export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
               </Button>
             </a>
             {isAdmin && invoice.status === "draft" && (
-              <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/invoices/${invoice.id}/send`)}>
+              <Button
+                size="sm"
+                disabled={acting}
+                onClick={() => action(`/api/proxy/invoices/${invoice.id}/send`, "POST", undefined, "Đã gửi hóa đơn.")}
+              >
                 Gửi hóa đơn
               </Button>
             )}
             {isAdmin && (invoice.status === "sent" || invoice.status === "overdue") && (
-              <Button size="sm" disabled={acting} onClick={() => action(`/api/proxy/invoices/${invoice.id}/pay`, "POST", { payment_method: "bank_transfer" })}>
+              <Button
+                size="sm"
+                disabled={acting}
+                onClick={() =>
+                  action(
+                    `/api/proxy/invoices/${invoice.id}/pay`,
+                    "POST",
+                    { payment_method: "bank_transfer" },
+                    "Đã ghi nhận thanh toán hóa đơn.",
+                  )
+                }
+              >
                 Ghi nhận thanh toán
               </Button>
             )}

@@ -20,6 +20,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { BranchUserItem } from "@/types/api";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -89,9 +90,12 @@ export function BranchUsersScreen({ branchId }: Props) {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã thêm nhân viên.");
       setShowForm(false);
       setForm({ login_id: "", password: "", full_name: "", email: "", role: "staff" });
       await loadUsers();

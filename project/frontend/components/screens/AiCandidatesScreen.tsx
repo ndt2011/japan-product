@@ -2,6 +2,7 @@
 
 import { Badge, Button, Card, Input, PageHeader, Select, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type { AiCandidateItem, CategoryOption } from "@/types/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -87,13 +88,18 @@ export function AiCandidatesScreen() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã duyệt sản phẩm AI.");
       setActiveId(null);
       await loadCandidates();
     } catch {
-      setError("Không duyệt được sản phẩm.");
+      const msg = "Không duyệt được sản phẩm.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -111,13 +117,18 @@ export function AiCandidatesScreen() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(translateMessage(data.message ?? "M0001"));
+        const msg = translateMessage(data.message ?? "M0001");
+        setError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Đã từ chối sản phẩm AI.");
       setActiveId(null);
       await loadCandidates();
     } catch {
-      setError("Không từ chối được sản phẩm.");
+      const msg = "Không từ chối được sản phẩm.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

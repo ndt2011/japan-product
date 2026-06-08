@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import { clsx } from "clsx";
+import Link from "next/link";
+import React from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -215,14 +216,20 @@ export function StatCard({
   title,
   value,
   change,
+  hint,
   icon,
   color = "blue",
+  href,
+  highlight,
 }: {
   title: string;
   value: string;
   change?: string;
+  hint?: string;
   icon: React.ReactNode;
   color?: "blue" | "green" | "yellow" | "red" | "purple";
+  href?: string;
+  highlight?: boolean;
 }) {
   const colors = {
     blue: "bg-brand-light text-brand",
@@ -232,24 +239,47 @@ export function StatCard({
     purple: "bg-violet-50 text-purple-accent",
   };
 
-  return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-text-muted uppercase tracking-wide mb-1">{title}</p>
-          <p className="text-2xl text-text-primary">{value}</p>
+  const inner = (
+    <Card
+      className={clsx(
+        "p-4 sm:p-5 h-full transition-all",
+        href && "hover:shadow-md hover:border-brand/30 cursor-pointer",
+        highlight && "ring-2 ring-brand/20 border-brand/40 bg-brand/[0.02]",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] sm:text-xs text-text-muted font-medium uppercase tracking-wide mb-1 truncate">
+            {title}
+          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-text-primary leading-tight break-words">{value}</p>
+          {hint && <p className="text-[11px] text-text-muted mt-1 line-clamp-2">{hint}</p>}
           {change && (
             <p className="text-xs text-success mt-1 flex items-center gap-1">
               <span>↑</span> {change}
             </p>
           )}
         </div>
-        <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center", colors[color])}>
+        <div
+          className={clsx(
+            "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 text-lg",
+            colors[color],
+          )}
+        >
           {icon}
         </div>
       </div>
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block h-full no-underline text-inherit">
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }
 
 export function SearchInput({

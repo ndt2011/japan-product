@@ -29,6 +29,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import type {
   AdminUserItem,
   BranchItem,
@@ -288,15 +289,20 @@ export function AdminScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(formatApiError(data));
+        const msg = formatApiError(data);
+        setError(msg);
+        toast.error(msg);
         return;
       }
-      setSuccess(translateMessage("M0110"));
+      const okMsg = translateMessage("M0110");
+      setSuccess(okMsg);
+      toast.success("Đã tạo tài khoản Admin.");
       setShowForm(false);
       setAdminForm({ login_id: "", password: "", full_name: "", email: "" });
       await loadUsers();
     } catch {
       setError("API_OFFLINE");
+      toast.error("Không kết nối được API.");
     } finally {
       setSaving(false);
     }
@@ -321,10 +327,13 @@ export function AdminScreen() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(formatApiError(data));
+        const msg = formatApiError(data);
+        setError(msg);
+        toast.error(msg);
         return;
       }
       setSuccess(translateMessage("M0111"));
+      toast.success("Đã tạo tài khoản công ty VN.");
       setShowForm(false);
       setCompanyForm({
         login_id: "",

@@ -95,7 +95,6 @@ class InventoryController extends Controller
 
         return ApiResponse::success(null, 'M1002');
     }
-}
 
     /**
      * POST /inventories/bulk-import
@@ -111,7 +110,7 @@ class InventoryController extends Controller
             return ApiResponse::error('M0001', null, 422);
         }
 
-        $auth = \App\Support\AuthContext::from($request);
+        $auth = AuthContext::from($request);
         $header = null;
         $imported = 0;
         $errors = [];

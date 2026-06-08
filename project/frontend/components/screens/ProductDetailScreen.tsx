@@ -4,6 +4,7 @@ import { ProductImageUpload } from "@/components/ProductImageUpload";
 import { Badge, Button, Card, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { toast } from "@/lib/toast";
 import { feeRateToPercent } from "@/lib/pricing";
 import type { ProductBranchStat, ProductItem } from "@/types/api";
 import Link from "next/link";
@@ -68,13 +69,18 @@ export function ProductDetailScreen({ productId }: { productId: number }) {
       const res = await fetch(`/api/proxy/products/${productId}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
+        toast.success("Đã xóa sản phẩm.");
         router.push("/products");
         router.refresh();
       } else {
-        setError(translateMessage(data.message ?? "M0304"));
+        const msg = translateMessage(data.message ?? "M0304");
+        setError(msg);
+        toast.error(msg);
       }
     } catch {
-      setError("Không thể xóa sản phẩm.");
+      const msg = "Không thể xóa sản phẩm.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setDeleting(false);
     }
