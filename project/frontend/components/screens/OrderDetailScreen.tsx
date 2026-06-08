@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { useIsAdmin, useIsCompany } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { getOrderStatus } from "@/lib/status";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { OrderCostItem, OrderItem } from "@/types/api";
 import Link from "next/link";
@@ -28,18 +29,6 @@ const costTypeOptions = [
   { value: "handling", label: "Xử lý kho" },
   { value: "other", label: "Khác" },
 ];
-
-const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "warning" | "success" | "danger" }> = {
-  DRAFT: { label: "Nháp", variant: "gray" },
-  PENDING: { label: "Chờ xác nhận", variant: "warning" },
-  CONFIRMED: { label: "Đã xác nhận", variant: "primary" },
-  PROCESSING: { label: "Đang xử lý", variant: "warning" },
-  SHIPPED: { label: "Đang giao", variant: "primary" },
-  DELIVERED: { label: "Đã giao", variant: "success" },
-  DELIVERED_ADMIN: { label: "Chờ xác nhận nhận", variant: "warning" },
-  COMPLETED: { label: "Hoàn tất", variant: "success" },
-  CANCELLED: { label: "Hủy", variant: "danger" },
-};
 
 const INVOICE_ELIGIBLE = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "DELIVERED_ADMIN", "COMPLETED"];
 
@@ -180,7 +169,7 @@ export function OrderDetailScreen({ orderId }: { orderId: number }) {
     );
   }
 
-  const s = statusMap[order.status] ?? { label: order.status, variant: "gray" as const };
+  const s = getOrderStatus(order.status);
 
   return (
     <div className="space-y-4 max-w-4xl">

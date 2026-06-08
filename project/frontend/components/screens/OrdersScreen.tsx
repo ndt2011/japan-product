@@ -14,27 +14,25 @@ import {
 } from "@/components/ui";
 import { usePermission } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
+import { getOrderStatus, ORDER_STATUS_ORDER } from "@/lib/status";
 import type { OrderItem } from "@/types/api";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-
-const statusMap: Record<string, { label: string; variant: "gray" | "primary" | "warning" | "success" | "danger" }> = {
-  DRAFT: { label: "Nháp", variant: "gray" },
-  PENDING: { label: "Chờ xác nhận", variant: "warning" },
-  CONFIRMED: { label: "Đã xác nhận", variant: "primary" },
-  PROCESSING: { label: "Đang xử lý", variant: "warning" },
-  SHIPPED: { label: "Đang giao", variant: "primary" },
-  DELIVERED: { label: "Đã giao", variant: "success" },
-  CANCELLED: { label: "Hủy", variant: "danger" },
-};
 
 export function OrdersScreen() {
   const canCreateOrder = usePermission("orders.create");
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "");
+
+  useEffect(() => {
+    const fromUrl = searchParams.get("status") ?? "";
+    setStatusFilter(fromUrl);
+  }, [searchParams]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -88,17 +86,23 @@ export function OrdersScreen() {
 
       {error && <Card className="p-4 text-sm text-danger">{error}</Card>}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        {Object.entries(statusMap).map(([key, s]) => (
-          <Card
-            key={key}
-            className={`p-3 cursor-pointer transition-colors ${statusFilter === key ? "border-brand" : "hover:border-brand/50"}`}
-            onClick={() => setStatusFilter(key === statusFilter ? "" : key)}
-          >
-            <p className="text-xs text-text-muted">{s.label}</p>
-            <p className="text-lg text-text-primary mt-0.5">{counts[key] ?? 0}</p>
-          </Card>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3">
+        {ORDER_STATUS_ORDER.map((key) => {
+          const s = getOrderStatus(key);
+          return (
+            <Card
+              key={key}
+              className={`p-3 cursor-pointer transition-colors ${statusFilter === key ? "ring-2 ring-brand" : "hover:border-brand/50"}`}
+              style={{ borderLeftWidth: 4, borderLeftColor: s.color }}
+              onClick={() => setStatusFilter(key === statusFilter ? "" : key)}
+            >
+              <Badge variant={s.variant} className="mb-1">
+                {s.label}
+              </Badge>
+              <p className="text-lg font-semibold text-text-primary">{counts[key] ?? 0}</p>
+            </Card>
+          );
+        })}
       </div>
 
       <Card className="p-4">
@@ -137,7 +141,7 @@ export function OrdersScreen() {
               </Tr>
             ) : (
               orders.map((o) => {
-                const s = statusMap[o.status] ?? { label: o.status, variant: "gray" as const };
+                const s = getOrderStatus(o.status);
                 return (
                   <Tr key={o.id}>
                     <Td>

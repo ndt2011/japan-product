@@ -42,7 +42,16 @@ export function Button({
   );
 }
 
-type BadgeVariant = "primary" | "success" | "warning" | "danger" | "gray" | "info";
+export type BadgeVariant =
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "gray"
+  | "info"
+  | "purple"
+  | "orange"
+  | "teal";
 
 export function Badge({
   variant = "gray",
@@ -53,14 +62,17 @@ export function Badge({
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset",
         {
-          "bg-brand-light text-brand": variant === "primary",
-          "bg-green-50 text-success": variant === "success",
-          "bg-amber-50 text-warning": variant === "warning",
-          "bg-red-50 text-danger": variant === "danger",
-          "bg-surface-subtle text-text-muted": variant === "gray",
-          "bg-sky-50 text-sky-600": variant === "info",
+          "bg-slate-100 text-slate-700 ring-slate-300": variant === "gray",
+          "bg-blue-100 text-blue-800 ring-blue-300": variant === "primary",
+          "bg-green-100 text-green-800 ring-green-300": variant === "success",
+          "bg-amber-100 text-amber-800 ring-amber-300": variant === "warning",
+          "bg-red-100 text-red-800 ring-red-300": variant === "danger",
+          "bg-sky-100 text-sky-800 ring-sky-300": variant === "info",
+          "bg-violet-100 text-violet-800 ring-violet-300": variant === "purple",
+          "bg-orange-100 text-orange-800 ring-orange-300": variant === "orange",
+          "bg-teal-100 text-teal-800 ring-teal-300": variant === "teal",
         },
         className,
       )}
