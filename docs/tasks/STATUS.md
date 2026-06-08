@@ -1,6 +1,6 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-08 (lần 4 — AI Chat Widget + Product Tier + CodeGenerator)  
+> **Cập nhật**: 2026-06-08 (lần 5 — Inventory Known Issues)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
 > **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp**  
@@ -94,6 +94,14 @@
 
 ---
 
+## ✅ Lần 5 — Hoàn thành (2026-06-08)
+
+| Nội dung | File | Ghi chú |
+|----------|------|---------|
+| Inventory Known Issues doc | `docs/sa/amendments/inventory-known-issues.md` | INV-001 warehouseId · INV-002 pre-order |
+
+---
+
 ## 🔄 Còn lại (P2 — không blocking staging)
 
 | ID | Việc | Priority |
@@ -101,6 +109,8 @@
 | BE-P2-013 | `GET /reports/profit/by-product` | P2 |
 | BE-P2-014 | Lưu `invoices.pdf_path` khi generate | P2 |
 | FE-P2-007 | Recharts chart tab Lợi nhuận | P2 |
+| INV-001 | reserve/release thêm warehouseId (khi có kho thứ 2) | P2 — xem `inventory-known-issues.md` |
+| INV-002 | Pre-order support (khi BA yêu cầu) | P3 — xem `inventory-known-issues.md` |
 | OPS | Railway: `php artisan migrate` (bao gồm ai_conversations + ai_messages) | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
 | OPS | Vercel: cập nhật domain R2 trong `next.config.mjs` | P1 |

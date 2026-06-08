@@ -61,8 +61,13 @@ class OrderService
             $status = $submit ? 'PENDING' : ($data['status'] ?? 'DRAFT');
 
             if ($status === 'PENDING') {
+                $warehouseId = $this->defaultWarehouseId();
                 foreach ($lines as $line) {
-                    $this->inventoryService->assertCanReserve((int) $line['product_id'], (int) $line['quantity']);
+                    $this->inventoryService->assertCanReserve(
+                        (int) $line['product_id'],
+                        $warehouseId,
+                        (int) $line['quantity'],
+                    );
                 }
             }
 
@@ -98,8 +103,13 @@ class OrderService
             $this->syncDetails($order, $lines, $user->id);
 
             if ($status === 'PENDING') {
+                $warehouseId = $this->defaultWarehouseId();
                 foreach ($lines as $line) {
-                    $this->inventoryService->reserve((int) $line['product_id'], (int) $line['quantity']);
+                    $this->inventoryService->reserve(
+                        (int) $line['product_id'],
+                        $warehouseId,
+                        (int) $line['quantity'],
+                    );
                 }
             }
 
@@ -160,9 +170,20 @@ class OrderService
 
         $this->assertCanModify($order, $user, $userType);
 
-        $updated = DB::transaction(function () use ($order, $user) {
+        $warehouseId = $this->defaultWarehouseId();
+
+        $updated = DB::transaction(function () use ($order, $user, $warehouseId) {
             foreach ($order->details as $detail) {
-                $this->inventoryService->reserve($detail->product_id, $detail->quantity);
+                $this->inventoryService->assertCanReserve(
+                    (int) $detail->product_id,
+                    $warehouseId,
+                    (int) $detail->quantity,
+                );
+                $this->inventoryService->reserve(
+                    (int) $detail->product_id,
+                    $warehouseId,
+                    (int) $detail->quantity,
+                );
             }
 
             return $this->orderRepository->update($order, [
@@ -271,10 +292,16 @@ class OrderService
             throw new OrderException('M0402', 409);
         }
 
-        return DB::transaction(function () use ($order) {
+        $warehouseId = $this->defaultWarehouseId();
+
+        return DB::transaction(function () use ($order, $warehouseId) {
             if ($order->status === 'PENDING') {
                 foreach ($order->details as $detail) {
-                    $this->inventoryService->release($detail->product_id, $detail->quantity);
+                    $this->inventoryService->release(
+                        (int) $detail->product_id,
+                        $warehouseId,
+                        (int) $detail->quantity,
+                    );
                 }
             }
 
@@ -359,6 +386,17 @@ class OrderService
                 throw new OrderException('M0407', 403);
             }
         }
+    }
+
+    private function defaultWarehouseId(): int
+    {
+        $warehouse = $this->warehouseRepository->defaultWarehouse();
+
+        if (! $warehouse) {
+            throw new WarehouseException('M1005', 404);
+        }
+
+        return (int) $warehouse->id;
     }
 
     private function assertCanModify(Order $order, Authenticatable $user, string $userType): void

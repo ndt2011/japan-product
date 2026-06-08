@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
@@ -180,7 +181,12 @@ class InvoiceController extends Controller
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
 
-            return response($dompdf->output(), 200, [
+            $pdfBytes = $dompdf->output();
+            $path     = "invoices/{$invoice->id}/{$filename}.pdf";
+            Storage::disk('local')->put($path, $pdfBytes);
+            $invoice->update(['pdf_path' => $path]);
+
+            return response($pdfBytes, 200, [
                 'Content-Type'        => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="'.$filename.'.pdf"',
             ]);

@@ -151,5 +151,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
         Route::get('/reports/revenue', [ReportController::class, 'revenue']);
         Route::get('/reports/profit', [ReportController::class, 'profit']);
+        Route::get('/reports/profit/by-product', [ReportController::class, 'profitByProduct']);
     });
 });

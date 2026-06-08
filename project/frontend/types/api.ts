@@ -181,6 +181,19 @@ export interface ProfitReportOrderRow {
   net_profit_vnd: number;
 }
 
+export interface ProfitReportProductRow {
+  product_id: number;
+  product_cd: string;
+  product_name: string;
+  product_name_vi: string | null;
+  quantity_sold: number;
+  revenue_vnd: number;
+  cost_vnd: number;
+  gross_profit_vnd: number;
+  other_costs_vnd: number;
+  net_profit_vnd: number;
+}
+
 export interface ExchangeRateData {
   from_currency: string;
   to_currency: string;

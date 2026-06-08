@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\Product;
 use App\Models\StockMovement;
 use App\Support\ApiResponse;
 use App\Support\AuthContext;
@@ -230,64 +232,38 @@ class ReportController extends Controller
         $to        = $request->input('date_to');
         $companyId = $request->input('company_id');
 
-        // Lấy các order đã COMPLETED trong khoảng thời gian
-        $query = Order::query()
-            ->with(['details.product', 'costs'])
-            ->where('deleted_flag', false)
-            ->whereIn('status', ['COMPLETED'])
-            ->when($from, fn ($q) => $q->where('completed_at', '>=', $from))
-            ->when($to, fn ($q) => $q->where('completed_at', '<=', $to . ' 23:59:59'))
-            ->when($companyId, fn ($q) => $q->where('company_vn_id', $companyId));
-
-        $orders = $query->get();
+        $orders = $this->completedOrdersForProfit($from, $to, $companyId);
 
         $summary = [
-            'total_revenue_vnd'    => 0,
-            'total_cost_vnd'       => 0,
-            'gross_profit_vnd'     => 0,
+            'total_revenue_vnd'     => 0,
+            'total_cost_vnd'        => 0,
+            'gross_profit_vnd'      => 0,
             'total_other_costs_vnd' => 0,
-            'net_profit_vnd'       => 0,
-            'profit_margin_pct'    => 0,
-            'order_count'          => $orders->count(),
+            'net_profit_vnd'        => 0,
+            'profit_margin_pct'     => 0,
+            'order_count'           => $orders->count(),
         ];
 
         $byOrder = [];
 
         foreach ($orders as $order) {
-            $lockedRate = (float) ($order->exchange_rate ?? 0);
-            $revVnd     = 0;
-            $costVnd    = 0;
+            $orderProfit = $this->orderProfitTotals($order);
 
-            foreach ($order->details as $detail) {
-                $product         = $detail->product;
-                $sellingJpy      = (float) ($product?->selling_price_jpy ?? $product?->cost_jpy ?? 0);
-                $costJpy         = (float) ($product?->cost_price_jpy ?? $product?->cost_jpy ?? 0);
-                $feeRate         = (float) ($product?->fee_rate ?? 0.05);
-                $qty             = (int) $detail->quantity;
-
-                $revVnd  += (int) round($sellingJpy * $lockedRate * (1 + $feeRate) * $qty);
-                $costVnd += (int) round($costJpy * $lockedRate * $qty);
-            }
-
-            $grossProfit  = $revVnd - $costVnd;
-            $otherCosts   = (int) ($order->costs?->sum('amount_vnd') ?? 0);
-            $netProfit    = $grossProfit - $otherCosts;
-
-            $summary['total_revenue_vnd']     += $revVnd;
-            $summary['total_cost_vnd']         += $costVnd;
-            $summary['gross_profit_vnd']       += $grossProfit;
-            $summary['total_other_costs_vnd']  += $otherCosts;
-            $summary['net_profit_vnd']         += $netProfit;
+            $summary['total_revenue_vnd']      += $orderProfit['revenue_vnd'];
+            $summary['total_cost_vnd']          += $orderProfit['cost_vnd'];
+            $summary['gross_profit_vnd']        += $orderProfit['gross_profit_vnd'];
+            $summary['total_other_costs_vnd']   += $orderProfit['other_costs_vnd'];
+            $summary['net_profit_vnd']          += $orderProfit['net_profit_vnd'];
 
             $byOrder[] = [
                 'order_id'         => $order->id,
                 'order_no'         => $order->order_no,
                 'completed_at'     => $order->completed_at?->toDateString(),
-                'revenue_vnd'      => $revVnd,
-                'cost_vnd'         => $costVnd,
-                'gross_profit_vnd' => $grossProfit,
-                'other_costs_vnd'  => $otherCosts,
-                'net_profit_vnd'   => $netProfit,
+                'revenue_vnd'      => $orderProfit['revenue_vnd'],
+                'cost_vnd'         => $orderProfit['cost_vnd'],
+                'gross_profit_vnd' => $orderProfit['gross_profit_vnd'],
+                'other_costs_vnd'  => $orderProfit['other_costs_vnd'],
+                'net_profit_vnd'   => $orderProfit['net_profit_vnd'],
             ];
         }
 
@@ -303,5 +279,134 @@ class ReportController extends Controller
             'summary'  => $summary,
             'by_order' => $byOrder,
         ]);
+    }
+
+    /**
+     * GET /reports/profit/by-product — Lợi nhuận theo sản phẩm (top/bottom)
+     * spec: docs/sa/amendments/invoice-payment.md § 5
+     */
+    public function profitByProduct(Request $request): JsonResponse
+    {
+        $from      = $request->input('date_from');
+        $to        = $request->input('date_to');
+        $companyId = $request->input('company_id');
+        $limit     = min(max((int) $request->input('limit', 20), 1), 100);
+
+        $orders = $this->completedOrdersForProfit($from, $to, $companyId);
+        $byProduct = [];
+
+        foreach ($orders as $order) {
+            $lockedRate  = (float) ($order->exchange_rate ?? 0);
+            $otherCosts  = (int) ($order->costs?->sum('amount_vnd') ?? 0);
+            $orderRev    = 0;
+            $lineMetrics = [];
+
+            foreach ($order->details as $detail) {
+                $line = $this->detailProfitMetrics($detail, $lockedRate);
+                $orderRev += $line['revenue_vnd'];
+                $lineMetrics[] = $line;
+            }
+
+            foreach ($lineMetrics as $line) {
+                $pid = $line['product_id'];
+                $allocatedOther = $orderRev > 0
+                    ? (int) round($otherCosts * $line['revenue_vnd'] / $orderRev)
+                    : 0;
+                $grossProfit = $line['revenue_vnd'] - $line['cost_vnd'];
+                $netProfit   = $grossProfit - $allocatedOther;
+
+                if (! isset($byProduct[$pid])) {
+                    $byProduct[$pid] = [
+                        'product_id'        => $pid,
+                        'product_cd'        => $line['product_cd'],
+                        'product_name'      => $line['product_name'],
+                        'product_name_vi'   => $line['product_name_vi'],
+                        'quantity_sold'     => 0,
+                        'revenue_vnd'       => 0,
+                        'cost_vnd'          => 0,
+                        'gross_profit_vnd'  => 0,
+                        'other_costs_vnd'   => 0,
+                        'net_profit_vnd'    => 0,
+                    ];
+                }
+
+                $byProduct[$pid]['quantity_sold']    += $line['quantity'];
+                $byProduct[$pid]['revenue_vnd']      += $line['revenue_vnd'];
+                $byProduct[$pid]['cost_vnd']         += $line['cost_vnd'];
+                $byProduct[$pid]['gross_profit_vnd'] += $grossProfit;
+                $byProduct[$pid]['other_costs_vnd']  += $allocatedOther;
+                $byProduct[$pid]['net_profit_vnd']   += $netProfit;
+            }
+        }
+
+        $items = collect($byProduct)
+            ->sortByDesc('net_profit_vnd')
+            ->take($limit)
+            ->values()
+            ->all();
+
+        return ApiResponse::success([
+            'filters' => compact('from', 'to', 'companyId'),
+            'items'   => $items,
+        ]);
+    }
+
+    /** @return \Illuminate\Support\Collection<int, Order> */
+    private function completedOrdersForProfit(?string $from, ?string $to, mixed $companyId)
+    {
+        return Order::query()
+            ->with(['details.product', 'costs'])
+            ->where('deleted_flag', false)
+            ->where('status', 'COMPLETED')
+            ->when($from, fn ($q) => $q->where('completed_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('completed_at', '<=', $to.' 23:59:59'))
+            ->when($companyId, fn ($q) => $q->where('company_vn_id', $companyId))
+            ->get();
+    }
+
+    /** @return array{revenue_vnd: int, cost_vnd: int, gross_profit_vnd: int, other_costs_vnd: int, net_profit_vnd: int} */
+    private function orderProfitTotals(Order $order): array
+    {
+        $lockedRate = (float) ($order->exchange_rate ?? 0);
+        $revVnd     = 0;
+        $costVnd    = 0;
+
+        foreach ($order->details as $detail) {
+            $line = $this->detailProfitMetrics($detail, $lockedRate);
+            $revVnd  += $line['revenue_vnd'];
+            $costVnd += $line['cost_vnd'];
+        }
+
+        $grossProfit = $revVnd - $costVnd;
+        $otherCosts  = (int) ($order->costs?->sum('amount_vnd') ?? 0);
+
+        return [
+            'revenue_vnd'      => $revVnd,
+            'cost_vnd'         => $costVnd,
+            'gross_profit_vnd' => $grossProfit,
+            'other_costs_vnd'  => $otherCosts,
+            'net_profit_vnd'   => $grossProfit - $otherCosts,
+        ];
+    }
+
+    /** @return array{product_id: int, product_cd: string, product_name: string, product_name_vi: ?string, quantity: int, revenue_vnd: int, cost_vnd: int} */
+    private function detailProfitMetrics(OrderDetail $detail, float $lockedRate): array
+    {
+        /** @var Product|null $product */
+        $product    = $detail->product;
+        $sellingJpy = (float) ($product?->selling_price_jpy ?? $product?->cost_jpy ?? 0);
+        $costJpy    = (float) ($product?->cost_price_jpy ?? $product?->cost_jpy ?? 0);
+        $feeRate    = (float) ($product?->fee_rate ?? 0.05);
+        $qty        = (int) $detail->quantity;
+
+        return [
+            'product_id'      => (int) $detail->product_id,
+            'product_cd'      => (string) ($product?->product_cd ?? ''),
+            'product_name'    => (string) ($product?->product_name ?? ''),
+            'product_name_vi'   => $product?->product_name_vi,
+            'quantity'        => $qty,
+            'revenue_vnd'     => (int) round($sellingJpy * $lockedRate * (1 + $feeRate) * $qty),
+            'cost_vnd'        => (int) round($costJpy * $lockedRate * $qty),
+        ];
     }
 }

@@ -2,8 +2,17 @@
 
 import { Badge, Card, EmptyState, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
-import type { ProfitReportOrderRow, ProfitReportSummary } from "@/types/api";
+import type { ProfitReportOrderRow, ProfitReportProductRow, ProfitReportSummary } from "@/types/api";
 import { useCallback, useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 type ReportTab = "orders" | "inventory" | "movements" | "revenue" | "profit";
 
@@ -26,6 +35,7 @@ export function ReportsScreen() {
   const [items, setItems] = useState<Record<string, unknown>[]>([]);
   const [profitSummary, setProfitSummary] = useState<ProfitReportSummary | null>(null);
   const [profitOrders, setProfitOrders] = useState<ProfitReportOrderRow[]>([]);
+  const [profitProducts, setProfitProducts] = useState<ProfitReportProductRow[]>([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -44,6 +54,7 @@ export function ReportsScreen() {
     setError("");
     setProfitSummary(null);
     setProfitOrders([]);
+    setProfitProducts([]);
 
     const paths: Record<Exclude<ReportTab, "profit">, string> = {
       orders: "/api/proxy/reports/orders",
@@ -58,8 +69,16 @@ export function ReportsScreen() {
         if (dateFrom) params.set("date_from", dateFrom);
         if (dateTo) params.set("date_to", dateTo);
         const qs = params.toString();
-        const res = await fetch(qs ? `/api/proxy/reports/profit?${qs}` : "/api/proxy/reports/profit");
-        const data = await res.json();
+        const profitUrl = qs ? `/api/proxy/reports/profit?${qs}` : "/api/proxy/reports/profit";
+        const byProductUrl = qs
+          ? `/api/proxy/reports/profit/by-product?${qs}&limit=10`
+          : "/api/proxy/reports/profit/by-product?limit=10";
+        const [profitRes, byProductRes] = await Promise.all([
+          fetch(profitUrl),
+          fetch(byProductUrl),
+        ]);
+        const data = await profitRes.json();
+        const productData = await byProductRes.json();
         if (!data.success) {
           setError(data.message ?? "Không tải được báo cáo lợi nhuận");
           setItems([]);
@@ -67,6 +86,7 @@ export function ReportsScreen() {
         }
         setProfitSummary(data.data?.summary ?? null);
         setProfitOrders(data.data?.by_order ?? []);
+        setProfitProducts(productData.success ? (productData.data?.items ?? []) : []);
         setSummary({});
         setItems([]);
         return;
@@ -135,6 +155,34 @@ export function ReportsScreen() {
         </Card>
       )}
 
+      {tab === "profit" && profitProducts.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-sm font-medium mb-4">Top sản phẩm theo lãi ròng</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={profitProducts.map((p) => ({
+                  name: (p.product_name_vi || p.product_name || p.product_cd).slice(0, 18),
+                  net_profit: p.net_profit_vnd,
+                }))}
+                margin={{ top: 8, right: 8, left: 8, bottom: 48 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={56} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${Math.round(v / 1_000_000)}M`} />
+                <Tooltip
+                  formatter={(value) => [
+                    `${Number(value ?? 0).toLocaleString("vi-VN")} ₫`,
+                    "Lãi ròng",
+                  ]}
+                />
+                <Bar dataKey="net_profit" fill="var(--brand)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
+
       {tab === "profit" && profitSummary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(profitSummary).map(([key, value]) => (
@@ -171,37 +219,73 @@ export function ReportsScreen() {
         ) : error ? (
           <EmptyState message={error} icon="⚠️" />
         ) : tab === "profit" ? (
-          profitOrders.length === 0 ? (
+          profitOrders.length === 0 && profitProducts.length === 0 ? (
             <EmptyState message="Chưa có đơn COMPLETED trong khoảng thời gian này." />
           ) : (
-            <Table>
-              <Thead>
-                <tr>
-                  <Th>Mã đơn</Th>
-                  <Th>Hoàn tất</Th>
-                  <Th>Doanh thu</Th>
-                  <Th>Giá vốn</Th>
-                  <Th>Lãi gộp</Th>
-                  <Th>CP khác</Th>
-                  <Th>Lãi ròng</Th>
-                </tr>
-              </Thead>
-              <tbody>
-                {profitOrders.map((row) => (
-                  <Tr key={row.order_id}>
-                    <Td className="font-medium">{row.order_no}</Td>
-                    <Td>{row.completed_at ?? "—"}</Td>
-                    <Td>{row.revenue_vnd.toLocaleString("vi-VN")} ₫</Td>
-                    <Td>{row.cost_vnd.toLocaleString("vi-VN")} ₫</Td>
-                    <Td>{row.gross_profit_vnd.toLocaleString("vi-VN")} ₫</Td>
-                    <Td>{row.other_costs_vnd.toLocaleString("vi-VN")} ₫</Td>
-                    <Td className="text-brand font-medium">
-                      {row.net_profit_vnd.toLocaleString("vi-VN")} ₫
-                    </Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </Table>
+            <div className="space-y-6 p-4">
+              {profitProducts.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-3">Lợi nhuận theo sản phẩm</h3>
+                  <Table>
+                    <Thead>
+                      <tr>
+                        <Th>Mã SP</Th>
+                        <Th>Tên</Th>
+                        <Th>SL bán</Th>
+                        <Th>Doanh thu</Th>
+                        <Th>Lãi ròng</Th>
+                      </tr>
+                    </Thead>
+                    <tbody>
+                      {profitProducts.map((row) => (
+                        <Tr key={row.product_id}>
+                          <Td className="font-mono text-xs">{row.product_cd}</Td>
+                          <Td>{row.product_name_vi || row.product_name}</Td>
+                          <Td>{row.quantity_sold}</Td>
+                          <Td>{row.revenue_vnd.toLocaleString("vi-VN")} ₫</Td>
+                          <Td className="text-brand font-medium">
+                            {row.net_profit_vnd.toLocaleString("vi-VN")} ₫
+                          </Td>
+                        </Tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
+              {profitOrders.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-3">Lợi nhuận theo đơn hàng</h3>
+                  <Table>
+                    <Thead>
+                      <tr>
+                        <Th>Mã đơn</Th>
+                        <Th>Hoàn tất</Th>
+                        <Th>Doanh thu</Th>
+                        <Th>Giá vốn</Th>
+                        <Th>Lãi gộp</Th>
+                        <Th>CP khác</Th>
+                        <Th>Lãi ròng</Th>
+                      </tr>
+                    </Thead>
+                    <tbody>
+                      {profitOrders.map((row) => (
+                        <Tr key={row.order_id}>
+                          <Td className="font-medium">{row.order_no}</Td>
+                          <Td>{row.completed_at ?? "—"}</Td>
+                          <Td>{row.revenue_vnd.toLocaleString("vi-VN")} ₫</Td>
+                          <Td>{row.cost_vnd.toLocaleString("vi-VN")} ₫</Td>
+                          <Td>{row.gross_profit_vnd.toLocaleString("vi-VN")} ₫</Td>
+                          <Td>{row.other_costs_vnd.toLocaleString("vi-VN")} ₫</Td>
+                          <Td className="text-brand font-medium">
+                            {row.net_profit_vnd.toLocaleString("vi-VN")} ₫
+                          </Td>
+                        </Tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
+            </div>
           )
         ) : items.length === 0 ? (
           <EmptyState message="Không có dữ liệu trong khoảng thời gian này." />

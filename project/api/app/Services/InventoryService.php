@@ -204,18 +204,18 @@ class InventoryService
         ];
     }
 
-    public function assertCanReserve(int $productId, int $qty): void
+    public function assertCanReserve(int $productId, int $warehouseId, int $qty): void
     {
-        $inventory = $this->inventoryRepository->findByProduct($productId);
+        $inventory = $this->inventoryRepository->findForWarehouse($productId, $warehouseId);
 
         if (! $inventory || $inventory->availableQty() < $qty) {
             throw new OrderException('M0401', 409);
         }
     }
 
-    public function reserve(int $productId, int $qty): void
+    public function reserve(int $productId, int $warehouseId, int $qty): void
     {
-        $inventory = $this->inventoryRepository->findByProduct($productId);
+        $inventory = $this->inventoryRepository->findForWarehouse($productId, $warehouseId);
 
         if (! $inventory || $inventory->availableQty() < $qty) {
             throw new OrderException('M0401', 409);
@@ -224,9 +224,9 @@ class InventoryService
         $this->inventoryRepository->reserve($inventory, $qty);
     }
 
-    public function release(int $productId, int $qty): void
+    public function release(int $productId, int $warehouseId, int $qty): void
     {
-        $inventory = $this->inventoryRepository->findByProduct($productId);
+        $inventory = $this->inventoryRepository->findForWarehouse($productId, $warehouseId);
 
         if ($inventory) {
             $this->inventoryRepository->release($inventory, $qty);
