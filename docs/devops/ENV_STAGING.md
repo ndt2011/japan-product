@@ -23,7 +23,7 @@ Internet
           Path API: /api/*
           │
           ├── MySQL 8 (Railway plugin)
-          └── Redis 7 (Railway plugin — có thể chưa dùng)
+          └── Redis 7 (Railway plugin — kết nối sẵn, cache/queue vẫn database/sync)
 ```
 
 **Luồng đăng nhập:**
@@ -126,13 +126,32 @@ DB_URL=mysql://...          # Copy NGUYÊN MYSQL_URL từ service MySQL
 
 **Không dùng** `MYSQL_PUBLIC_URL` (tốn egress).
 
-**Tùy chọn (cache/queue đơn giản):**
+**Cache / queue / session (staging mặc định):**
 
 ```env
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=database
 LOG_CHANNEL=stderr
+```
+
+**Redis (chuẩn bị kết nối — chỉ 2 dòng trên service `product`):**
+
+```env
+REDIS_URL=${{Redis.REDIS_URL}}
+REDIS_CLIENT=phpredis
+```
+
+> **Không** copy toàn bộ Variables từ service Redis (password, `REDIS_PUBLIC_URL`, `REDISHOST`…).  
+> `${{Redis.REDIS_URL}}` là reference nội bộ Railway — đủ cho Laravel.  
+> Redis trống trên dashboard là **bình thường** khi `CACHE_STORE=database` và `QUEUE_CONNECTION=sync`.  
+> Muốn dùng Redis thật: đổi `CACHE_STORE=redis` / `QUEUE_CONNECTION=redis` + worker `queue:work` (chưa bật staging).
+
+**Kiểm tra Redis sau khi thêm Variables + Redeploy:**
+
+```bash
+GET /api/health              # redis_configured: true
+GET /api/health?redis=1      # redis_connected: true
 ```
 
 **AI + Rakuten (bắt buộc nếu dùng tab Khám phá web):**
@@ -168,6 +187,9 @@ GET /api/health
 
 # Lấy IP outbound cho Rakuten whitelist
 GET /api/health?ip=1
+
+# Kiểm tra kết nối Redis (sau khi thêm REDIS_URL)
+GET /api/health?redis=1
 ```
 
 ```json
@@ -177,10 +199,14 @@ GET /api/health?ip=1
   "rakuten_configured": true,
   "openai_configured": true,
   "queue_connection": "sync",
+  "cache_store": "database",
+  "redis_configured": true,
   "ai_search_result_limit": 10,
   "outbound_ip": "34.xxx.xxx.xxx"
 }
 ```
+
+Với `?redis=1` thêm `redis_connected: true` nếu API ping Redis OK.
 
 Nếu `"db":"sqlite"` → `DB_URL` chưa vào container → sửa Variables + **Redeploy**.
 
@@ -387,5 +413,6 @@ curl.exe -s -X POST "https://product-production-7e4e.up.railway.app/api/auth/log
 | 2026-06-08 | Rakuten AI search staging OK — IP Railway whitelist         |
 | 2026-06-08 | Railway Variables: RAKUTEN_*, OPENAI, QUEUE_CONNECTION=sync |
 | 2026-06-08 | Doc quy trình dạy AI catalog (`ai-catalog-teaching-process.md`) + few-shot QueryExpansion |
+| 2026-06-08 | Redis: `REDIS_URL=${{Redis.REDIS_URL}}` trên service product; health `redis_configured` / `?redis=1` |
 
 

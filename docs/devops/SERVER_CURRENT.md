@@ -29,6 +29,8 @@
   "env": "staging",
   "db": "mysql",
   "queue_connection": "sync",
+  "cache_store": "database",
+  "redis_configured": true,
   "rakuten_configured": true,
   "openai_configured": true,
   "product_image_disk": "r2",

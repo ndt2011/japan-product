@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
 class HealthController extends Controller
 {
@@ -31,6 +32,8 @@ class HealthController extends Controller
             'db_connection_env' => $_SERVER['DB_CONNECTION'] ?? getenv('DB_CONNECTION') ?: null,
             'mysql_env_keys' => $envKeys,
             'queue_connection' => config('queue.default'),
+            'cache_store' => config('cache.default'),
+            'redis_configured' => $this->isRedisConfigured(),
             'rakuten_configured' => config('services.rakuten.application_id') !== ''
                 && config('services.rakuten.access_key') !== '',
             'openai_configured' => config('services.openai.api_key') !== '',
@@ -44,7 +47,40 @@ class HealthController extends Controller
             $payload['outbound_ip_hint'] = 'Whitelist this IP on Rakuten Developers (許可IPアドレス). IP may change after Railway redeploy.';
         }
 
+        if ($request->boolean('redis')) {
+            $payload['redis_connected'] = $this->pingRedis();
+            $payload['redis_hint'] = 'Add REDIS_URL=${{Redis.REDIS_URL}} on service product. App still uses cache_store/queue_connection from env.';
+        }
+
         return ApiResponse::success($payload);
+    }
+
+    private function isRedisConfigured(): bool
+    {
+        $url = getenv('REDIS_URL') ?: ($_ENV['REDIS_URL'] ?? $_SERVER['REDIS_URL'] ?? '');
+
+        if (is_string($url) && $url !== '') {
+            return true;
+        }
+
+        $host = getenv('REDIS_HOST') ?: ($_ENV['REDIS_HOST'] ?? $_ENV['REDISHOST'] ?? $_SERVER['REDISHOST'] ?? '');
+
+        return is_string($host) && $host !== '' && $host !== '127.0.0.1';
+    }
+
+    private function pingRedis(): bool
+    {
+        if (! $this->isRedisConfigured()) {
+            return false;
+        }
+
+        try {
+            Redis::connection()->ping();
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     private function isR2Configured(): bool

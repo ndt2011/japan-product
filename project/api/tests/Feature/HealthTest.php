@@ -18,6 +18,8 @@ class HealthTest extends TestCase
                     'rakuten_configured',
                     'openai_configured',
                     'queue_connection',
+                    'cache_store',
+                    'redis_configured',
                     'ai_search_result_limit',
                     'product_image_disk',
                     'r2_configured',
