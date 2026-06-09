@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\AuthContext;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +24,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('ai-purchasing', function (Request $request) {
+            $auth = AuthContext::from($request);
+            $key = $auth['type'].':'.$auth['id'];
+
+            return Limit::perHour(10)->by($key);
+        });
+
         if (config('queue.default') !== 'database') {
             return;
         }

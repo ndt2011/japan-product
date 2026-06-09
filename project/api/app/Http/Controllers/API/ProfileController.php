@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Profile\StoreProfileAvatarRequest;
+use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Services\ProfileService;
 use App\Support\ApiResponse;
 use App\Support\AuthContext;
@@ -24,21 +26,25 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateProfileRequest $request): JsonResponse
     {
         $auth = AuthContext::from($request);
 
-        $validated = $request->validate([
-            'full_name' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'avatar_url' => ['nullable', 'string', 'max:2000'],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        ]);
+        return ApiResponse::success([
+            'profile' => $this->profileService->update($auth['user'], $auth['type'], $request->validated()),
+        ], 'M0200');
+    }
+
+    public function uploadAvatar(StoreProfileAvatarRequest $request): JsonResponse
+    {
+        $auth = AuthContext::from($request);
 
         return ApiResponse::success([
-            'profile' => $this->profileService->update($auth['user'], $auth['type'], $validated),
+            'profile' => $this->profileService->uploadAvatar(
+                $auth['user'],
+                $auth['type'],
+                $request->file('avatar'),
+            ),
         ], 'M0200');
     }
 }

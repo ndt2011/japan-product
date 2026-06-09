@@ -320,7 +320,7 @@ export function MasterDataScreen() {
                   value={supplierForm.supplier_name}
                   onChange={(e) => {
                     setSupplierForm((f) => ({ ...f, supplier_name: e.target.value }));
-                    clearFieldError(setSupplierFieldErrors, "supplier_name");
+                    setSupplierFieldErrors((prev) => clearFieldError(prev, "supplier_name"));
                   }}
                   error={supplierFieldErrors.supplier_name}
                 />

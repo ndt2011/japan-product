@@ -1,7 +1,7 @@
 # Backend Tasks — Laravel 11
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Cập nhật**: 2026-06-08 | **Assignee**: Backend Developer  
+**Cập nhật**: 2026-06-09 (lần 20) | **Assignee**: Backend Developer  
 **Repo**: https://github.com/ndt2011/japan-product (`project/api/`)  
 **Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
 
@@ -84,19 +84,21 @@
 |----|-------|---|-----|-----|------------|
 | BE-P2-001 | Migration: `products` thêm `cost_price_jpy`, `selling_price_jpy`, `fee_rate` | P0 | — | 2h | ✅ migration 100060 |
 | BE-P2-002 | Migration: `invoices` + `invoice_items` + patch 100070/100071 | P0 | — | 3h | ✅ |
-| BE-P2-002b | Migration: `order_costs` + model `OrderCost` | P0 | — | 2h | ✅ · CRUD API ⏳ |
+| BE-P2-002b | Migration: `order_costs` + model `OrderCost` | P0 | — | 2h | ✅ |
 | BE-P2-003 | Migration: `orders` tracking + status `DELIVERED_ADMIN` | P0 | — | 1h | ✅ migration 100061 |
 | BE-P2-004 | `InvoiceService::createFromOrder()` — fee + snapshot | P0 | BE-P2-001~003 | 1d | ✅ |
-| BE-P2-005 | `InvoiceController`: CRUD + `send` + `pay` + `pdf` | P0 | BE-P2-004 | 1.5d | ✅ pdf=HTML ⏳ |
-| BE-P2-006 | DomPDF — PDF thật (`dompdf/dompdf`) | P1 | BE-P2-005 | 1d | ✅ · `pdf_path` persist ⏳ |
+| BE-P2-005 | `InvoiceController`: CRUD + `send` + `pay` + `pdf` | P0 | BE-P2-004 | 1.5d | ✅ |
+| BE-P2-006 | DomPDF — PDF thật (`dompdf/dompdf`) | P1 | BE-P2-005 | 1d | ✅ |
 | BE-P2-007 | `PUT /orders/{id}/confirm-receipt` (company + branch) | P0 | BE-P2-003 | 0.5d | ✅ |
 | BE-P2-008 | Scheduler `invoices:check-overdue` 9h JST | P0 | BE-P2-005 | 3h | ✅ |
 | BE-P2-009 | Scheduler `orders:auto-complete` 8h JST | P0 | BE-P2-007 | 3h | ✅ |
-| BE-P2-010 | `GET /reports/profit` (Admin) | P1 | BE-P2-004 | 1d | ✅ · by-product ⏳ |
+| BE-P2-010 | `GET /reports/profit` (Admin) | P1 | BE-P2-004 | 1d | ✅ |
 | BE-P2-011 | `ProductResource` ẩn `cost_price_jpy` non-admin | P0 | BE-P2-001 | 2h | ✅ |
 | BE-P2-012 | API `order_costs` list/create/delete | P1 | BE-P2-002b | 0.5d | ✅ |
+| BE-P2-013 | `GET /reports/profit/by-product` | P2 | BE-P2-010 | 0.5d | ✅ |
+| BE-P2-014 | `invoices.pdf_path` persist + serve cached PDF | P2 | BE-P2-006 | 2h | ✅ RULE-INV-05 |
 
-**Việc tiếp**: BE-P2-006 (DomPDF) → BE-P2-012 (order_costs API) → BE-P2-010 by-product
+**Phase 2 backend**: ✅ 100% (BE-P2-001~014)
 
 ---
 
@@ -113,7 +115,8 @@
 | BE-AI-004 | `scoreItem()` — 5 tiêu chí weighted: price30%+quality30%+popular20%+warranty10%+brand10% | P0 | BE-AI-003 | 3h | ✅ |
 | BE-AI-005 | `generateReport()` — GPT-4o-mini, max 400 tokens, cache 1h | P0 | BE-AI-004 | 2h | ✅ |
 | BE-AI-006 | `AiPurchasingController::analyze()` — POST /ai/purchasing + validation | P0 | BE-AI-005 | 2h | ✅ |
-| BE-AI-007 | Rate limiting: max 10 request/user/giờ (throttle middleware) | P1 | BE-AI-006 | 1h | 📋 P2 |
+| BE-AI-007 | Rate limiting: max 10 request/user/giờ (throttle `ai-purchasing`) | P1 | BE-AI-006 | 1h | ✅ |
+| BE-AI-009 | `purchasing_sessions` migration + history API | P2 | BE-AI-001 | 2h | ✅ `100120` |
 | BE-AI-008 | Cache: GPT report 1h (Laravel Cache), translation via service | P1 | BE-AI-003 | 2h | ✅ |
 
 **Thứ tự implement**: BE-AI-001 → BE-AI-002 → BE-AI-003 → BE-AI-004 → BE-AI-005 → BE-AI-006
@@ -190,7 +193,7 @@
 | BE-V3-026 | Migration: `barcode`, `min_order_qty` vào products | P1 | — | 0.5h | ✅ `100100` |
 | BE-V3-027 | `ProductResource` — thêm `created_by_name` (resolve Admin từ `created_user_id`) | P1 | — | 1h | ✅ |
 | BE-V3-028 | `AiProductCandidateResource` — đảm bảo `image_url` trong response | P1 | — | 0.5h | ✅ |
-| BE-V3-029 | Review + cập nhật required validation tất cả Form Requests | P2 | — | 2h | 📋 |
+| BE-V3-029 | Review + cập nhật required validation tất cả Form Requests | P2 | — | 2h | ✅ Branch · Warehouse · OrderCost · Category · BranchUser · Stock · Shipment · Inventory · AI |
 
 ### V3-G2: Master Data + Profile (#10 #14)
 
@@ -198,7 +201,7 @@
 |----|-------|---|-----|-----|------------|
 | BE-V3-030 | API CRUD `product_categories`; warehouses create/list; **suppliers CRUD** | P2 | — | 3h | ✅ |
 | BE-V3-031 | Migration: `avatar_url`, `phone` vào admins + branch_users + companies_vn | P2 | — | 1h | ✅ `100110` |
-| BE-V3-032 | `GET/PUT /profile` + `POST /profile/avatar` (upload R2) | P2 | BE-V3-031 | 3h | ⚠️ GET/PUT ✅ · avatar R2 📋 |
+| BE-V3-032 | `GET/PUT /profile` + `POST /profile/avatar` (upload R2) | P2 | BE-V3-031 | 3h | ✅ |
 
 ---
 

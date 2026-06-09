@@ -4,7 +4,9 @@ namespace App\Services\Ai;
 
 use App\Models\Admin;
 use App\Models\BranchUser;
+use App\Models\PurchasingSession;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -51,7 +53,7 @@ class AiPurchasingService
      * @param  array<string, mixed>  $params  ['query', 'budget_jpy', 'qty', 'preferences']
      * @return array<string, mixed>
      */
-    public function analyze(array $params, Authenticatable $user): array
+    public function analyze(array $params, Authenticatable $user, string $userType, int $userId): array
     {
         $query = (string) ($params['query'] ?? '');
         $budgetJpy = isset($params['budget_jpy']) ? (int) $params['budget_jpy'] : null;
@@ -86,7 +88,7 @@ class AiPurchasingService
         // Step 5: generate AI report
         $report = $this->generateReport($query, $jpKeyword, $top, $budgetJpy, $qty, $user);
 
-        return [
+        $payload = [
             'success' => true,
             'query' => $query,
             'keyword_jp' => $jpKeyword,
@@ -94,6 +96,40 @@ class AiPurchasingService
             'recommendation' => $top[0] ?? null,
             'report' => $report,
         ];
+
+        $session = PurchasingSession::query()->create([
+            'user_type' => $userType,
+            'user_id' => $userId,
+            'query' => $query,
+            'keyword_jp' => $jpKeyword,
+            'budget_jpy' => $budgetJpy,
+            'qty' => $qty,
+            'status' => 'completed',
+            'response_json' => $payload,
+            'created' => now(),
+        ]);
+
+        $payload['session_id'] = $session->id;
+
+        return $payload;
+    }
+
+    public function listHistory(string $userType, int $userId, int $perPage = 20): LengthAwarePaginator
+    {
+        return PurchasingSession::query()
+            ->where('user_type', $userType)
+            ->where('user_id', $userId)
+            ->orderByDesc('created')
+            ->paginate($perPage);
+    }
+
+    public function getSession(int $id, string $userType, int $userId): ?PurchasingSession
+    {
+        return PurchasingSession::query()
+            ->where('id', $id)
+            ->where('user_type', $userType)
+            ->where('user_id', $userId)
+            ->first();
     }
 
     /** @return array<int, array<string, mixed>> */

@@ -155,6 +155,34 @@ export function ReportsScreen() {
         </Card>
       )}
 
+      {tab === "profit" && profitOrders.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-sm font-medium mb-4">Lãi ròng theo đơn hàng</h3>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={profitOrders.slice(0, 8).map((o) => ({
+                  name: o.order_no.slice(0, 14),
+                  net_profit: o.net_profit_vnd,
+                }))}
+                margin={{ top: 8, right: 8, left: 8, bottom: 32 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={40} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${Math.round(Number(v) / 1_000_000)}M`} />
+                <Tooltip
+                  formatter={(value) => [
+                    `${Number(value ?? 0).toLocaleString("vi-VN")} ₫`,
+                    "Lãi ròng",
+                  ]}
+                />
+                <Bar dataKey="net_profit" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
+
       {tab === "profit" && profitProducts.length > 0 && (
         <Card className="p-5">
           <h3 className="text-sm font-medium mb-4">Top sản phẩm theo lãi ròng</h3>

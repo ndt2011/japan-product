@@ -121,6 +121,143 @@
 
 ---
 
+## UC-V3-101: Xem và đọc thông báo (V3)
+
+**Actor**: Branch Manager / Branch Staff / JP Agency  
+**Precondition**: Đã đăng nhập, có thông báo chưa đọc  
+**Postcondition**: Thông báo được đánh dấu đã đọc
+
+### Luồng chính
+1. User thấy badge số đỏ trên bell icon header
+2. Click bell → dropdown hiển thị 10 thông báo gần nhất (type icon + nội dung + timestamp)
+3. Click vào 1 thông báo → `read_at` được set, badge giảm 1
+4. Click "Đọc tất cả" → toàn bộ `read_at` được set, badge = 0
+
+### Luồng thay thế
+- **2a** Không có thông báo: Dropdown hiển thị "Không có thông báo mới"
+- **3a** Thông báo liên kết đến đơn hàng: Click → navigate đến trang đơn hàng đó
+
+---
+
+## UC-V3-201: Nhập kho CSV bulk import (V3)
+
+**Actor**: Admin / JP Agency  
+**Precondition**: Đã có file CSV đúng định dạng  
+**Postcondition**: Tồn kho được cập nhật, báo cáo import hiển thị
+
+### Luồng chính
+1. Vào trang Kho hàng → Click "📥 Import CSV"
+2. Modal hiển thị: format mẫu + nút upload
+3. Chọn file `.csv` (tối đa 2MB)
+4. Click "Import"
+5. Hệ thống parse từng dòng, gọi `stockIn()` cho dòng hợp lệ
+6. Hiển thị kết quả: `imported X dòng / errors Y dòng`
+
+### Luồng thay thế
+- **3a** File không phải .csv: HTTP 422, thông báo lỗi định dạng
+- **5a** Dòng thiếu `product_cd` hoặc `warehouse_id`: bỏ qua dòng đó, ghi vào errors, tiếp tục
+- **6a** Không có dòng nào hợp lệ: `imported = 0`, hiển thị toàn bộ errors
+
+---
+
+## UC-V3-202: Nhập kho thủ công (V3)
+
+**Actor**: Admin / JP Agency  
+**Precondition**: Biết sản phẩm cần nhập  
+**Postcondition**: Stock movement IN được tạo, tồn kho tăng
+
+### Luồng chính
+1. Vào "Phiếu Nhập Kho"
+2. Gõ tên/mã sản phẩm vào ô tìm kiếm → dropdown gợi ý xuất hiện
+3. Chọn sản phẩm → ID được lưu ngầm
+4. Chọn kho, nhập số lượng, nhập lý do (optional)
+5. Click "Nhập kho"
+6. Hệ thống gọi `POST /stock-movements {movement_type: IN}`, lịch sử cập nhật
+
+### Luồng thay thế
+- **2a** Gõ < 2 ký tự: dropdown không xuất hiện
+- **2b** Không tìm thấy sản phẩm: hiển thị "Không tìm thấy sản phẩm"
+- **4a** Số lượng ≤ 0: validation error
+
+---
+
+## UC-V3-301: Xem Dashboard tài chính (V3)
+
+**Actor**: Admin / JP Agency  
+**Precondition**: Có dữ liệu đơn hàng  
+**Postcondition**: Dashboard hiển thị KPI + biểu đồ
+
+### Luồng chính
+1. Vào Dashboard → Tab "Doanh thu"
+2. Hệ thống load KPI cards: tổng đơn, công nợ, SP tồn kho thấp, doanh thu tháng
+3. Biểu đồ Revenue (JPY/VND) theo tháng hiển thị
+4. Tab "Cashflow" → biểu đồ In/Out/Net 12 tháng
+5. Tỷ giá hiện tại hiển thị góc phải, Admin có thể chỉnh inline
+
+### Luồng thay thế
+- **1a** Branch Manager: chỉ thấy số liệu của branch mình
+- **3a** Không có dữ liệu tháng này: biểu đồ hiển thị 0, không lỗi
+
+---
+
+## UC-V3-401: Luồng đơn hàng đầy đủ V3 (V3)
+
+**Actor**: JP Agency (approve/pay/ship) · VN Branch (confirm receipt)  
+**Precondition**: Đơn hàng đã CONFIRMED  
+**Postcondition**: Đơn COMPLETED, kho được cập nhật
+
+### Luồng chính
+1. JP Agency Approve đơn CONFIRMED → status = APPROVED
+2. JP Agency đánh dấu Paid → status = PAID, `locked_rate` ghi DB
+3. JP Agency Mark Shipped → status = SHIPPING
+4. Batch DELIVERED → đơn = DELIVERED_ADMIN, kho VN +stockIn tự động
+5. VN Branch nhấn "Đã nhận hàng" → status = COMPLETED, kho -stockOut tự động
+
+### Luồng thay thế
+- **Bất kỳ bước nào** skip: HTTP 422, "Không thể chuyển trạng thái"
+
+---
+
+## UC-V3-501: Cập nhật hồ sơ tài khoản (V3)
+
+**Actor**: Tất cả user đã đăng nhập  
+**Precondition**: Đã đăng nhập  
+**Postcondition**: Thông tin profile được cập nhật
+
+### Luồng chính
+1. Vào "/profile"
+2. Hệ thống load: tên, email (readonly), phone, avatar_url
+3. User sửa tên / phone / avatar URL
+4. Click "Lưu" → `PUT /profile`
+5. Toast xác nhận thành công
+
+### Luồng thay thế
+- **3a** Nhập phone có chữ: validation error "Số điện thoại không hợp lệ"
+- **3b** Cố sửa email qua DevTools: field ignored, email không thay đổi
+
+---
+
+## UC-AI-001: Phân tích AI Purchasing (V3/AI)
+
+**Actor**: Admin / JP Agency  
+**Precondition**: OPENAI_API_KEY đã được set, có danh sách sản phẩm  
+**Postcondition**: Kết quả gợi ý mua hàng với AI score hiển thị
+
+### Luồng chính
+1. Vào "AI Purchasing" từ menu
+2. Chọn/nhập danh sách sản phẩm cần phân tích
+3. Click "Phân tích AI"
+4. Hệ thống gọi `POST /ai/purchasing`, chờ ≤ 15s
+5. Kết quả hiển thị: danh sách sắp xếp theo ai_score giảm dần
+6. Mỗi sản phẩm: ScoreBar với 5 tiêu chí + text giải thích
+
+### Luồng thay thế
+- **1a** VN Branch Staff: HTTP 403
+- **4a** OPENAI_API_KEY chưa set: thông báo "AI service chưa được cấu hình"
+- **4b** Timeout > 15s: thông báo lỗi kết nối AI
+
+---
+
 ## UC-501: Cấu hình permission matrix
 
 **Actor**: SUPER_ADMIN  

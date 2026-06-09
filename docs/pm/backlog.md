@@ -54,7 +54,7 @@
 
 ---
 
-## Phase 2 — Invoice, Dual Pricing, Profit (2026-06-08) ✅ ~98%
+## Phase 2 — Invoice, Dual Pricing, Profit (2026-06-08) ✅ 100%
 
 | ID | Feature | Priority | Status |
 |----|---------|----------|--------|
@@ -65,11 +65,11 @@
 | P2-DEL-02 | Auto-complete sau 7 ngày | P0 | ✅ |
 | P2-RPT-01 | GET /reports/profit + tab FE | P1 | ✅ |
 | P2-RPT-02 | order_costs API + UI + net profit | P1 | ✅ |
-| P2-PDF-01 | DomPDF hóa đơn | P1 | ✅ · `pdf_path` persist ⏳ |
+| P2-PDF-01 | DomPDF hóa đơn + `pdf_path` cache | P1 | ✅ |
 | P2-FE-01 | Product form dual pricing (Admin) | P0 | ✅ |
 | P2-FE-02 | Tab Lợi nhuận `/reports` | P1 | ✅ |
 | P2-FE-03 | Badge thông báo header | P2 | ✅ |
-| P2-RPT-03 | profit/by-product + Recharts | P2 | ⏳ |
+| P2-RPT-03 | profit/by-product + Recharts | P2 | ✅ |
 
 ---
 
@@ -87,7 +87,7 @@
 | P2-008 | Audit log | P2 | 📋 |
 | P2-009 | Amazon JP PA-API | P1 | 📋 |
 | P2-010 | AI Phase 4 GPT re-rank | P2 | 📋 |
-| P2-011 | Notification in-app | P2 | 📋 V3-G1 ↓ |
+| P2-011 | Notification in-app | P2 | ✅ V3-G1 done |
 
 ---
 
@@ -126,14 +126,26 @@
 ## AI Purchasing Specialist (Sprint AI-P)
 
 > Spec đầy đủ: `docs/sa/amendments/ai-purchasing-specialist.md`  
-> Tasks: BE-AI-001~008 · FE-AI-001~007
+> Tasks: BE-AI-001~008 · FE-AI-001~007  
+> **Tiến độ (2026-06-09)**: ~90% code local · ⏳ Cần OPENAI_API_KEY Railway + History page P2
 
 | ID | Feature | Priority | Status |
 |----|---------|----------|--------|
-| AI-P-01 | Phân tích yêu cầu từ tiếng Việt/Nhật | P1 | 📋 BE-AI-001 |
-| AI-P-02 | Tìm ≥5 sản phẩm từ Rakuten + internal catalog | P1 | 📋 BE-AI-002~003 |
-| AI-P-03 | Chấm điểm 5 tiêu chí: Giá 30% + Chất lượng 30% + Review 20% + BH 10% + Brand 10% | P1 | 📋 BE-AI-004 |
-| AI-P-04 | Sinh báo cáo so sánh VI/JP + khuyến nghị | P1 | 📋 BE-AI-005 |
-| AI-P-05 | API + queue + polling | P1 | 📋 BE-AI-006~007 |
-| AI-P-06 | Màn hình `/purchasing` + ProductCompareCard + ScoreBar | P1 | 📋 FE-AI-002~004 |
-| AI-P-07 | ProfitCalculator realtime | P2 | 📋 FE-AI-005 |
+| AI-P-01 | Phân tích yêu cầu từ tiếng Việt/Nhật | P1 | ✅ BE-AI-001 AiPurchasingService |
+| AI-P-02 | Tìm ≥5 sản phẩm từ Rakuten + internal catalog | P1 | ✅ BE-AI-002~003 |
+| AI-P-03 | Chấm điểm 5 tiêu chí: Giá 30% + Chất lượng 30% + Phổ biến 20% + BH 10% + Brand 10% | P1 | ✅ BE-AI-004 |
+| AI-P-04 | Sinh báo cáo so sánh VI/JP + khuyến nghị | P1 | ✅ BE-AI-005 |
+| AI-P-05 | POST /ai/purchasing API | P1 | ✅ BE-AI-006 |
+| AI-P-06 | Màn hình `/purchasing` + ProductCard + ScoreBar | P1 | ✅ FE-AI-002~004 |
+| AI-P-07 | ProfitCalculator realtime | P2 | ✅ FE-AI-005 |
+| AI-P-08 | AI Purchasing history page | P2 | 📋 FE-AI-007 (defer) |
+| AI-P-09 | Rate limiting BE-AI-007 | P2 | 📋 BE-AI-007 (defer) |
+
+---
+
+## Hotfix — Inventory UX (2026-06-09)
+
+| ID | Feature | Priority | Status |
+|----|---------|----------|--------|
+| INV-003 | StockIn autocomplete sản phẩm theo tên (thay input ID số) | P1 | ✅ Done |
+| INV-001b | warehouse_id optional khi batch DELIVERED | P2 | ✅ Done |

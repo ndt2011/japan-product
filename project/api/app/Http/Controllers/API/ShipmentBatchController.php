@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Exceptions\ShipmentBatchException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ShipmentBatch\AdvanceShipmentBatchStatusRequest;
+use App\Http\Requests\ShipmentBatch\UpdateShipmentTrackingRequest;
 use App\Http\Requests\ShipmentBatch\StoreShipmentBatchRequest;
 use App\Http\Requests\ShipmentBatch\UpdateShipmentBatchRequest;
 use App\Http\Resources\OrderResource;
@@ -109,7 +110,7 @@ class ShipmentBatchController extends Controller
         ], 'M0506');
     }
 
-    public function setTracking(Request $request, int $id): JsonResponse
+    public function setTracking(UpdateShipmentTrackingRequest $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);
 
@@ -117,12 +118,7 @@ class ShipmentBatchController extends Controller
             return ApiResponse::error('M0507', null, 403);
         }
 
-        $validated = $request->validate([
-            'tracking_no' => ['nullable', 'string', 'max:100'],
-            'tracking_number' => ['nullable', 'string', 'max:100'],
-            'carrier_name' => ['nullable', 'string', 'max:100'],
-            'logistics_partner' => ['nullable', 'string', 'max:100'],
-        ]);
+        $validated = $request->validated();
 
         try {
             $batch = $this->service->setTracking($id, $validated, $auth['user']);

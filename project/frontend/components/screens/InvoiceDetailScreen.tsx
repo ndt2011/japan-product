@@ -163,6 +163,11 @@ export function InvoiceDetailScreen({ invoiceId }: { invoiceId: number }) {
           <p className="text-text-muted">Tổng thanh toán</p>
           <p className="mt-1 font-medium">{formatVnd(invoice.total_amount)}</p>
         </div>
+        {isAdmin && invoice.pdf_path && (
+          <div className="col-span-2 sm:col-span-4">
+            <p className="text-xs text-success">PDF đã lưu trên server — mở lại sẽ dùng bản snapshot.</p>
+          </div>
+        )}
       </Card>
 
       <Card>

@@ -6,10 +6,14 @@ use App\Models\Admin;
 use App\Models\BranchUser;
 use App\Models\CompanyVn;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileService
 {
+    public function __construct(
+        private readonly ImageStorageService $imageStorageService,
+    ) {}
     /**
      * @return array<string, mixed>
      */
@@ -51,6 +55,26 @@ class ProfileService
             $user->update($payload);
             $user->refresh();
         }
+
+        return $this->present($user->fresh(), $userType);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function uploadAvatar(Authenticatable $user, string $userType, UploadedFile $file): array
+    {
+        $oldUrl = $user->avatar_url ?? null;
+        $url = $this->imageStorageService->uploadAvatar($file, $userType, (int) $user->id);
+
+        if (is_string($oldUrl) && $oldUrl !== '') {
+            $this->imageStorageService->deleteByUrl($oldUrl);
+        }
+
+        $user->update([
+            'avatar_url' => $url,
+            'modified' => now(),
+        ]);
 
         return $this->present($user->fresh(), $userType);
     }

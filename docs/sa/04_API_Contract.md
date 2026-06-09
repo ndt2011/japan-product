@@ -1608,17 +1608,95 @@ Phân tích và tư vấn sản phẩm thu mua dựa trên yêu cầu của user
 
 ---
 
+---
+
+## Module 14 — Stock Movements (V3)
+
+**Base URL**: `/api/stock-movements`  
+**Auth**: Bearer token required  
+**Phân quyền**: Admin / JP Agency
+
+### GET /stock-movements
+
+| Query param | Kiểu | Mô tả |
+|-------------|------|-------|
+| `movement_type` | string | `IN` hoặc `OUT` |
+| `product_id` | integer | Lọc theo sản phẩm |
+| `warehouse_id` | integer | Lọc theo kho |
+| `from_date` | date | Y-m-d |
+| `to_date` | date | Y-m-d |
+| `per_page` | integer | max 100, default 50 |
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "summary": { "total_in": 500, "total_out": 120, "net": 380 },
+    "items": [{
+      "id": 1, "movement_type": "IN",
+      "product_id": 5, "product_name": "DHC Collagen",
+      "warehouse_id": 1, "warehouse_name": "Kho HN",
+      "quantity": 100, "quantity_before": 50, "quantity_after": 150,
+      "ref_type": "shipment_batch", "ref_id": 3,
+      "reason": "Nhập kho theo chuyến hàng #3",
+      "created": "2026-06-09T10:00:00Z"
+    }],
+    "pagination": { "current_page": 1, "per_page": 50, "total": 80, "last_page": 2 }
+  }
+}
+```
+
+---
+
+### POST /stock-movements
+
+Nhập/xuất kho thủ công.
+
+**Request body**:
+```json
+{
+  "movement_type": "IN",
+  "product_id": 5,
+  "warehouse_id": 1,
+  "quantity": 50,
+  "reason": "Nhập kho thủ công từ nhà cung cấp",
+  "ref_type": "manual",
+  "note": "Lô hàng tháng 6"
+}
+```
+
+| Field | Required | Ghi chú |
+|-------|----------|---------|
+| `movement_type` | ✅ | `IN` hoặc `OUT` |
+| `product_id` | ✅ | exists:products |
+| `warehouse_id` | ✅ | exists:warehouses |
+| `quantity` | ✅ | integer ≥ 1 |
+| `reason` | — | max 500 |
+| `ref_type` | — | `manual` / `csv_import` / `shipment_batch` / `order` |
+| `note` | — | Ghi chú thêm |
+
+**Response 201**: `{ "success": true, "message": "M1001", "data": { "movement": { "id": 99, "quantity_before": 100, "quantity_after": 150 } } }`
+
+**Lỗi**: `422` validation fail · `409` OUT khi available_qty không đủ (M1002) · `404` product/warehouse không tồn tại
+
+> **INV-001 note**: `PUT /shipment-batches/{id}/advance-status` nay nhận thêm `warehouse_id` optional. Nếu không truyền → dùng `defaultWarehouse()`.
+
+---
+
 ## Cập nhật Message Codes (V3)
 
 | Code | Module | Mô tả |
 |------|--------|-------|
-| M1001 | Notifications | Đánh dấu đã đọc thành công |
-| M1002 | Notifications | Thông báo không tồn tại hoặc không phải của bạn |
-| M1101 | Inventory | Cập nhật inventory thành công |
-| M1102 | Inventory | Xóa inventory thành công |
-| M1103 | Inventory | Không xóa được — đang có reserved_qty > 0 |
-| M1104 | Inventory | CSV import: file không hợp lệ |
-| M1201 | Profile | Cập nhật profile thành công |
-| M1301 | AI Purchasing | Phân tích thành công |
-| M1302 | AI Purchasing | Không tìm thấy sản phẩm phù hợp |
-| M1303 | AI Purchasing | Vượt giới hạn request (rate limit) |
+| M1001 | Stock Movements | Nhập/xuất kho thành công |
+| M1002 | Stock Movements | Tồn kho không đủ để xuất |
+| M1101 | Notifications | Đánh dấu đã đọc thành công |
+| M1102 | Notifications | Thông báo không tồn tại hoặc không phải của bạn |
+| M1201 | Inventory | Cập nhật inventory thành công |
+| M1202 | Inventory | Xóa inventory thành công |
+| M1203 | Inventory | Không xóa được — đang có reserved_qty > 0 |
+| M1204 | Inventory | CSV import: file không hợp lệ |
+| M1301 | Profile | Cập nhật profile thành công |
+| M1401 | AI Purchasing | Phân tích thành công |
+| M1402 | AI Purchasing | Không tìm thấy sản phẩm phù hợp |
+| M1403 | AI Purchasing | AI service chưa được cấu hình (thiếu API key) |

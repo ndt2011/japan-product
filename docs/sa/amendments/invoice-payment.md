@@ -368,7 +368,7 @@ GET /api/reports/profit/by-product
 
 ## 8. Checklist implement (cập nhật 2026-06-08)
 
-> **Trạng thái**: ✅ ~98% — chi tiết [STATUS.md](../../tasks/STATUS.md) · audit [code-vs-docs-audit.md](./code-vs-docs-audit.md)
+> **Trạng thái**: ✅ **100%** — chi tiết [STATUS.md](../../tasks/STATUS.md) · audit [code-vs-docs-audit.md](./code-vs-docs-audit.md)
 
 ```
 Backend:
@@ -384,7 +384,8 @@ Backend:
   ☑ BE-P2-010: GET /reports/profit
   ☑ BE-P2-011: ProductResource ẩn cost non-admin
   ☑ BE-P2-012: order_costs API (GET/POST/DELETE)
-  □ BE-P2-013: GET /reports/profit/by-product (P2)
+  ☑ BE-P2-013: GET /reports/profit/by-product
+  ☑ BE-P2-014: Lưu `pdf_path` + serve cached PDF (RULE-INV-05)
 
 Frontend:
   ☑ FE-P2-001: /invoices
@@ -393,15 +394,15 @@ Frontend:
   ☑ FE-P2-004: Product form dual pricing (Admin)
   ☑ FE-P2-005: Tab Lợi nhuận trong /reports (bảng + cards)
   ☑ FE-P2-006: Badge 🔔 header
-  □ FE-P2-007: Recharts chart profit (P2)
+  ☑ FE-P2-007: Recharts chart profit (SP + đơn hàng)
 
-QA:
-  □ TC-INV-001: Tạo invoice tự động khi confirm đơn
-  □ TC-INV-002: Tính đúng unit_price_vnd = selling_price × rate × 1.05
-  □ TC-INV-003: Đại lý không thấy cost_price_jpy trong API response
-  □ TC-INV-004: PDF xuất đúng nội dung
-  □ TC-INV-005: Invoice overdue sau due_date
-  □ TC-DEL-001: Đại lý xác nhận nhận hàng → COMPLETED
-  □ TC-DEL-002: Auto COMPLETED sau 7 ngày không xác nhận
-  □ TC-PROFIT-001: Báo cáo lợi nhuận đúng công thức
+QA (PHPUnit → manual staging — xem `docs/tasks/qa-tasks.md` QA-028~033):
+  ☑ TC-INV-001: Tạo invoice từ order — `InvoiceTest` ✅
+  ☑ TC-INV-002: unit_price_vnd dual pricing — `InvoiceTest` ✅
+  □ TC-INV-003: Đại lý không thấy cost_price_jpy — manual
+  ☑ TC-INV-004: PDF persist + cache — `InvoiceTest::test_pdf` ✅
+  □ TC-INV-005: Invoice overdue sau due_date — scheduler manual
+  ☑ TC-DEL-001: confirm-receipt → COMPLETED — `OrderTest` ✅
+  □ TC-DEL-002: Auto COMPLETED 7 ngày — scheduler manual
+  ☑ TC-PROFIT-001: profit + by-product — `ProfitReportTest` ✅
 ```

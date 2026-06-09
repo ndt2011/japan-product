@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\WarehouseException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockMovement\StoreStockMovementRequest;
 use App\Http\Resources\StockMovementResource;
 use App\Services\InventoryService;
 use App\Support\ApiResponse;
@@ -39,18 +40,9 @@ class StockMovementController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreStockMovementRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'movement_type' => ['required', 'in:IN,OUT'],
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'reason' => ['nullable', 'string', 'max:500'],
-            'ref_type' => ['nullable', 'string', 'max:30'],
-            'ref_id' => ['nullable', 'integer'],
-            'note' => ['nullable', 'string'],
-        ]);
+        $data = $request->validated();
 
         $auth = AuthContext::from($request);
 

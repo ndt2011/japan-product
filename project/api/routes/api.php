@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/count', [NotificationController::class, 'count']);
@@ -118,7 +119,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ai/conversations/{id}/messages', [AiChatController::class, 'messages']);
 
     // AI Purchasing Specialist — spec: docs/sa/amendments/ai-purchasing-specialist.md
-    Route::post('/ai/purchasing', [AiPurchasingController::class, 'analyze']);
+    Route::get('/ai/purchasing/history', [AiPurchasingController::class, 'history']);
+    Route::get('/ai/purchasing/{id}', [AiPurchasingController::class, 'show'])->whereNumber('id');
+    Route::middleware('throttle:ai-purchasing')->group(function () {
+        Route::post('/ai/purchasing', [AiPurchasingController::class, 'analyze']);
+    });
 
     Route::post('/ai/product-search', [AiProductSearchController::class, 'search']);
     Route::post('/ai/search', [AiSearchController::class, 'store']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\OrderException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderCost\StoreOrderCostRequest;
 use App\Models\Admin;
 use App\Services\OrderCostService;
 use App\Support\ApiResponse;
@@ -39,19 +40,14 @@ class OrderCostController extends Controller
         ]);
     }
 
-    public function store(Request $request, int $orderId): JsonResponse
+    public function store(StoreOrderCostRequest $request, int $orderId): JsonResponse
     {
         $auth = AuthContext::from($request);
         if (! $auth['user'] instanceof Admin) {
             return ApiResponse::error('M0407', null, 403);
         }
 
-        $data = $request->validate([
-            'cost_type'   => ['required', 'string', 'in:shipping,customs_jp,customs_vn,handling,other'],
-            'amount_vnd'  => ['required', 'integer', 'min:1'],
-            'note'        => ['nullable', 'string', 'max:500'],
-            'batch_id'    => ['nullable', 'integer'],
-        ]);
+        $data = $request->validated();
 
         try {
             $cost = $this->orderCostService->store($orderId, $data, $auth['user']);

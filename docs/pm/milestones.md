@@ -14,7 +14,7 @@
 | **M3**: Product + AI live | 2026-07-26 | CRUD SP + ảnh R2, AI Rakuten + hybrid catalog | ✅ ~95% |
 | **M4**: Order flow complete | 2026-08-09 | Đặt hàng, confirm, tỷ giá lock, invoice auto | 🔄 ~90% |
 | **M5**: Shipment tracking live | 2026-08-23 | Batch, DELIVERED_ADMIN, confirm-receipt | ✅ ~95% |
-| **M6**: Phase 2 Invoice | 2026-09-01 | HĐ, công nợ, profit, dual pricing form | ✅ ~98% staging |
+| **M6**: Phase 2 Invoice | 2026-09-01 | HĐ, công nợ, profit, dual pricing form | ✅ 100% staging |
 | **M6b**: V3 Staging Deploy | 2026-06-15 | push main + migrate 100100/100110 + smoke test | ⏳ OPS |
 | **M6c**: AI Purchasing Live | 2026-06-15 | OPENAI_API_KEY set, POST /ai/purchasing trả về score | ⏳ OPS |
 | **M7**: UAT hoàn thành | 2026-09-13 | 0 critical bugs, test pass | ⬜ |

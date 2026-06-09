@@ -1,9 +1,9 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-09 (lần 16 — BE-V3-018 scheduler + Suppliers CRUD)  
+> **Cập nhật**: 2026-06-09 (lần 20 — sync **qa-tasks** · **devops-tasks** · **local, chưa push**)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
-> **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp** (V3 ~95% task)  
+> **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~99% khớp** (V3 + AI-P 100%)  
 > **Server**: [SERVER_CURRENT.md](../devops/SERVER_CURRENT.md)
 
 ---
@@ -18,11 +18,11 @@
 | **S4–S5** Orders + Shipments | 2-step delivery | **✅ ~95%** | auto-complete ✅ |
 | **S6–S7** Kho + Báo cáo | Reports + profit | **✅ ~95%** | Tab Lợi nhuận ✅ |
 | **DevOps** | Railway + Vercel staging | **✅** | Auto-deploy `main` |
-| **Phase 2** Invoice & Payment | HĐ, công nợ, profit | **✅ ~98%** | by-product ⏳ P2 |
-| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~98%** | G1 hoàn thành · suppliers CRUD |
-| **AI Purchasing** | BE service + FE screen | **✅ ~90%** | History page P2 còn lại |
+| **Phase 2** Invoice & Payment | HĐ, công nợ, profit | **✅ 100%** | BE-P2-013~014 · FE-P2-007 ✅ |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ 100%** | BE-V3-029 Form Requests ✅ |
+| **AI Purchasing** | BE service + FE screen + history | **✅ 100%** | BE-AI-007 throttle · `/purchasing/history` |
 
-**Tổng MVP + Phase 2 + V3 core**: ~**92%** — migrate `100100` + `100110` auto qua `start.sh`.
+**Tổng MVP + Phase 2 + V3 + AI-P core**: ~**98%** — migrate `100120` (purchasing_sessions) qua `start.sh`.
 
 ---
 
@@ -67,6 +67,8 @@
 | BE-P2-010 | GET /reports/profit | ✅ |
 | BE-P2-011 | ProductResource ẩn cost non-admin | ✅ |
 | BE-P2-012 | order_costs API + UI | ✅ |
+| BE-P2-013 | `GET /reports/profit/by-product` | ✅ |
+| BE-P2-014 | `invoices.pdf_path` persist + serve cached (RULE-INV-05) | ✅ |
 
 ### Frontend
 
@@ -78,6 +80,7 @@
 | FE-P2-004 | Product form dual pricing | ✅ |
 | FE-P2-005 | Tab Lợi nhuận `/reports` | ✅ |
 | FE-P2-006 | Badge 🔔 header | ✅ |
+| FE-P2-007 | Recharts profit chart (SP + đơn) | ✅ |
 | — | `/debts`, `/admin` all-users | ✅ |
 
 ---
@@ -152,14 +155,15 @@
 | BE-V3-027 | `ProductResource.created_by_name` | ✅ |
 | BE-V3-030 | Categories CRUD + warehouses + **suppliers CRUD** | ✅ |
 | BE-V3-031 | Profile migration `avatar_url`, `phone` | ✅ `100110` |
-| BE-V3-032 | GET/PUT `/profile` | ✅ |
+| BE-V3-032 | GET/PUT `/profile` + `POST /profile/avatar` R2 | ✅ |
+| BE-V3-029 | Form Requests toàn bộ controllers chính | ✅ |
 | FE-V3-017~019 | Dashboard tài chính + chart + proxy | ✅ |
 | FE-V3-020~024 | Product thumb, gallery, filter, AI thumb, branch filter | ✅ |
 | FE-V3-025~026 | `/admin/master-data` 4 tab (categories, warehouses, suppliers CRUD, units) | ✅ |
 | FE-V3-027 | `/profile` — sửa tên, email, phone, avatar URL | ✅ |
 | FE-V3-032 | Tỷ giá JPY/VND trên Dashboard + estimator ProductForm | ✅ |
 
-**Còn G2 (P2, không blocking):** BE-V3-029 Form Requests · BE-V3-032 `POST /profile/avatar` R2 · FE avatar upload R2
+**G2 hoàn thành** — Form Requests: Branch, Warehouse, OrderCost, Category, BranchUser, Stock, Shipment tracking, Inventory, AI Purchasing.
 
 ---
 
@@ -181,23 +185,19 @@
 
 **OPS staging:** Railway Variables `REDIS_URL=${{Redis.REDIS_URL}}` · health `?redis=1` · smoke `/api/notifications/count`, `/api/profile`, `/invoices/{id}`
 
-Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-tasks.md](./frontend-tasks.md) · [upgrade-v3-analysis.md](../sa/amendments/upgrade-v3-analysis.md)
+Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-tasks.md](./frontend-tasks.md) · [qa-tasks.md](./qa-tasks.md) · [devops-tasks.md](./devops-tasks.md) · [upgrade-v3-analysis.md](../sa/amendments/upgrade-v3-analysis.md)
 
 ---
 
-## 🔄 Còn lại (P2 — không blocking staging)
+## 🔄 Còn lại (không blocking staging)
 
 | ID | Việc | Priority |
 |----|------|----------|
-| BE-P2-013 | `GET /reports/profit/by-product` | ✅ (đã có API + tab Reports) |
-| BE-P2-014 | Lưu `invoices.pdf_path` khi generate | P2 |
-| FE-P2-007 | Recharts chart tab Lợi nhuận | P2 |
-| INV-001 | reserve/release thêm warehouseId (khi có kho thứ 2) | P2 — xem `inventory-known-issues.md` |
 | INV-002 | Pre-order support (khi BA yêu cầu) | P3 — xem `inventory-known-issues.md` |
-| **AI-P** | **AI Purchasing Specialist** — BE 8 tasks + FE 7 tasks | **P1 — xem `ai-purchasing-specialist.md`** |
 | **V3-G1** | Order + Notify + Pricing + Inventory core | **✅ 100%** |
-| **V3-G2** | Dashboard + Product + Master + Profile | **✅ ~95%** — thiếu avatar R2 · Form Requests |
+| **V3-G2** | Dashboard + Product + Master + Profile | **✅ 100%** |
 | **V3-G3** | Mobile + Mermaid + validation | **✅ 100%** |
+| **AI-P** | Purchasing + history + throttle | **✅ 100%** |
 | OPS | Railway `REDIS_URL` trên service product + redeploy | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
 | OPS | Vercel: cập nhật domain R2 trong `next.config.mjs` | P1 |
@@ -218,7 +218,7 @@ Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-task
 cd project/api && php artisan test
 ```
 
-**74 passed** · FE build OK (`npm run build`)
+**81 passed** · FE build OK (`npm run build`)
 
 ---
 

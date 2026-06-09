@@ -403,7 +403,7 @@ class ReportController extends Controller
             'product_id'      => (int) $detail->product_id,
             'product_cd'      => (string) ($product?->product_cd ?? ''),
             'product_name'    => (string) ($product?->product_name ?? ''),
-            'product_name_vi'   => $product?->product_name_vi,
+            'product_name_vi'   => $product?->name_vi,
             'quantity'        => $qty,
             'revenue_vnd'     => (int) round($sellingJpy * $lockedRate * (1 + $feeRate) * $qty),
             'cost_vnd'        => (int) round($costJpy * $lockedRate * $qty),

@@ -226,7 +226,7 @@ php artisan products:embed --force  # Re-embed sau khi có tên VN
 
 # V3 upgrade (sau push code mới — auto qua start.sh, hoặc chạy tay)
 php artisan migrate --force
-# Kiểm tra: 100100_v3_upgrade_phase1, 100110_v3_profile_fields
+# Kiểm tra: 100100_v3_upgrade_phase1, 100110_v3_profile_fields, 100120_create_purchasing_sessions
 # Smoke: GET /api/notifications/count · GET /api/profile · GET /api/dashboard/revenue?year=2026&month=6
 ```
 

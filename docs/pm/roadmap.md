@@ -56,19 +56,22 @@ Phase 1 — MVP          Phase 2 — Extended       V3 Upgrades         Phase 3 
 
 ---
 
-## V3 Upgrades — Sprint (2026-06-08)
+## V3 Upgrades — Sprint (2026-06-08 → 2026-06-09)
 
-**Mục tiêu**: 14 cải tiến UX/nghiệp vụ sau khi staging live
+**Mục tiêu**: 14 cải tiến UX/nghiệp vụ sau khi staging live  
+**Tiến độ thực tế (2026-06-09)**: ✅ ~95% code local · ⏳ Chờ push main + OPS staging
 
 > Phân tích chi tiết: `docs/sa/amendments/upgrade-v3-analysis.md`  
-> Backlog: `docs/pm/backlog.md` — Phase 3 V3 Upgrades
+> Backlog: `docs/pm/backlog.md` — Phase 3 V3 Upgrades  
+> OPS tasks: `docs/tasks/devops-tasks.md` (DO-013~019)
 
-| Nhóm | Scope | Sprint | Ước tính |
+| Nhóm | Scope | Sprint | Tiến độ |
 |------|-------|--------|---------|
-| G1 — Critical | Order flow, Pricing, Inventory, Notifications | V3-G1 | ~5 ngày BE + 3 ngày FE |
-| G2 — Important | Dashboard V2, Product UX, Master Data, Profile | V3-G2 | ~3 ngày BE + 2 ngày FE |
-| G3 — Enhancement | Mobile responsive, Form validation, AI diagram | V3-G3 | ~2 ngày FE |
-| AI-P | AI Purchasing Specialist | Sprint AI-P | ~22h BE + 13.5h FE |
+| G1 — Critical | Order flow, Pricing, Inventory, Notifications | V3-G1 | ✅ ~97% (thiếu scheduler BE-V3-018) |
+| G2 — Important | Dashboard V2, Product UX, Master Data, Profile | V3-G2 | ✅ ~92% (thiếu avatar R2, suppliers CRUD) |
+| G3 — Enhancement | Mobile responsive, Form validation, AI diagram | V3-G3 | ✅ 100% |
+| AI-P | AI Purchasing Specialist | Sprint AI-P | ✅ ~90% (thiếu History page, OPENAI key OPS) |
+| **INV** | **StockIn autocomplete + warehouse fix** | **Hotfix** | **✅ 100% (2026-06-09)** |
 
 ---
 

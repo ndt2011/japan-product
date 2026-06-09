@@ -1,7 +1,7 @@
 # Frontend Tasks — Next.js 14
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Cập nhật**: 2026-06-08 | **Assignee**: Frontend Developer  
+**Cập nhật**: 2026-06-09 (lần 20) | **Assignee**: Frontend Developer  
 **Repo**: https://github.com/ndt2011/japan-product (`project/frontend/`)  
 **UI reference**: `project/demothietke` — [design-source-demothietke.md](../sa/design-source-demothietke.md)  
 **Trạng thái tổng**: Xem [STATUS.md](./STATUS.md)
@@ -95,6 +95,7 @@
 | FE-P2-004 | Product form Admin: dual pricing + preview VND | P0 | BE-P2-001 | 1d | ✅ |
 | FE-P2-005 | Tab Lợi nhuận `/reports` + filter date | P1 | BE-P2-010 | 1.5d | ✅ |
 | FE-P2-006 | Badge 🔔 header (overdue + DELIVERED_ADMIN) | P1 | BE-P2-008 | 0.5d | ✅ |
+| FE-P2-007 | Recharts chart tab Lợi nhuận (SP + đơn hàng) | P2 | BE-P2-013 | 0.5d | ✅ |
 | FE-408 | `/admin` — all users, search, ma trận quyền, form hints | P0 | BE-008 | 1d | ✅ commit `29fe4e8` |
 
 **Lưu ý FE-P2-004**: `cost_price_jpy` và `selling_price_jpy` render chỉ khi `userType === 'admin'`. Đại lý thấy `unit_price_vnd` (đã bao phí).
@@ -115,7 +116,7 @@
 | FE-AI-004 | `ScoreBar` component — label + value/10 + color-coded progress bar | P1 | FE-AI-003 | 1h | ✅ |
 | FE-AI-005 | AI report section trong PurchasingScreen — hiển thị báo cáo GPT tiếng Việt | P1 | FE-AI-003 | 2h | ✅ |
 | FE-AI-006 | Sidebar nav "Tư Vấn Thu Mua" (🛍️) — admin + company, group AI | P0 | FE-AI-002 | 0.5h | ✅ |
-| FE-AI-007 | Màn hình lịch sử tìm kiếm `/purchasing/history` | P2 | FE-AI-002 | 2h | 📋 |
+| FE-AI-007 | Màn hình lịch sử tìm kiếm `/purchasing/history` | P2 | FE-AI-002 | 2h | ✅ |
 
 **Màn hình chính** (`/purchasing`):
 ```
@@ -195,7 +196,7 @@
 |----|-------|---|-----|-----|------------|
 | FE-V3-025 | `/admin/master-data` — tab Categories CRUD UI | P1 | BE-V3-030 | 2h | ✅ |
 | FE-V3-026 | `/admin/master-data` — tab Warehouses + Suppliers + Units | P1 | — | 2h | ✅ |
-| FE-V3-027 | `/profile` — xem + sửa avatar_url, phone, display_name | P1 | BE-V3-031 | 3h | ✅ · upload R2 📋 P2 |
+| FE-V3-027 | `/profile` — xem + sửa avatar_url, phone, display_name + upload R2 | P1 | BE-V3-031 | 3h | ✅ |
 
 ### V3-G3: Enhancement (#3, #4, #5)
 
@@ -220,4 +221,4 @@
 | FE-AI-004 | `ScoreBar` — thanh 5 tiêu chí màu gradient | P1 | FE-AI-003 | 1h | ✅ |
 | FE-AI-005 | AI report section trong PurchasingScreen | P1 | FE-AI-002 | 2h | ✅ |
 | FE-AI-006 | Sidebar nav "Tư Vấn Thu Mua" (admin + company) | P0 | FE-AI-002 | 0.5h | ✅ |
-| FE-AI-007 | Màn hình lịch sử `/purchasing/history` | P2 | FE-AI-002 | 2h | 📋 |
+| FE-AI-007 | Màn hình lịch sử `/purchasing/history` | P2 | FE-AI-002 | 2h | ✅ |

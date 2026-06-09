@@ -1,7 +1,7 @@
 # Business Rules
 
 **Dự án**: Hệ thống quản lý hàng hóa Nhật-Việt  
-**Phiên bản**: 1.0 | **Ngày**: 2026-06-07
+**Phiên bản**: 1.2 | **Ngày**: 2026-06-09 (thêm V3 + AI Purchasing rules)
 
 ---
 
@@ -89,3 +89,65 @@
 | RULE-RATE-02 | Tỷ giá mới không ảnh hưởng đơn hàng đã CONFIRMED | P0 |
 | RULE-RATE-03 | Lịch sử tỷ giá được lưu giữ không giới hạn | P1 |
 | RULE-RATE-04 | Chỉ SUPER_ADMIN mới được cập nhật tỷ giá | P0 |
+
+---
+
+## RULE-INV — Kho hàng (V3)
+
+| Mã | Quy tắc | Ưu tiên |
+|----|---------|---------|
+| RULE-INV-01 | `available_qty = quantity - reserved_qty` — tính realtime, không lưu vào DB | P0 |
+| RULE-INV-02 | Khi batch DELIVERED → `stockIn()` tự động cộng kho theo số lượng từng đơn | P0 |
+| RULE-INV-03 | Khi đại lý confirmReceipt → `stockOut()` tự động trừ kho | P0 |
+| RULE-INV-04 | `restock_status` tự cập nhật sau mỗi stockIn/stockOut: CRITICAL (qty≤0) / LOW (qty<min) / NORMAL | P0 |
+| RULE-INV-05 | CSV bulk import: dòng lỗi không block dòng hợp lệ — import từng phần, báo lỗi theo row | P0 |
+| RULE-INV-06 | CSV phải có header: `product_cd, warehouse_id, quantity, min_stock_qty, notes` | P0 |
+| RULE-INV-07 | `min_stock_qty` mặc định = 5 nếu không được set | P1 |
+| RULE-INV-08 | Nhập kho thủ công (`POST /stock-movements`) chỉ Admin/JP Agency được thực hiện | P0 |
+
+---
+
+## RULE-NOTIF — Thông báo (V3)
+
+| Mã | Quy tắc | Ưu tiên |
+|----|---------|---------|
+| RULE-NOTIF-01 | Thông báo tạo tự động tại server khi có sự kiện: ORDER_NEW, ORDER_CONFIRMED, ORDER_CANCELLED, BATCH_DELIVERED | P0 |
+| RULE-NOTIF-02 | Mỗi user chỉ nhận thông báo thuộc phạm vi mình: branch chỉ thấy của branch mình | P0 |
+| RULE-NOTIF-03 | Frontend poll API mỗi 60 giây để cập nhật badge | P1 |
+| RULE-NOTIF-04 | Đọc thông báo đặt `read_at = now()`, không xóa record | P0 |
+| RULE-NOTIF-05 | `unread_count` = số record có `read_at IS NULL` của user | P0 |
+
+---
+
+## RULE-PROFILE — Hồ sơ tài khoản (V3)
+
+| Mã | Quy tắc | Ưu tiên |
+|----|---------|---------|
+| RULE-PROFILE-01 | Email là định danh đăng nhập — không thay đổi được qua Profile | P0 |
+| RULE-PROFILE-02 | Số điện thoại chỉ chứa số, tối thiểu 8 ký tự | P0 |
+| RULE-PROFILE-03 | Avatar URL phải là URL hợp lệ (http/https) | P1 |
+| RULE-PROFILE-04 | Mỗi user chỉ xem/sửa profile của chính mình | P0 |
+
+---
+
+## RULE-DASH — Dashboard tài chính (V3)
+
+| Mã | Quy tắc | Ưu tiên |
+|----|---------|---------|
+| RULE-DASH-01 | Dashboard revenue chỉ hiển thị với Admin / JP Agency — Branch chỉ thấy số liệu của branch mình | P0 |
+| RULE-DASH-02 | Tỷ giá hiển thị trên Dashboard là tỷ giá hiện tại từ `exchange_rates` mới nhất | P0 |
+| RULE-DASH-03 | Revenue tính theo `locked_rate` của từng đơn (không tính theo tỷ giá hiện tại) | P0 |
+| RULE-DASH-04 | KPI: `outstanding_debt` = tổng invoice chưa thanh toán; `low_stock_count` = số SP có restock_status=LOW/CRITICAL | P0 |
+
+---
+
+## RULE-AIPUR — AI Purchasing Specialist (V3/AI)
+
+| Mã | Quy tắc | Ưu tiên |
+|----|---------|---------|
+| RULE-AIPUR-01 | AI Purchasing chỉ Admin / JP Agency mới được truy cập | P0 |
+| RULE-AIPUR-02 | Công thức score: Price×30% + Quality×30% + Popularity×20% + Warranty×10% + Brand×10% | P0 |
+| RULE-AIPUR-03 | Score mỗi tiêu chí từ 0–100, ai_score tổng từ 0–100 | P0 |
+| RULE-AIPUR-04 | Kết quả trả về sắp xếp giảm dần theo ai_score | P0 |
+| RULE-AIPUR-05 | Nếu OPENAI_API_KEY chưa set → trả lỗi graceful (HTTP 503), không crash | P0 |
+| RULE-AIPUR-06 | Mỗi request tối đa 20 sản phẩm để phân tích | P1 |

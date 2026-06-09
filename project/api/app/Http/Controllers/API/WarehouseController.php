@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\WarehouseException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Warehouse\StoreWarehouseRequest;
 use App\Http\Resources\WarehouseResource;
 use App\Services\WarehouseService;
 use App\Support\ApiResponse;
@@ -32,16 +33,9 @@ class WarehouseController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreWarehouseRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'warehouse_cd' => ['nullable', 'string', 'max:50'],
-            'warehouse_name' => ['required', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'country' => ['nullable', 'string', 'max:10'],
-            'manager_name' => ['nullable', 'string', 'max:100'],
-            'tel' => ['nullable', 'string', 'max:20'],
-        ]);
+        $data = $request->validated();
 
         $auth = AuthContext::from($request);
 

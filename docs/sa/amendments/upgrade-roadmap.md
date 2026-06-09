@@ -19,8 +19,8 @@
 
 ### T1-001: Invoice & Payment (Hóa đơn & Thanh toán)
 
-> **Trạng thái** (2026-06-08): **✅ ~98% triển khai** — spec: `invoice-payment.md`  
-> BE-P2-001~012 ✅ · FE-P2-001~006 ✅ · Còn: profit/by-product, Recharts chart, `pdf_path` persist  
+> **Trạng thái** (2026-06-09): **✅ 100% triển khai** — spec: `invoice-payment.md`  
+> BE-P2-001~014 ✅ · FE-P2-001~007 ✅  
 > Chi tiết: [docs/tasks/STATUS.md](../../tasks/STATUS.md) · Audit: [code-vs-docs-audit.md](./code-vs-docs-audit.md)
 
 **Tại sao critical**: Hiện tại đơn hàng chỉ track status. Không có hóa đơn → không thu tiền được.

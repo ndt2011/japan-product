@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\BranchException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BranchUser\StoreBranchUserRequest;
+use App\Http\Requests\BranchUser\UpdateBranchUserRequest;
 use App\Http\Resources\BranchUserResource;
 use App\Models\BranchUser;
 use App\Services\BranchUserService;
@@ -37,18 +39,10 @@ class BranchUserManagementController extends Controller
         ]);
     }
 
-    public function store(Request $request, int $id): JsonResponse
+    public function store(StoreBranchUserRequest $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);
-        $roleRule = $auth['type'] === 'admin' ? 'manager,staff' : 'staff';
-
-        $data = $request->validate([
-            'login_id' => ['required', 'string', 'max:100', 'unique:branch_users,login_id'],
-            'password' => ['required', 'string', 'min:8'],
-            'full_name' => ['required', 'string', 'max:150'],
-            'email' => ['nullable', 'email'],
-            'role' => ['required', 'in:'.$roleRule],
-        ]);
+        $data = $request->validated();
 
         try {
             $user = $this->branchUserService->store(
@@ -66,17 +60,10 @@ class BranchUserManagementController extends Controller
         ], 'M1202', 201);
     }
 
-    public function update(Request $request, int $id, int $userId): JsonResponse
+    public function update(UpdateBranchUserRequest $request, int $id, int $userId): JsonResponse
     {
         $auth = AuthContext::from($request);
-        $roleRule = $auth['type'] === 'admin' ? 'manager,staff' : 'staff';
-
-        $data = $request->validate([
-            'full_name' => ['sometimes', 'string', 'max:150'],
-            'email' => ['nullable', 'email'],
-            'password' => ['nullable', 'string', 'min:8'],
-            'role' => ['sometimes', 'in:'.$roleRule],
-        ]);
+        $data = $request->validated();
 
         try {
             $user = $this->branchUserService->update(

@@ -422,6 +422,7 @@ export interface InvoiceItem {
   order_no?: string | null;
   company_vn_id: number;
   company_name?: string | null;
+  pdf_path?: string | null;
   invoice_no: string;
   invoice_date: string;
   due_date: string;

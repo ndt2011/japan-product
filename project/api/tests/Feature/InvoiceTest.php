@@ -9,6 +9,7 @@ use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class InvoiceTest extends TestCase
@@ -149,5 +150,32 @@ class InvoiceTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.invoice_count', 1)
             ->assertJsonPath('data.total_unpaid_vnd', 357000);
+    }
+
+    public function test_pdf_endpoint_persists_path_and_serves_cached_file(): void
+    {
+        Storage::fake('local');
+        ['admin' => $admin, 'order' => $order] = $this->seedConfirmedOrder();
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $create = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/invoices', ['order_id' => $order->id]);
+        $invoiceId = $create->json('data.invoice.id');
+
+        $first = $this->withHeader('Authorization', "Bearer {$token}")
+            ->get("/api/invoices/{$invoiceId}/pdf");
+
+        $first->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $first->headers->get('Content-Type'));
+
+        $invoice = \App\Models\Invoice::query()->find($invoiceId);
+        $this->assertNotNull($invoice?->pdf_path);
+        Storage::disk('local')->assertExists($invoice->pdf_path);
+
+        $second = $this->withHeader('Authorization', "Bearer {$token}")
+            ->get("/api/invoices/{$invoiceId}/pdf");
+
+        $second->assertOk();
+        $this->assertSame($first->getContent(), $second->getContent());
     }
 }

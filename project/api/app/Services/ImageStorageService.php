@@ -15,6 +15,23 @@ class ImageStorageService
         return config('filesystems.product_images_disk', 'public');
     }
 
+    public function uploadAvatar(UploadedFile $file, string $userType, int $userId): string
+    {
+        $disk = $this->disk();
+        $extension = $file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg';
+        $filename = sprintf(
+            'avatars/%s/%d/%s.%s',
+            $userType,
+            $userId,
+            Str::uuid()->toString(),
+            strtolower($extension),
+        );
+
+        Storage::disk($disk)->put($filename, $file->get(), 'public');
+
+        return $this->resolveStoredPath($filename);
+    }
+
     public function upload(UploadedFile $file, int $productId): string
     {
         $disk = $this->disk();
@@ -63,7 +80,7 @@ class ImageStorageService
             return $pathOrUrl;
         }
 
-        if (preg_match('#/products/\d+/[^/?]+#', $pathOrUrl, $m)) {
+        if (preg_match('#/(?:products/\d+|avatars/[^/]+/\d+)/[^/?]+#', $pathOrUrl, $m)) {
             return ltrim($m[0], '/');
         }
 

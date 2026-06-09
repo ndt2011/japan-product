@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\InvoiceException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Invoice\PayInvoiceRequest;
+use App\Http\Requests\Invoice\StoreInvoiceRequest;
+use App\Http\Requests\Invoice\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Admin;
 use App\Services\InvoiceService;
@@ -62,7 +65,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreInvoiceRequest $request): JsonResponse
     {
         $auth = AuthContext::from($request);
 
@@ -70,16 +73,11 @@ class InvoiceController extends Controller
             return ApiResponse::error('M0407', null, 403);
         }
 
-        $request->validate([
-            'order_id' => ['required', 'integer', 'exists:orders,id'],
-            'note' => ['nullable', 'string', 'max:2000'],
-        ]);
-
         try {
             $invoice = $this->invoiceService->createFromOrder(
-                (int) $request->input('order_id'),
+                (int) $request->validated('order_id'),
                 $auth['user'],
-                $request->input('note'),
+                $request->validated('note'),
             );
         } catch (InvoiceException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
@@ -90,7 +88,7 @@ class InvoiceController extends Controller
         ], 'M0000', 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateInvoiceRequest $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);
 
@@ -98,13 +96,8 @@ class InvoiceController extends Controller
             return ApiResponse::error('M0407', null, 403);
         }
 
-        $request->validate([
-            'note' => ['nullable', 'string', 'max:2000'],
-            'due_date' => ['nullable', 'date'],
-        ]);
-
         try {
-            $invoice = $this->invoiceService->update($id, $request->only(['note', 'due_date']), $auth['user']);
+            $invoice = $this->invoiceService->update($id, $request->validated(), $auth['user']);
         } catch (InvoiceException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
         }
@@ -133,7 +126,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function pay(Request $request, int $id): JsonResponse
+    public function pay(PayInvoiceRequest $request, int $id): JsonResponse
     {
         $auth = AuthContext::from($request);
 
@@ -141,13 +134,8 @@ class InvoiceController extends Controller
             return ApiResponse::error('M0407', null, 403);
         }
 
-        $request->validate([
-            'paid_amount' => ['nullable', 'integer', 'min:0'],
-            'payment_method' => ['nullable', 'in:bank_transfer,cash,other'],
-        ]);
-
         try {
-            $invoice = $this->invoiceService->pay($id, $request->only(['paid_amount', 'payment_method']), $auth['user']);
+            $invoice = $this->invoiceService->pay($id, $request->validated(), $auth['user']);
         } catch (InvoiceException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
         }
@@ -168,8 +156,21 @@ class InvoiceController extends Controller
         }
 
         $invoice->loadMissing(['items', 'company', 'order']);
-        $html = view('invoices.pdf', ['invoice' => $invoice])->render();
         $filename = $invoice->invoice_no;
+
+        // RULE-INV-05: trả PDF đã lưu — không tái tạo khi file còn tồn tại
+        if ($invoice->pdf_path && Storage::disk('local')->exists($invoice->pdf_path)) {
+            return response(
+                Storage::disk('local')->get($invoice->pdf_path),
+                200,
+                [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="'.$filename.'.pdf"',
+                ],
+            );
+        }
+
+        $html = view('invoices.pdf', ['invoice' => $invoice])->render();
 
         try {
             $options = new Options();

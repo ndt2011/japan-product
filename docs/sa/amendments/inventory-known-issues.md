@@ -11,7 +11,7 @@ Flow kho hiện tại **đúng với 1 kho**. Có 3 điểm cần dev xử lý k
 
 | # | Vấn đề | Mức độ | Blocking? | Trạng thái |
 |---|--------|--------|-----------|------------|
-| INV-001 | reserve/release không nhận warehouseId | ⚠️ P2 | Không — chỉ ảnh hưởng khi có ≥2 kho | ⏳ Partial |
+| INV-001 | reserve/release không nhận warehouseId | ⚠️ P2 | Không — chỉ ảnh hưởng khi có ≥2 kho | ✅ `defaultWarehouseId()` |
 | INV-002 | Pre-order bị chặn hoàn toàn | ⚠️ P2 | Không — đúng design hiện tại | 📋 Pending BA |
 | INV-003 | StockInScreen dùng product_id số (UX kém) | ⚠️ P1 | UX blocker hàng ngày | ✅ Fixed 2026-06-09 |
 

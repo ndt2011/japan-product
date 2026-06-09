@@ -106,11 +106,12 @@ docs/
 | Sprint / Phase | Nội dung | Code |
 |----------------|----------|------|
 | S1–S7 MVP | Auth, SP, AI, Orders, Kho, Reports | **✅ ~95%** |
-| Phase 2 | Invoice, dual pricing, profit | **✅ ~98%** |
-| **V3 Upgrade** | Order flow, notify, dashboard, profile, mobile | **✅ ~95% local** |
+| Phase 2 | Invoice, dual pricing, profit | **✅ 100%** |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile, mobile | **✅ 100%** |
+| **AI Purchasing** | Analyze + history + throttle | **✅ 100%** |
 | DevOps staging | Railway + Vercel + Redis | **✅** · auto-deploy `main` |
 
-Chi tiết + task tick ✅⚠️📋: [tasks/STATUS.md](./tasks/STATUS.md) · [backend-tasks.md](./tasks/backend-tasks.md) · [frontend-tasks.md](./tasks/frontend-tasks.md)
+Chi tiết + task tick: [tasks/STATUS.md](./tasks/STATUS.md) · [backend-tasks.md](./tasks/backend-tasks.md) · [frontend-tasks.md](./tasks/frontend-tasks.md) · [qa-tasks.md](./tasks/qa-tasks.md) · [devops-tasks.md](./tasks/devops-tasks.md)
 
 ---
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\BranchException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Branch\StoreBranchRequest;
+use App\Http\Requests\Branch\UpdateBranchRequest;
 use App\Http\Resources\BranchResource;
 use App\Models\BranchUser;
 use App\Services\BranchService;
@@ -33,16 +35,9 @@ class BranchController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBranchRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'branch_cd' => ['required', 'string', 'max:50'],
-            'branch_name' => ['required', 'string', 'max:255'],
-            'region' => ['required', 'string', 'max:50'],
-            'province' => ['required', 'string', 'max:100'],
-            'address' => ['nullable', 'string'],
-            'tel' => ['nullable', 'string', 'max:20'],
-        ]);
+        $data = $request->validated();
 
         $auth = AuthContext::from($request);
 
@@ -70,15 +65,9 @@ class BranchController extends Controller
         ]);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateBranchRequest $request, int $id): JsonResponse
     {
-        $data = $request->validate([
-            'branch_name' => ['sometimes', 'string', 'max:255'],
-            'region' => ['sometimes', 'string', 'max:50'],
-            'province' => ['sometimes', 'string', 'max:100'],
-            'address' => ['nullable', 'string'],
-            'tel' => ['nullable', 'string', 'max:20'],
-        ]);
+        $data = $request->validated();
 
         $auth = AuthContext::from($request);
 

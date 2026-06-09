@@ -38,6 +38,7 @@ export function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -67,6 +68,37 @@ export function ProfileScreen() {
   function patchForm<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setFieldErrors((prev) => clearFieldError(prev, key));
+  }
+
+  async function onAvatarChange(file: File | null) {
+    if (!file) return;
+    setUploadingAvatar(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const res = await fetch("/api/proxy/profile/avatar", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!data.success) {
+        const msg = translateMessage(data.message ?? "M0002");
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      const p = data.data.profile as ProfileData;
+      setProfile(p);
+      setForm((f) => ({ ...f, avatar_url: p.avatar_url ?? "" }));
+      toast.success("Đã cập nhật ảnh đại diện.");
+      const meRes = await fetch("/api/proxy/auth/me");
+      const meData = await meRes.json();
+      if (meData.success && meData.data?.user) {
+        setUser(meData.data.user);
+      }
+    } catch {
+      toast.error("Tải ảnh thất bại.");
+    } finally {
+      setUploadingAvatar(false);
+    }
   }
 
   async function onSubmit(e: FormEvent) {
@@ -186,11 +218,22 @@ export function ProfileScreen() {
               value={form.phone}
               onChange={(e) => patchForm("phone", e.target.value)}
             />
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Ảnh đại diện</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploadingAvatar}
+                onChange={(e) => onAvatarChange(e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-text-body file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-brand-light file:text-brand"
+              />
+              {uploadingAvatar && <p className="text-xs text-text-muted mt-1">Đang tải ảnh...</p>}
+            </div>
             <Input
-              label="Avatar URL"
+              label="Avatar URL (tùy chọn)"
               value={form.avatar_url}
               onChange={(e) => patchForm("avatar_url", e.target.value)}
-              placeholder="https://..."
+              placeholder="https://... hoặc dùng upload ở trên"
               error={fieldErrors.avatar_url}
             />
             <Input

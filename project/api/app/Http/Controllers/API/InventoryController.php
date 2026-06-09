@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Exceptions\WarehouseException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\BulkImportInventoryRequest;
+use App\Http\Requests\Inventory\InventoryCheckRequest;
+use App\Http\Requests\Inventory\UpdateInventoryRequest;
 use App\Http\Resources\InventoryResource;
 use App\Services\InventoryService;
 use App\Support\ApiResponse;
@@ -34,16 +37,9 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function check(Request $request): JsonResponse
+    public function check(InventoryCheckRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.actual_qty' => ['required', 'integer', 'min:0'],
-            'items.*.note' => ['nullable', 'string'],
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
+        $data = $request->validated();
 
         $auth = AuthContext::from($request);
 
@@ -61,19 +57,12 @@ class InventoryController extends Controller
         return ApiResponse::success($result, 'M1003');
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateInventoryRequest $request, int $id): JsonResponse
     {
-        $data = $request->validate([
-            'min_stock_qty' => ['nullable', 'integer', 'min:0'],
-            'restock_eta' => ['nullable', 'date'],
-            'restock_status' => ['nullable', 'in:NORMAL,LOW,CRITICAL,ON_ORDER'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
-
         $auth = AuthContext::from($request);
 
         try {
-            $inventory = $this->inventoryService->updateRecord($id, $data, $auth['id']);
+            $inventory = $this->inventoryService->updateRecord($id, $request->validated(), $auth['id']);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return ApiResponse::error('M0002', null, 404);
         }
@@ -100,9 +89,8 @@ class InventoryController extends Controller
      * POST /inventories/bulk-import
      * CSV columns: product_cd, warehouse_id, quantity, min_stock_qty, notes
      */
-    public function bulkImport(Request $request): JsonResponse
+    public function bulkImport(BulkImportInventoryRequest $request): JsonResponse
     {
-        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
 
         $path = $request->file('file')->getRealPath();
         $handle = fopen($path, 'r');

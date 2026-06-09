@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Input, PageHeader } from "@/components/ui";
+import Link from "next/link";
 import {
   clearFieldError,
   hasFieldErrors,
@@ -229,6 +230,11 @@ export function PurchasingScreen() {
       <PageHeader
         title="🛍️ Tư Vấn Thu Mua AI"
         subtitle="Tìm và so sánh sản phẩm Nhật tốt nhất theo yêu cầu của bạn"
+        actions={
+          <Link href="/purchasing/history">
+            <Button variant="secondary" size="sm">📋 Lịch sử</Button>
+          </Link>
+        }
       />
 
       {/* Search form */}
