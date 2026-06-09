@@ -15,9 +15,41 @@
 | **M4**: Order flow complete | 2026-08-09 | Đặt hàng, confirm, tỷ giá lock, invoice auto | 🔄 ~90% |
 | **M5**: Shipment tracking live | 2026-08-23 | Batch, DELIVERED_ADMIN, confirm-receipt | ✅ ~95% |
 | **M6**: Phase 2 Invoice | 2026-09-01 | HĐ, công nợ, profit, dual pricing form | ✅ ~98% staging |
+| **M6b**: V3 Staging Deploy | 2026-06-15 | push main + migrate 100100/100110 + smoke test | ⏳ OPS |
+| **M6c**: AI Purchasing Live | 2026-06-15 | OPENAI_API_KEY set, POST /ai/purchasing trả về score | ⏳ OPS |
 | **M7**: UAT hoàn thành | 2026-09-13 | 0 critical bugs, test pass | ⬜ |
 | **M8**: Production Go-Live | 2026-09-20 | ConoHa VPS hoặc Railway prod | ⬜ |
 | **M9**: Phase 2 extended | 2026-10-01 | DomPDF, profit FE, dual pricing form | ⬜ |
+
+---
+
+## Chi tiết M6b + M6c — V3 & AI Purchasing (Sprint V3 + Sprint AI-P)
+
+### M6b: V3 Staging Deploy
+
+**Mục tiêu**: Toàn bộ code V3 (local) được push và chạy trên staging Railway + Vercel
+
+| Hạng mục | Tiêu chí | Người thực hiện | Trạng thái |
+|----------|----------|-----------------|------------|
+| Push branch → `main` | CI green (test + build) | Dev | ⏳ |
+| Railway deploy tự động | Deploy log không có lỗi | DevOps | ⏳ |
+| Migrate `100100_v3_upgrade_phase1` | `php artisan migrate` trên Railway Shell | DevOps | ⏳ |
+| Migrate `100110_v3_profile_fields` | `php artisan migrate` trên Railway Shell | DevOps | ⏳ |
+| Smoke test Notifications | GET /api/notifications/count → 200 | QA | ⏳ |
+| Smoke test Profile | GET /api/profile → 200 với avatar_url | QA | ⏳ |
+| Smoke test Dashboard | GET /api/dashboard/revenue → 200 | QA | ⏳ |
+| Vercel R2 domain | Điền domain R2 vào `next.config.mjs` | DevOps | ⏳ |
+
+### M6c: AI Purchasing Live
+
+**Mục tiêu**: AI Purchasing hoạt động end-to-end trên staging
+
+| Hạng mục | Tiêu chí | Người thực hiện | Trạng thái |
+|----------|----------|-----------------|------------|
+| Railway Secret: OPENAI_API_KEY | Set key hợp lệ | DevOps | ⏳ |
+| POST /ai/purchasing → 200 | Trả về products[].ai_score + breakdown | QA | ⏳ |
+| FE PurchasingScreen hiển thị | ScoreBar render đúng 5 tiêu chí | QA | ⏳ |
+| Role guard: VN Staff → 403 | Test bằng account `hn_staff` | QA | ⏳ |
 
 ---
 
@@ -26,3 +58,4 @@
 - AI scraping bị block: +1 sprint — đã whitelist IP Rakuten trên staging ✅
 - Team thiếu người: Defer REQ-003 full RBAC sang Phase 3
 - VPS ConoHa: Dùng Railway staging làm demo (hiện tại) ✅
+- OPENAI_API_KEY: Nếu chưa có → AI Purchasing hiển thị graceful error, không crash app

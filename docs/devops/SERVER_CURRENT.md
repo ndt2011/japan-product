@@ -164,12 +164,16 @@ curl -s https://api.ipify.org
 curl -s "https://product-production-7e4e.up.railway.app/api/health?ip=1"
 ```
 
-### 5.4 Redis (tùy chọn — hiện dùng database cache)
+### 5.4 Redis (kết nối sẵn — cache/queue vẫn database/sync)
+
+Thêm trên service **`product`** (không copy password/`REDIS_PUBLIC_URL` từ service Redis):
 
 ```env
 REDIS_URL=${{Redis.REDIS_URL}}
 REDIS_CLIENT=phpredis
 ```
+
+Kiểm tra: `GET /api/health` (`redis_configured`) · `GET /api/health?redis=1` (`redis_connected`)
 
 ### 5.5 Build & start (repo)
 

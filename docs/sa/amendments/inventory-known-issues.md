@@ -1,18 +1,19 @@
 # Inventory — Known Issues & Dev Tasks
 
-> spec amendment — ngày 2026-06-08
+> spec amendment — ngày 2026-06-09 (cập nhật: INV-001 partial fix + INV-003 mới)
 > liên quan: docs/sa/amendments/product-tier-model.md, docs/tasks/backend-tasks.md
 
 ---
 
 ## Tóm tắt
 
-Flow kho hiện tại **đúng với 1 kho**. Có 2 điểm cần dev xử lý khi hệ thống mở rộng:
+Flow kho hiện tại **đúng với 1 kho**. Có 3 điểm cần dev xử lý khi hệ thống mở rộng:
 
-| # | Vấn đề | Mức độ | Blocking? |
-|---|--------|--------|-----------|
-| INV-001 | reserve/release không nhận warehouseId | ⚠️ P2 | Không — chỉ ảnh hưởng khi có ≥2 kho |
-| INV-002 | Pre-order bị chặn hoàn toàn | ⚠️ P2 | Không — đúng design hiện tại |
+| # | Vấn đề | Mức độ | Blocking? | Trạng thái |
+|---|--------|--------|-----------|------------|
+| INV-001 | reserve/release không nhận warehouseId | ⚠️ P2 | Không — chỉ ảnh hưởng khi có ≥2 kho | ⏳ Partial |
+| INV-002 | Pre-order bị chặn hoàn toàn | ⚠️ P2 | Không — đúng design hiện tại | 📋 Pending BA |
+| INV-003 | StockInScreen dùng product_id số (UX kém) | ⚠️ P1 | UX blocker hàng ngày | ✅ Fixed 2026-06-09 |
 
 ---
 
@@ -165,5 +166,25 @@ Chưa có yêu cầu pre-order từ BA/BRD.
 | `app/Repositories/InventoryRepository.php` | `findByProduct()` | Tìm kho không theo warehouseId — cần sửa INV-001 |
 | `app/Repositories/InventoryRepository.php` | `findForWarehouse()` | Tìm kho có warehouseId — đúng |
 | `app/Services/OrderService.php` | `store()`, `submit()`, `cancel()` | Nơi gọi reserve/release |
-| `app/Services/ShipmentBatchService.php` | `advanceStatus()` DELIVERED | Gọi stockIn ✅ |
+| `app/Services/ShipmentBatchService.php` | `advanceStatus()` DELIVERED | Gọi stockIn ✅ · nhận `warehouse_id` optional từ request ✅ |
 | `app/Services/OrderService.php` | `confirmReceipt()` | Gọi stockOut ✅ |
+| `components/screens/StockInScreen.tsx` | form | Autocomplete sản phẩm theo tên ✅ (INV-003 fixed) |
+
+---
+
+## INV-003 — StockInScreen UX: nhập product_id số thủ công ✅ FIXED
+
+**Vấn đề cũ**: Form nhập kho thủ công yêu cầu nhập `product_id` (số nguyên) — nhân viên kho không biết ID.
+
+**Fix 2026-06-09**:
+- `StockInScreen.tsx` — thay `Input[type=number]` bằng Combobox autocomplete
+- Gõ tên hoặc mã sản phẩm → dropdown gợi ý (debounce 300ms)
+- Gọi `GET /api/proxy/products?search=&per_page=10` (endpoint đã có)
+- Hiển thị: ảnh thumbnail + product_cd + name_vi/name_jp
+- Sau khi chọn: lưu `product.id` ngầm vào form state
+
+**INV-001 Partial Fix 2026-06-09**:
+- `AdvanceShipmentBatchStatusRequest` — thêm `warehouse_id` optional
+- `ShipmentBatchService::advanceStatus()` — nhận `?int $warehouseId`
+- Khi advance → DELIVERED: ưu tiên `warehouse_id` từ request, fallback `defaultWarehouse()`
+- Chưa fix `reserve()/release()` (cần khi có kho thứ 2 thực sự)

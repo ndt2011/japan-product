@@ -92,3 +92,72 @@
 | TC-SEC-002 | XSS | Tên sản phẩm: `<script>alert(1)</script>` | Ký tự bị escape, không chạy JS | P0 |
 | TC-SEC-003 | IDOR | VN Branch A GET /orders/{id của Branch B} | HTTP 403 | P0 |
 | TC-SEC-004 | JWT manipulation | Sửa payload JWT (đổi role) | HTTP 401, signature invalid | P0 |
+
+---
+
+## Module NOTIFICATION — Thông báo (V3)
+
+| ID | Tên test case | Điều kiện đầu vào | Kết quả kỳ vọng | Priority |
+|----|--------------|-------------------|-----------------|---------|
+| TC-NOTIF-001 | Tạo thông báo tự động | JP tạo đơn mới cho Branch | Bản ghi trong `notifications` với type=ORDER_CREATED, user_id=branch_manager | P0 |
+| TC-NOTIF-002 | Bell badge count | GET /notifications/count | Trả về `unread_count` đúng số chưa đọc | P0 |
+| TC-NOTIF-003 | Đọc 1 thông báo | PUT /notifications/{id}/read | `read_at` được set, unread_count giảm 1 | P0 |
+| TC-NOTIF-004 | Đọc tất cả | PUT /notifications/read-all | Tất cả `read_at` được set, unread_count = 0 | P0 |
+| TC-NOTIF-005 | Phân quyền thông báo | Branch A xem /notifications | Chỉ thấy thông báo của mình, không thấy của Branch B | P0 |
+| TC-NOTIF-006 | Polling interval | Frontend poll mỗi 60s | Badge cập nhật đúng sau 60s khi có thông báo mới | P1 |
+| TC-NOTIF-007 | Trigger khi confirm đơn | JP Agency confirm đơn | Notification tạo cho VN Branch với type=ORDER_CONFIRMED | P0 |
+| TC-NOTIF-008 | Trigger khi batch DELIVERED | Batch status → DELIVERED | Notification tạo cho VN Branch với type=BATCH_DELIVERED | P0 |
+
+---
+
+## Module INVENTORY V3 — Kho nâng cao (V3)
+
+| ID | Tên test case | Điều kiện đầu vào | Kết quả kỳ vọng | Priority |
+|----|--------------|-------------------|-----------------|---------|
+| TC-INV-001 | Restock badge | Product `available_qty` < `min_stock_qty` | badge trạng thái = LOW hoặc CRITICAL | P0 |
+| TC-INV-002 | available_qty formula | quantity=100, reserved_qty=30 | available_qty = 70 | P0 |
+| TC-INV-003 | Cập nhật inventory | PUT /inventories/{id} với quantity=150 | HTTP 200, quantity cập nhật, available_qty tính lại | P0 |
+| TC-INV-004 | Xóa inventory | DELETE /inventories/{id} | HTTP 200, soft delete hoặc record bị xóa | P1 |
+| TC-INV-005 | CSV bulk import — thành công | Upload file CSV hợp lệ 10 dòng | HTTP 200, imported=10, errors=[] | P0 |
+| TC-INV-006 | CSV — dòng lỗi | CSV có 8 dòng hợp lệ + 2 dòng thiếu product_id | imported=8, errors chứa 2 thông báo lỗi | P0 |
+| TC-INV-007 | CSV — file rỗng | Upload file CSV không có dòng dữ liệu | HTTP 422, validation error | P0 |
+| TC-INV-008 | CSV — file không phải CSV | Upload file .xlsx | HTTP 422, message "File không hợp lệ" | P1 |
+| TC-INV-009 | Restock status = ON_ORDER | Đặt đơn hàng cho sản phẩm LOW | restock_status tự cập nhật = ON_ORDER | P1 |
+
+---
+
+## Module PROFILE — Thông tin tài khoản (V3)
+
+| ID | Tên test case | Điều kiện đầu vào | Kết quả kỳ vọng | Priority |
+|----|--------------|-------------------|-----------------|---------|
+| TC-PROF-001 | GET profile | User đã đăng nhập | HTTP 200, trả về name, email, phone, avatar_url | P0 |
+| TC-PROF-002 | Cập nhật profile | PUT /profile {name, phone} hợp lệ | HTTP 200, DB cập nhật đúng | P0 |
+| TC-PROF-003 | Email không thay đổi được | PUT /profile với email mới | Email không bị thay đổi (hoặc HTTP 422) | P1 |
+| TC-PROF-004 | Validation phone | Phone có ký tự chữ | HTTP 422, validation error | P0 |
+| TC-PROF-005 | Avatar URL | PUT /profile với avatar_url hợp lệ | HTTP 200, avatar hiển thị trên UI | P1 |
+
+---
+
+## Module DASHBOARD V2 — Dashboard tài chính (V3)
+
+| ID | Tên test case | Điều kiện đầu vào | Kết quả kỳ vọng | Priority |
+|----|--------------|-------------------|-----------------|---------|
+| TC-DASH-001 | Revenue by period | GET /dashboard/revenue?period=month | HTTP 200, data gồm revenue_jpy, revenue_vnd theo tháng | P0 |
+| TC-DASH-002 | Cashflow | GET /dashboard/cashflow | HTTP 200, in + out + net cho 12 tháng gần nhất | P0 |
+| TC-DASH-003 | Phân quyền dashboard | VN Branch gọi /dashboard/revenue | HTTP 403 hoặc chỉ data của branch | P0 |
+| TC-DASH-004 | Tỷ giá JPY/VND hiển thị | Dashboard load | Tỷ giá hiện tại hiển thị, có thể edit | P1 |
+| TC-DASH-005 | KPI cards | Dashboard load | Hiển thị total_orders, outstanding_debt, low_stock_count, revenue_month | P0 |
+
+---
+
+## Module AI PURCHASING — AI Mua hàng (V3/AI)
+
+| ID | Tên test case | Điều kiện đầu vào | Kết quả kỳ vọng | Priority |
+|----|--------------|-------------------|-----------------|---------|
+| TC-AIPUR-001 | Gợi ý AI mua hàng | POST /ai/purchasing {product_ids: [1,2,3]} | HTTP 200, mỗi sản phẩm có ai_score, breakdown (price/quality/popularity/warranty/brand) | P0 |
+| TC-AIPUR-002 | Scoring weights | Sản phẩm A: giá tốt=100, chất lượng=80, phổ biến=70, BH=90, thương hiệu=85 | ai_score = 100×0.3 + 80×0.3 + 70×0.2 + 90×0.1 + 85×0.1 = 87.5 | P0 |
+| TC-AIPUR-003 | Top N gợi ý | Request với top_n=5 | Trả về tối đa 5 sản phẩm được gợi ý mua, sắp xếp score giảm dần | P0 |
+| TC-AIPUR-004 | Thiếu OPENAI_API_KEY | Key chưa set, gọi API | HTTP 503 hoặc lỗi rõ ràng "AI service not configured" | P0 |
+| TC-AIPUR-005 | ProductCard hiển thị ScoreBar | FE gọi AI Purchasing screen | Mỗi sản phẩm hiển thị ScoreBar với breakdown 5 tiêu chí | P1 |
+| TC-AIPUR-006 | Phân quyền AI Purchasing | VN Branch Staff gọi /ai/purchasing | HTTP 403 (chỉ JP Agency/Admin) | P0 |
+| TC-AIPUR-007 | Empty product list | product_ids = [] | HTTP 422, validation error | P0 |

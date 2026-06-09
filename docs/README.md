@@ -108,7 +108,7 @@ docs/
 | S1–S7 MVP | Auth, SP, AI, Orders, Kho, Reports | **✅ ~95%** |
 | Phase 2 | Invoice, dual pricing, profit | **✅ ~98%** |
 | **V3 Upgrade** | Order flow, notify, dashboard, profile, mobile | **✅ ~95% local** |
-| DevOps staging | Railway + Vercel | **✅** · V3 chưa push `main` |
+| DevOps staging | Railway + Vercel + Redis | **✅** · auto-deploy `main` |
 
 Chi tiết + task tick ✅⚠️📋: [tasks/STATUS.md](./tasks/STATUS.md) · [backend-tasks.md](./tasks/backend-tasks.md) · [frontend-tasks.md](./tasks/frontend-tasks.md)
 

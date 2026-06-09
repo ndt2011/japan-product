@@ -197,3 +197,60 @@
 - Thay đổi có hiệu lực ngay không cần restart
 
 **Priority**: P1 | **Estimate**: 6 points
+
+---
+
+## V3 — User Stories (2026-06-08)
+
+### Thông báo hệ thống
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-V3-101 | Tất cả user | Nhận thông báo khi đơn hàng thay đổi trạng thái | Bell badge tăng, dropdown hiện thông báo mới |
+| US-V3-102 | Admin | Nhận thông báo khi hóa đơn sắp hoặc đã quá hạn | Thông báo OVERDUE hiện trong bell |
+| US-V3-103 | Admin | Nhận thông báo khi tồn kho xuống dưới ngưỡng | Thông báo LOW/CRITICAL hiện kèm tên sản phẩm |
+| US-V3-104 | Tất cả | Đánh dấu đã đọc từng thông báo hoặc tất cả | Badge giảm về 0 sau "Đọc tất cả" |
+
+### Quản lý kho V3
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-V3-201 | Admin | Xem danh sách tồn kho kèm badge NORMAL/LOW/CRITICAL/ON_ORDER | Badge màu đúng theo ngưỡng |
+| US-V3-202 | Admin | Chỉnh sửa ngưỡng tồn kho, trạng thái tái nhập, ghi chú | PUT /inventories/{id} thành công |
+| US-V3-203 | Admin | Xóa bản ghi inventory khi không còn sử dụng | Soft-delete, không hiện trong danh sách |
+| US-V3-204 | Admin | Import hàng loạt tồn kho từ file CSV | Báo số dòng thành công + lỗi cụ thể |
+
+### Dashboard V2
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-V3-301 | Admin/Company | Xem KPI tài chính trên Dashboard: doanh thu, công nợ, tồn kho thấp | Hiện đúng số liệu thực tế |
+| US-V3-302 | Admin | Xem biểu đồ doanh thu 30 ngày và cashflow 6 tháng | Chart render đúng dữ liệu từ API |
+
+### Đơn hàng V3
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-V3-401 | Admin | Ghi nhận thanh toán (APPROVED → PAID) | Status chuyển đúng, thông báo gửi |
+| US-V3-402 | Admin | Nhập tracking URL (PAID → SHIPPING) | Tracking URL lưu, hiển thị trong chi tiết |
+| US-V3-403 | Branch | Xác nhận đã nhận hàng (SHIPPING → DELIVERED → COMPLETED) | Auto-complete sau 24h |
+
+### Hồ sơ
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-V3-501 | Tất cả | Xem và sửa thông tin profile: tên, SĐT, avatar URL | PUT /profile thành công |
+| US-V3-502 | Tất cả | Đổi mật khẩu với xác thực mật khẩu cũ | Token không hết hiệu lực khi đổi |
+
+---
+
+## AI Purchasing Specialist — User Stories
+
+| ID | Vai trò | Mô tả | Tiêu chí chấp nhận |
+|----|---------|-------|-------------------|
+| US-AI-001 | Admin/Company | Nhập yêu cầu thu mua bằng tiếng Việt tự do | AI hiểu và trả về kết quả liên quan |
+| US-AI-002 | Admin/Company | Xem Top 5 sản phẩm được chấm điểm 5 tiêu chí | Điểm total đúng theo công thức weighted |
+| US-AI-003 | Admin/Company | Biết sản phẩm nào được AI khuyến nghị nhất | Badge ⭐ "Khuyến nghị" trên rank 1 |
+| US-AI-004 | Admin/Company | Nhập ngân sách JPY và số lượng để lọc kết quả | Kết quả phù hợp ngân sách |
+| US-AI-005 | Admin/Company | Đọc báo cáo phân tích tiếng Việt từ AI | Báo cáo rõ ràng, cache 1h |
+| US-AI-006 | Admin/Company | Click link xem sản phẩm trực tiếp trên Rakuten | Link mở đúng trang sản phẩm JP |

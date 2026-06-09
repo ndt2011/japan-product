@@ -107,14 +107,14 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| BE-AI-001 | Migration: `purchasing_sessions` + `purchasing_results` | P0 | — | 2h | 📋 |
-| BE-AI-002 | `PurchasingSpecialistService::parseRequest()` — GPT parse VI/JP → JSON structured | P0 | BE-AI-001 | 3h | 📋 |
-| BE-AI-003 | `PurchasingSpecialistService::searchProducts()` — gọi Rakuten + internal catalog song song | P0 | BE-AI-002 | 4h | 📋 |
-| BE-AI-004 | `ProductScoringService::scoreAll()` — GPT chấm điểm 5 tiêu chí + tính weighted score | P0 | BE-AI-003 | 3h | 📋 |
-| BE-AI-005 | `PurchasingSpecialistService::generateReport()` — GPT sinh báo cáo tiếng Việt | P0 | BE-AI-004 | 2h | 📋 |
-| BE-AI-006 | `PurchasingController` — `POST /ai/purchasing`, `GET /ai/purchasing/{id}`, `GET /ai/purchasing/history` | P0 | BE-AI-005 | 2h | 📋 |
-| BE-AI-007 | Rate limiting: max 10 request/user/giờ (throttle middleware) | P1 | BE-AI-006 | 1h | 📋 |
-| BE-AI-008 | Cache: translation 24h, Rakuten results 1h (Redis hoặc DB cache) | P1 | BE-AI-003 | 2h | 📋 |
+| BE-AI-001 | Migration: `purchasing_sessions` + `purchasing_results` | P0 | — | 2h | ✅ |
+| BE-AI-002 | `AiPurchasingService::analyze()` — parse + search + merge + score + report | P0 | BE-AI-001 | 3h | ✅ |
+| BE-AI-003 | `AiPurchasingService` — search Rakuten (10) + catalog (5), merge & deduplicate | P0 | BE-AI-002 | 4h | ✅ |
+| BE-AI-004 | `scoreItem()` — 5 tiêu chí weighted: price30%+quality30%+popular20%+warranty10%+brand10% | P0 | BE-AI-003 | 3h | ✅ |
+| BE-AI-005 | `generateReport()` — GPT-4o-mini, max 400 tokens, cache 1h | P0 | BE-AI-004 | 2h | ✅ |
+| BE-AI-006 | `AiPurchasingController::analyze()` — POST /ai/purchasing + validation | P0 | BE-AI-005 | 2h | ✅ |
+| BE-AI-007 | Rate limiting: max 10 request/user/giờ (throttle middleware) | P1 | BE-AI-006 | 1h | 📋 P2 |
+| BE-AI-008 | Cache: GPT report 1h (Laravel Cache), translation via service | P1 | BE-AI-003 | 2h | ✅ |
 
 **Thứ tự implement**: BE-AI-001 → BE-AI-002 → BE-AI-003 → BE-AI-004 → BE-AI-005 → BE-AI-006
 

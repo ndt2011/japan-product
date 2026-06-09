@@ -92,3 +92,71 @@
 - [ ] Tất cả form có validation rõ ràng, message theo `06_Hằng_số_thông_báo.xlsx`
 - [ ] Giao diện responsive (desktop 1280px trở lên không bị vỡ layout)
 - [ ] Không có dữ liệu của company/branch khác bị lọt qua
+
+---
+
+## US-V3-101 ~ 104: Hệ thống Thông báo (V3)
+
+- [ ] Khi đơn hàng được tạo → thông báo tự động xuất hiện ở phía người nhận (branch_manager) trong ≤ 60s
+- [ ] Bell icon trên header hiển thị badge số đỏ khi có thông báo chưa đọc
+- [ ] Click bell → dropdown hiển thị 10 thông báo gần nhất, có type icon và timestamp
+- [ ] Click vào 1 thông báo → `read_at` được set, badge giảm 1
+- [ ] Nút "Đọc tất cả" → tất cả `read_at` được set, badge biến mất
+- [ ] Phân quyền: mỗi user chỉ thấy thông báo của mình, không thấy của người khác
+- [ ] Các event trigger thông báo: ORDER_CREATED, ORDER_CONFIRMED, ORDER_CANCELLED, BATCH_DELIVERED
+
+---
+
+## US-V3-201 ~ 204: Quản lý Kho nâng cao (V3)
+
+- [ ] Danh sách kho hiển thị cột `available_qty` = `quantity - reserved_qty` (tính realtime)
+- [ ] Cột restock_status hiển thị badge màu: NORMAL (xanh) / LOW (vàng) / CRITICAL (đỏ) / ON_ORDER (xám)
+- [ ] Nhấn Edit → modal cho sửa quantity, min_stock_qty, restock_status
+- [ ] Lưu edit → dữ liệu DB cập nhật ngay, danh sách refresh
+- [ ] Nút "Import CSV" → modal upload file, hiển thị format mẫu
+- [ ] Upload CSV hợp lệ → hiển thị: imported X dòng, errors Y dòng (nếu có)
+- [ ] CSV có dòng lỗi → phần lỗi được báo row number + lý do, phần hợp lệ vẫn được import
+- [ ] CSV sai định dạng (không phải .csv) → thông báo lỗi rõ ràng
+
+---
+
+## US-V3-301 ~ 302: Dashboard tài chính (V3)
+
+- [ ] Dashboard Admin/JP Agency hiển thị tab "Doanh thu" với biểu đồ revenue JPY và VND
+- [ ] Biểu đồ cashflow hiển thị In/Out/Net theo tháng, 12 tháng gần nhất
+- [ ] KPI cards: Tổng đơn hàng / Công nợ chưa thanh toán / Sản phẩm tồn kho thấp / Doanh thu tháng
+- [ ] Tỷ giá JPY/VND hiển thị trên Dashboard, Admin có thể chỉnh trực tiếp
+- [ ] Branch manager chỉ thấy số liệu của branch mình
+
+---
+
+## US-V3-401 ~ 403: Luồng đơn hàng đầy đủ (V3)
+
+- [ ] Đơn hàng flow: DRAFT → PENDING → CONFIRMED → APPROVED → PAID → SHIPPING → DELIVERED → COMPLETED
+- [ ] Button đúng theo role: JP Agency thấy "Confirm" / "Approve" / "Mark Shipped"; VN Branch thấy "Confirm Receipt"
+- [ ] Không thể skip trạng thái (ví dụ PENDING → SHIPPING trả lỗi)
+- [ ] Khi PAID: `locked_rate` ghi vào DB, mọi tính toán về sau dùng rate này
+- [ ] Khi COMPLETED: tồn kho được release hoàn toàn (reserved_qty giảm)
+
+---
+
+## US-V3-501 ~ 502: Hồ sơ tài khoản (V3)
+
+- [ ] Trang Profile hiển thị: tên, email (read-only), số điện thoại, ảnh đại diện
+- [ ] Sửa tên + phone → lưu thành công, hiển thị toast xác nhận
+- [ ] Phone validation: không được chứa ký tự chữ, tối thiểu 8 số
+- [ ] Avatar URL hợp lệ → ảnh hiển thị ngay sau khi lưu
+- [ ] Email không thay đổi được qua form Profile (protected field)
+
+---
+
+## US-AI-001 ~ 006: AI Purchasing Specialist (V3/AI)
+
+- [ ] Màn hình AI Purchasing chỉ hiển thị với role Admin / JP Agency (branch staff thấy 403)
+- [ ] Nhập danh sách sản phẩm → nhấn "Phân tích" → kết quả trả về trong ≤ 15s
+- [ ] Mỗi sản phẩm hiển thị: AI Score tổng + breakdown 5 tiêu chí (Price 30% / Quality 30% / Popularity 20% / Warranty 10% / Brand 10%)
+- [ ] ScoreBar component hiển thị từng tiêu chí bằng thanh progress với màu sắc phân biệt
+- [ ] Danh sách kết quả sắp xếp giảm dần theo ai_score
+- [ ] Khi OPENAI_API_KEY chưa set → hiển thị thông báo "AI service chưa được cấu hình" thay vì crash
+- [ ] Giải thích AI (recommendation text) hiển thị bên dưới mỗi sản phẩm được gợi ý mua
+- [ ] Response chứa trường `recommended: true/false` cho mỗi sản phẩm

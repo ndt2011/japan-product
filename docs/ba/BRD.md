@@ -106,3 +106,39 @@ Hiện tại, quy trình nhập khẩu thực phẩm chức năng Nhật Bản s
 | Backend Developer | Implement API | Trung bình |
 | Frontend Developer | Implement UI | Trung bình |
 | QA Engineer | Kiểm thử | Trung bình |
+
+---
+
+## Phần bổ sung V3 — Business Requirements (2026-06-08)
+
+### BR-V3-001: Thông báo thời gian thực
+- Hệ thống PHẢI gửi thông báo tự động khi: đơn hàng đổi trạng thái, hóa đơn quá hạn, tồn kho dưới ngưỡng.
+- Thông báo PHẢI lưu vào database và hiện badge số chưa đọc trên header.
+- User PHẢI có thể đánh dấu đọc từng thông báo hoặc tất cả cùng lúc.
+
+### BR-V3-002: Quản lý tồn kho nâng cao
+- Admin PHẢI có thể đặt ngưỡng cảnh báo tồn kho (min_stock_qty) cho từng bản ghi inventory.
+- Hệ thống PHẢI tự động gán restock_status: NORMAL (≥ min), LOW (< min), CRITICAL (≤ min/2), ON_ORDER (đã đặt).
+- Admin PHẢI có thể import hàng loạt bằng CSV với báo cáo lỗi từng dòng.
+
+### BR-V3-003: Luồng đơn hàng đầy đủ
+- Đơn hàng PHẢI đi qua đúng thứ tự: DRAFT → PENDING → APPROVED → PAID → SHIPPING → DELIVERED → COMPLETED.
+- Admin PHẢI ghi nhận thanh toán trước khi nhập tracking. Branch PHẢI xác nhận nhận hàng trước khi auto-complete.
+- Hệ thống PHẢI tự động chuyển DELIVERED → COMPLETED sau 24 giờ nếu không có khiếu nại.
+
+### BR-V3-004: Dashboard tài chính
+- Dashboard PHẢI hiển thị: doanh thu tháng, công nợ tổng, đơn chờ duyệt, tồn kho thấp.
+- Biểu đồ doanh thu 30 ngày và cashflow 6 tháng PHẢI cập nhật theo thời gian thực.
+- Dữ liệu hiển thị PHẢI phân quyền theo role (Admin xem full, Company xem limited).
+
+### BR-V3-005: Giá 3 tầng
+- Sản phẩm CÓ THỂ có 3 mức giá: cost_price_jpy (giá vốn), wholesale_price_vnd (giá buôn), retail_price_vnd (giá lẻ).
+- Company và Branch CHỈ thấy giá bán phù hợp — không thấy giá vốn.
+- Giá VND PHẢI được tính hoặc nhập thủ công, không tự động theo tỷ giá.
+
+### BR-AI-001: AI Purchasing Specialist
+- Hệ thống PHẢI hỗ trợ phân tích thu mua bằng tiếng Việt tự do.
+- AI PHẢI tìm kiếm song song Rakuten (10 kết quả) và catalog nội bộ (5 kết quả).
+- Mỗi sản phẩm PHẢI được chấm điểm 5 tiêu chí với trọng số: Giá 30%, Chất lượng 30%, Độ phổ biến 20%, Bảo hành 10%, Thương hiệu 10%.
+- Kết quả PHẢI trả về Top 5, có đánh dấu khuyến nghị và báo cáo phân tích tiếng Việt.
+- Báo cáo GPT PHẢI được cache 1 giờ để tiết kiệm chi phí API.

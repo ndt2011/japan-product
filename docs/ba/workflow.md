@@ -159,3 +159,89 @@ Internet (Rakuten/Amazon JP)
                                 [exchange_rates] ─────────────┘
                                  (lock khi confirm)
 ```
+
+---
+
+## WF-V3-01: Luồng đơn hàng đầy đủ (V3)
+
+```
+[Company/Branch]          [Admin]                  [System]
+      │                       │                        │
+      ├─ Tạo đơn (DRAFT)      │                        │
+      ├─ Gui don ──────────► PENDING                   │
+      │                  ├─ Duyet ──────────────────► APPROVED
+      │                  ├─ Ghi nhan TT ────────────► PAID
+      │                  ├─ Nhap Tracking URL ──────► SHIPPING
+      │◄─────────── Thong bao giao hang              │
+      ├─ Xac nhan nhan hang ──────────────────────► DELIVERED
+      │                                    Auto 24h ► COMPLETED
+```
+
+**Trigger thông báo tự động:**
+- PENDING → APPROVED: notify Company/Branch
+- PAID → SHIPPING: notify Company/Branch (kèm tracking URL)
+- DELIVERED: notify Admin (Branch đã xác nhận)
+
+---
+
+## WF-V3-02: Luồng CSV Import Kho
+
+```
+[Admin]
+  │
+  ├─ Click "📥 Import CSV"
+  ├─ Chuẩn bị file: product_cd, warehouse_id, quantity (, min_stock_qty, notes)
+  ├─ Upload file (max 2MB, UTF-8)
+  │
+  [Backend]
+  ├─ Parse CSV header → validate cột bắt buộc
+  ├─ Với mỗi dòng:
+  │   ├─ Tìm inventory theo product_cd + warehouse_id
+  │   ├─ Nếu tìm thấy → stockIn() + update min_stock_qty
+  │   ├─ Nếu không → ghi lỗi dòng N: "Không tìm thấy SP"
+  ├─ Return: { imported: N, total_rows: M, errors: [...] }
+  │
+  [Admin]
+  └─ Xem kết quả: X dòng thành công / Y lỗi cụ thể
+```
+
+---
+
+## WF-AI-01: Luồng AI Purchasing Specialist
+
+```
+[Admin/Company]
+  │
+  ├─ Nhập yêu cầu tiếng Việt (query + budget_jpy + qty + preferences)
+  │
+  [AiPurchasingService]
+  ├─ Step 1: Dịch keyword VI → JP (RakutenKeywordTranslatorService)
+  ├─ Step 2: Tìm Rakuten (10 kết quả) + catalog nội bộ (5 kết quả) song song
+  ├─ Step 3: Merge & deduplicate (normalize tên 20 ký tự đầu)
+  ├─ Step 4: Chấm điểm mỗi sản phẩm:
+  │           priceScore(30%) + qualityScore(30%) + popularityScore(20%)
+  │         + warrantyScore(10%) + brandScore(10%) = total_score
+  ├─ Step 5: Sort desc → Top 5 → Sinh báo cáo GPT (cache 1h)
+  │
+  [Response]
+  └─ { results: [Top5], recommendation: "...", report: "..." }
+```
+
+---
+
+## WF-V3-03: Luồng Thông báo
+
+```
+[Event trigger]                [NotificationService]         [Frontend]
+      │                               │                          │
+Order status changed ──────► createNotification()               │
+Invoice overdue (9h cron) ──► createNotification()              │
+Inventory LOW (daily) ───────► createNotification()             │
+      │                        ├─ INSERT notifications table    │
+      │                        └─ (future: push/email)          │
+      │                                                   Poll /count 60s
+      │                                                   Badge tăng ──►
+      │                                                   User click bell
+      │                                                   GET /notifications
+      │                                                   PUT /read-all
+```

@@ -155,7 +155,15 @@ Chỉ deploy staging khi **ít nhất mục 1 và 6** pass.
 ### 1.3 Thêm Redis 7
 
 1. **+ New** → **Database** → **Add Redis**
-2. Tab **Variables** → copy `REDIS_URL` (hoặc reference `${{Redis.REDIS_URL}}`)
+2. Trên service **`product`** (API), thêm **2 dòng** — không copy hết Variables từ service Redis:
+
+```env
+REDIS_URL=${{Redis.REDIS_URL}}
+REDIS_CLIENT=phpredis
+```
+
+3. Giữ `CACHE_STORE=database` + `QUEUE_CONNECTION=sync` (Redis trống trên dashboard là bình thường)
+4. Sau Redeploy: `GET /api/health` → `redis_configured: true` · `GET /api/health?redis=1` → `redis_connected: true`
 
 ### 1.4 Ghi memo
 

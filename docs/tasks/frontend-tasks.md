@@ -110,11 +110,11 @@
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
 | FE-AI-001 | Proxy route `POST /api/proxy/ai/purchasing` + `GET /api/proxy/ai/purchasing/[id]` | P0 | BE-AI-006 | 1h | ✅ |
-| FE-AI-002 | `PurchasingScreen.tsx` — form nhập yêu cầu tự do (VI/JP), loading state, polling kết quả | P0 | FE-AI-001 | 4h | 📋 |
-| FE-AI-003 | `ProductCompareCard.tsx` — card sản phẩm: ảnh + tên VI + tên JP + giá JPY/VND + badge khuyến nghị | P0 | FE-AI-002 | 3h | 📋 |
-| FE-AI-004 | `ScoreBar.tsx` — thanh điểm 5 tiêu chí với màu gradient (xanh-vàng-đỏ theo điểm) | P1 | FE-AI-003 | 1h | 📋 |
-| FE-AI-005 | `ProfitCalculator.tsx` — nhập giá bán đề xuất → tính biên lợi nhuận realtime | P1 | FE-AI-003 | 2h | 📋 |
-| FE-AI-006 | Thêm "Tư vấn thu mua" vào sidebar navigation (chỉ admin + company) | P0 | FE-AI-002 | 0.5h | 📋 |
+| FE-AI-002 | `PurchasingScreen.tsx` — form query + gợi ý nhanh + budget/qty inputs + grid kết quả | P0 | FE-AI-001 | 4h | ✅ |
+| FE-AI-003 | `ProductCard` trong PurchasingScreen — rank badge, ⭐ khuyến nghị, ảnh, tên VI/JP, giá, ScoreBars | P0 | FE-AI-002 | 3h | ✅ |
+| FE-AI-004 | `ScoreBar` component — label + value/10 + color-coded progress bar | P1 | FE-AI-003 | 1h | ✅ |
+| FE-AI-005 | AI report section trong PurchasingScreen — hiển thị báo cáo GPT tiếng Việt | P1 | FE-AI-003 | 2h | ✅ |
+| FE-AI-006 | Sidebar nav "Tư Vấn Thu Mua" (🛍️) — admin + company, group AI | P0 | FE-AI-002 | 0.5h | ✅ |
 | FE-AI-007 | Màn hình lịch sử tìm kiếm `/purchasing/history` | P2 | FE-AI-002 | 2h | 📋 |
 
 **Màn hình chính** (`/purchasing`):

@@ -127,3 +127,50 @@
 | CI/CD pipeline production | DevOps |
 | Data migration (nếu có dữ liệu cũ) | Backend |
 | Go-live + monitoring | DevOps |
+
+---
+
+## Sprint V3 — Nâng cấp V3 (2026-06-08, đã hoàn thành local)
+
+**Goal**: Order flow đầy đủ, Thông báo, Dashboard tài chính, Inventory nâng cao, Profile  
+**Tiến độ**: ✅ ~95% code local | Chờ push `main` + migrate staging
+
+| ID | Story | Points | Assignee | Trạng thái |
+|----|-------|--------|----------|------------|
+| US-V3-101~104 | Notification system (BE + FE) | 8 | Backend + Frontend | ✅ |
+| US-V3-201~204 | Inventory V3: edit/delete/CSV import | 6 | Backend + Frontend | ✅ |
+| US-V3-301~302 | Dashboard V2: revenue chart + cashflow | 5 | Backend + Frontend | ✅ |
+| US-V3-401~403 | Order flow V3: APPROVED→PAID→SHIPPING | 6 | Backend + Frontend | ✅ |
+| US-V3-501~502 | Profile: avatar_url, phone, name | 3 | Backend + Frontend | ✅ |
+| — | BE migrations `100100` + `100110` | 2 | Backend | ⏳ OPS staging |
+| — | FE form validation `lib/form-validation.ts` | 3 | Frontend | ✅ FE-V3-033 |
+| — | Mobile responsive (bottom nav, card list) | 3 | Frontend | ✅ FE-V3-028~029 |
+| — | Pricing 3 tầng + retail_price_vnd | 4 | Backend | ✅ BE-V3-010~012 |
+
+**Total**: ~40 points  
+**Definition of Done**: Staging staging migrate OK, smoke test `/api/notifications/count` + `/api/profile` pass
+
+**Còn lại (P2 — không blocking staging)**:
+- BE-V3-018: Scheduler daily restock_status update
+- BE-V3-030: Suppliers CRUD đầy đủ
+- BE-V3-031: Upload avatar POST /profile/avatar → Cloudflare R2
+
+---
+
+## Sprint AI-P — AI Purchasing Specialist (2026-06-08, đã hoàn thành local)
+
+**Goal**: Gợi ý mua hàng thông minh dựa trên AI scoring 5 tiêu chí  
+**Tiến độ**: ✅ ~90% code local | Thiếu OPENAI_API_KEY Railway + History page
+
+| ID | Story | Points | Assignee | Trạng thái |
+|----|-------|--------|----------|------------|
+| US-AI-001 | BE AiPurchasingService — scoring engine | 8 | Backend | ✅ |
+| US-AI-002 | BE POST /ai/purchasing — API endpoint | 3 | Backend | ✅ |
+| US-AI-003 | FE PurchasingScreen — layout + request | 5 | Frontend | ✅ |
+| US-AI-004 | FE ProductCard + ScoreBar component | 4 | Frontend | ✅ |
+| US-AI-005 | FE Navigation item + proxy route | 2 | Frontend | ✅ |
+| US-AI-006 | BE/FE AI Purchasing history | 5 | Backend + Frontend | 📋 P2 |
+| — | Railway Secret: set OPENAI_API_KEY | 1 | DevOps | ⏳ OPS |
+
+**Total**: ~28 points  
+**Definition of Done**: POST /ai/purchasing trả về ai_score + breakdown 5 tiêu chí, UI hiển thị ScoreBar

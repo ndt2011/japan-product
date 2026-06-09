@@ -1,6 +1,6 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-08 (lần 13 — FE-V3-033 validation + sync G2–G3)  
+> **Cập nhật**: 2026-06-09 (lần 15 — Sync deploy main + Redis health + invoice fix)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
 > **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp** (V3 ~95% task)  
@@ -19,10 +19,10 @@
 | **S6–S7** Kho + Báo cáo | Reports + profit | **✅ ~95%** | Tab Lợi nhuận ✅ |
 | **DevOps** | Railway + Vercel staging | **✅** | Auto-deploy `main` |
 | **Phase 2** Invoice & Payment | HĐ, công nợ, profit | **✅ ~98%** | by-product ⏳ P2 |
-| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~95%** | Code local · chưa push `main` |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~95%** | Pushed `main` · toast + dashboard UX |
 | **AI Purchasing** | BE service + FE screen | **✅ ~90%** | History page P2 còn lại |
 
-**Tổng MVP + Phase 2 + V3 core**: ~**92%** — staging cần migrate `100100` + `100110` sau push.
+**Tổng MVP + Phase 2 + V3 core**: ~**92%** — migrate `100100` + `100110` auto qua `start.sh`.
 
 ---
 
@@ -42,6 +42,9 @@
 | 2026-06-08 PM | FE-V3-024 | Branch xem products đã duyệt + filter disabled |
 | 2026-06-08 PM | FE-V3-033 | `form-validation.ts` + inline errors 14 form screens |
 | 2026-06-08 PM | Docs G2–G3 | Sync STATUS · backend-tasks · backlog · audit |
+| 2026-06-08 PM | Deploy `main` | V3 release `865d3df` · dashboard/toast `dd91b36` |
+| 2026-06-08 PM | Fix invoice UI | `product_name_jp` / `line_total_vnd` — `10ff141` |
+| 2026-06-08 PM | Redis staging | `REDIS_URL` + health `redis_configured` — `09ad433` |
 
 ---
 
@@ -124,7 +127,7 @@
 
 ---
 
-## ✅ V3 Giai đoạn 1 — Critical (local, chưa push)
+## ✅ V3 Giai đoạn 1 — Critical (pushed `main`)
 
 | ID | Nội dung | Trạng thái |
 |----|----------|------------|
@@ -140,7 +143,7 @@
 
 ---
 
-## ✅ V3 Giai đoạn 2 — Important (G2, local)
+## ✅ V3 Giai đoạn 2 — Important (G2, pushed `main`)
 
 | ID | Nội dung | Trạng thái |
 |----|----------|------------|
@@ -160,7 +163,7 @@
 
 ---
 
-## ✅ V3 Giai đoạn 3 — Enhancement (G3, local)
+## ✅ V3 Giai đoạn 3 — Enhancement (G3, pushed `main`)
 
 | ID | Nội dung | Trạng thái |
 |----|----------|------------|
@@ -176,7 +179,7 @@
 
 **Migrations:** `100100_v3_upgrade_phase1` · `100110_v3_profile_fields`
 
-**OPS sau push:** Railway Deploy Logs → `[start] migrate OK` → smoke `/api/notifications/count`, `/api/profile`
+**OPS staging:** Railway Variables `REDIS_URL=${{Redis.REDIS_URL}}` · health `?redis=1` · smoke `/api/notifications/count`, `/api/profile`, `/invoices/{id}`
 
 Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-tasks.md](./frontend-tasks.md) · [upgrade-v3-analysis.md](../sa/amendments/upgrade-v3-analysis.md)
 
@@ -195,7 +198,7 @@ Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-task
 | **V3-G1** | Order + Notify + Pricing + Inventory core | **✅ ~97%** — thiếu BE-V3-018 scheduler |
 | **V3-G2** | Dashboard + Product + Master + Profile | **✅ ~92%** — thiếu avatar R2 · Form Requests · suppliers CRUD |
 | **V3-G3** | Mobile + Mermaid + validation | **✅ 100%** |
-| OPS | Railway migrate `100100` + `100110` sau push `main` | **P0 ops** |
+| OPS | Railway `REDIS_URL` trên service product + redeploy | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
 | OPS | Vercel: cập nhật domain R2 trong `next.config.mjs` | P1 |
 | T1-003 | Auto price calculation | P2 |

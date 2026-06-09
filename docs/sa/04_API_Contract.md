@@ -1336,3 +1336,289 @@ PREPARING → CUSTOMS_JP → IN_TRANSIT → CUSTOMS_VN → DELIVERED
 | M0902 | Admin | login_id admin đã tồn tại |
 | M0903 | Admin | Tạo/cập nhật company thành công |
 | M0904 | Admin | login_id hoặc mã công ty đã tồn tại |
+
+---
+
+## Module 10 — Notifications (V3)
+
+> Auth: `auth:sanctum` — tất cả role
+
+### GET `/notifications`
+
+Danh sách thông báo của user hiện tại (phân trang).
+
+**Query params**: `per_page` (default 15), `unread_only` (boolean)
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "type": "order_status_changed",
+        "title": "Đơn hàng ORD-202606-0001 đã được duyệt",
+        "body": "Admin đã duyệt đơn hàng của bạn.",
+        "is_read": false,
+        "read_at": null,
+        "created_at": "2026-06-08T10:00:00Z"
+      }
+    ],
+    "total": 5,
+    "unread_count": 3
+  }
+}
+```
+
+---
+
+### GET `/notifications/count`
+
+Số thông báo chưa đọc (dùng cho badge header — poll mỗi 60s).
+
+**Response 200**:
+```json
+{ "success": true, "data": { "unread_count": 3 } }
+```
+
+---
+
+### PUT `/notifications/{id}/read`
+
+Đánh dấu 1 thông báo đã đọc.
+
+**Response 200**: `{ "success": true, "message": "Marked as read" }`
+
+---
+
+### PUT `/notifications/read-all`
+
+Đánh dấu tất cả thông báo đã đọc.
+
+**Response 200**: `{ "success": true, "data": { "updated": 3 } }`
+
+---
+
+## Module 11 — Inventory CRUD (V3)
+
+> Auth: `auth:sanctum` + `role:admin`
+
+### PUT `/inventories/{id}`
+
+Cập nhật thông tin kho của một inventory record.
+
+**Request body**:
+```json
+{
+  "min_stock_qty": 20,
+  "restock_status": "LOW",
+  "restock_eta": "2026-07-15",
+  "notes": "Cần nhập thêm từ Osaka"
+}
+```
+
+**Validation**:
+- `restock_status`: enum `NORMAL|LOW|CRITICAL|ON_ORDER`
+- `restock_eta`: nullable, date format `Y-m-d`
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "product_id": 12,
+    "warehouse_id": 1,
+    "quantity": 50,
+    "reserved_qty": 5,
+    "available_qty": 45,
+    "min_stock_qty": 20,
+    "restock_status": "LOW",
+    "restock_eta": "2026-07-15",
+    "notes": "Cần nhập thêm từ Osaka"
+  }
+}
+```
+
+---
+
+### DELETE `/inventories/{id}`
+
+Soft-delete một inventory record (đặt `deleted_flag = true`).
+
+**Response 200**: `{ "success": true, "message": "Inventory deleted" }`
+
+**Lỗi 422**: Nếu record có `reserved_qty > 0` (đang giữ hàng cho đơn).
+
+---
+
+### POST `/inventories/bulk-import`
+
+Import hàng loạt từ file CSV.
+
+**Request**: `multipart/form-data`
+- `file`: file CSV (mimes: csv,txt, max 2MB)
+
+**CSV format** (header row bắt buộc):
+```
+product_cd,warehouse_id,quantity,min_stock_qty,notes
+JP-FOD-00012,1,100,20,Nhap tu Osaka
+```
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "imported": 45,
+    "total_rows": 47,
+    "errors": [
+      "Dong 3: product_cd 'JP-XYZ-99999' khong ton tai",
+      "Dong 12: warehouse_id '99' khong hop le"
+    ]
+  }
+}
+```
+
+---
+
+## Module 12 — Profile (V3)
+
+> Auth: `auth:sanctum` — tất cả role
+
+### GET `/profile`
+
+Thông tin profile của user đang đăng nhập.
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "user_type": "admin",
+    "id": 1,
+    "name": "Super Admin",
+    "login_id": "admin",
+    "email": "admin@example.com",
+    "phone": "090-1234-5678",
+    "avatar_url": "https://r2.example.com/avatars/admin.jpg",
+    "role_display": "Admin (JP Agency)",
+    "company_name": null,
+    "branch_name": null,
+    "created_at": "2026-06-07T00:00:00Z"
+  }
+}
+```
+
+---
+
+### PUT `/profile`
+
+Cập nhật thông tin profile (không thể đổi login_id, email, role).
+
+**Request body**:
+```json
+{
+  "name": "Nguyen Admin",
+  "phone": "090-9999-8888",
+  "avatar_url": "https://r2.example.com/avatars/new.jpg"
+}
+```
+
+**Response 200**: `{ "success": true, "data": { /* updated profile */ } }`
+
+---
+
+## Module 13 — AI Purchasing Specialist (V3 + AI-P)
+
+> Auth: `auth:sanctum` + `role:admin,company`
+
+### POST `/ai/purchasing`
+
+Phân tích và tư vấn sản phẩm thu mua dựa trên yêu cầu của user.
+
+**Request body**:
+```json
+{
+  "query": "Tìm kem dưỡng ẩm ban đêm cho da khô, ưu tiên thương hiệu Nhật",
+  "budget_jpy": 3000,
+  "qty": 50,
+  "preferences": "Không paraben, có thể dùng cho da nhạy cảm"
+}
+```
+
+**Validation**:
+- `query`: required, string, max 500
+- `budget_jpy`: nullable, integer, min 1
+- `qty`: nullable, integer, min 1, max 10000
+- `preferences`: nullable, string, max 500
+
+**Xử lý (5 bước)**:
+1. Dịch từ khóa VI → JP (RakutenKeywordTranslatorService)
+2. Tìm kiếm Rakuten (10 kết quả) + catalog nội bộ (5 kết quả)
+3. Merge & deduplicate (theo tên chuẩn hóa 20 ký tự đầu)
+4. Chấm điểm từng sản phẩm theo 5 tiêu chí
+5. Sinh báo cáo GPT (cache 1h)
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "query": "Kem dưỡng ẩm ban đêm",
+    "keyword_jp": "夜間保湿クリーム 乾燥肌",
+    "results": [
+      {
+        "rank": 1,
+        "name": "DHC Olive Virgin Oil Moisturizer",
+        "name_jp": "DHCオリーブバージンオイル",
+        "price_jpy": 1980,
+        "price_vnd_est": 330000,
+        "brand": "DHC",
+        "review_score": 4.5,
+        "review_count": 1250,
+        "image_url": "https://...",
+        "url": "https://item.rakuten.co.jp/...",
+        "source": "rakuten",
+        "scores": {
+          "price": 9.0,
+          "quality": 9.0,
+          "popularity": 10.0,
+          "warranty": 5.0,
+          "brand": 9.0,
+          "total": 8.95
+        }
+      }
+    ],
+    "recommendation": "DHC Olive Virgin Oil Moisturizer — tổng điểm 8.95/10",
+    "report": "Dựa trên phân tích 8 sản phẩm, DHC là lựa chọn tốt nhất..."
+  }
+}
+```
+
+**Scoring weights**:
+| Tiêu chí | Trọng số | Thang điểm |
+|----------|---------|-----------|
+| Price (Giá) | 30% | JPY≤1000:10 / ≤2000:9 / ≤3500:8 / ≤5000:7 / ≤8000:6 / ≤15000:5 / else:4 |
+| Quality (Chất lượng) | 30% | review_score × 2 |
+| Popularity (Độ phổ biến) | 20% | ≥1000 reviews:10 / ≥500:9 / ≥100:8 / ≥50:7 / ≥10:6 / >0:5 |
+| Warranty (Bảo hành) | 10% | ≥24th:10 / ≥12th:8 / khác:5 |
+| Brand (Thương hiệu) | 10% | TRUSTED_BRANDS lookup (DHC,FANCL,Sony...) |
+
+---
+
+## Cập nhật Message Codes (V3)
+
+| Code | Module | Mô tả |
+|------|--------|-------|
+| M1001 | Notifications | Đánh dấu đã đọc thành công |
+| M1002 | Notifications | Thông báo không tồn tại hoặc không phải của bạn |
+| M1101 | Inventory | Cập nhật inventory thành công |
+| M1102 | Inventory | Xóa inventory thành công |
+| M1103 | Inventory | Không xóa được — đang có reserved_qty > 0 |
+| M1104 | Inventory | CSV import: file không hợp lệ |
+| M1201 | Profile | Cập nhật profile thành công |
+| M1301 | AI Purchasing | Phân tích thành công |
+| M1302 | AI Purchasing | Không tìm thấy sản phẩm phù hợp |
+| M1303 | AI Purchasing | Vượt giới hạn request (rate limit) |
