@@ -160,7 +160,7 @@
 | BE-V3-015 | `InventoryService` — auto sinh `inventory_cd` (INV-{WH}-{PROD}-{SEQ}) | P0 | BE-V3-014 | 2h | ✅ |
 | BE-V3-016 | `InventoryController` — PUT update + DELETE (soft) | P0 | BE-V3-015 | 2h | ✅ |
 | BE-V3-017 | `POST /inventories/bulk-import` — CSV nhập kho hàng loạt | P1 | BE-V3-015 | 3h | ✅ |
-| BE-V3-018 | Scheduler: kiểm tra tồn kho daily → auto set restock_status | P1 | BE-V3-014 | 2h | 📋 |
+| BE-V3-018 | Scheduler: kiểm tra tồn kho daily → auto set restock_status | P1 | BE-V3-014 | 2h | ✅ `inventories:sync-restock-status` 7h JST |
 
 ### V3-G1: Notification System (#4)
 
@@ -196,7 +196,7 @@
 
 | ID | Mô tả | P | Dep | Est | Trạng thái |
 |----|-------|---|-----|-----|------------|
-| BE-V3-030 | API CRUD `product_categories`; warehouses create/list; suppliers read-only | P2 | — | 3h | ✅ · suppliers CRUD 📋 P2 |
+| BE-V3-030 | API CRUD `product_categories`; warehouses create/list; **suppliers CRUD** | P2 | — | 3h | ✅ |
 | BE-V3-031 | Migration: `avatar_url`, `phone` vào admins + branch_users + companies_vn | P2 | — | 1h | ✅ `100110` |
 | BE-V3-032 | `GET/PUT /profile` + `POST /profile/avatar` (upload R2) | P2 | BE-V3-031 | 3h | ⚠️ GET/PUT ✅ · avatar R2 📋 |
 

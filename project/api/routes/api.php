@@ -24,6 +24,7 @@ use App\Http\Controllers\API\ProductImageController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\ShipmentBatchController;
+use App\Http\Controllers\API\SupplierController;
 use App\Http\Controllers\API\StockMovementController;
 use App\Http\Controllers\API\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -164,6 +165,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/product-categories', [ProductCategoryController::class, 'store']);
         Route::put('/product-categories/{id}', [ProductCategoryController::class, 'update']);
         Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);
+
+        Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
+        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
 
         Route::get('/inventories', [InventoryController::class, 'index']);
         Route::put('/inventories/{id}', [InventoryController::class, 'update']);

@@ -1,6 +1,6 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-09 (lần 15 — Sync deploy main + Redis health + invoice fix)  
+> **Cập nhật**: 2026-06-09 (lần 16 — BE-V3-018 scheduler + Suppliers CRUD)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
 > **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~95% khớp** (V3 ~95% task)  
@@ -19,7 +19,7 @@
 | **S6–S7** Kho + Báo cáo | Reports + profit | **✅ ~95%** | Tab Lợi nhuận ✅ |
 | **DevOps** | Railway + Vercel staging | **✅** | Auto-deploy `main` |
 | **Phase 2** Invoice & Payment | HĐ, công nợ, profit | **✅ ~98%** | by-product ⏳ P2 |
-| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~95%** | Pushed `main` · toast + dashboard UX |
+| **V3 Upgrade** | Order flow, notify, dashboard, profile | **✅ ~98%** | G1 hoàn thành · suppliers CRUD |
 | **AI Purchasing** | BE service + FE screen | **✅ ~90%** | History page P2 còn lại |
 
 **Tổng MVP + Phase 2 + V3 core**: ~**92%** — migrate `100100` + `100110` auto qua `start.sh`.
@@ -139,7 +139,7 @@
 | FE-V3-010,014 | Inventory list + restock badge | ✅ |
 | FE-V3-015,016 | Product form/detail pricing branch | ✅ |
 
-**Chưa G1:** BE-V3-018 scheduler restock daily (P1)
+**G1 hoàn thành:** BE-V3-018 scheduler `inventories:sync-restock-status` 7h JST
 
 ---
 
@@ -150,16 +150,16 @@
 | BE-V3-023~025 | `/dashboard/revenue`, `/cashflow`, phân quyền role | ✅ |
 | BE-V3-026, 028 | `barcode`, `min_order_qty`, AI `image_url` | ✅ |
 | BE-V3-027 | `ProductResource.created_by_name` | ✅ |
-| BE-V3-030 | Categories CRUD + warehouses create/list | ✅ |
+| BE-V3-030 | Categories CRUD + warehouses + **suppliers CRUD** | ✅ |
 | BE-V3-031 | Profile migration `avatar_url`, `phone` | ✅ `100110` |
 | BE-V3-032 | GET/PUT `/profile` | ✅ |
 | FE-V3-017~019 | Dashboard tài chính + chart + proxy | ✅ |
 | FE-V3-020~024 | Product thumb, gallery, filter, AI thumb, branch filter | ✅ |
-| FE-V3-025~026 | `/admin/master-data` 4 tab (categories, warehouses, suppliers RO, units) | ✅ |
+| FE-V3-025~026 | `/admin/master-data` 4 tab (categories, warehouses, suppliers CRUD, units) | ✅ |
 | FE-V3-027 | `/profile` — sửa tên, email, phone, avatar URL | ✅ |
 | FE-V3-032 | Tỷ giá JPY/VND trên Dashboard + estimator ProductForm | ✅ |
 
-**Còn G2 (P2, không blocking):** BE-V3-029 Form Requests · BE-V3-030 suppliers full CRUD · BE-V3-032 `POST /profile/avatar` R2 · FE avatar upload R2
+**Còn G2 (P2, không blocking):** BE-V3-029 Form Requests · BE-V3-032 `POST /profile/avatar` R2 · FE avatar upload R2
 
 ---
 
@@ -189,14 +189,14 @@ Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-task
 
 | ID | Việc | Priority |
 |----|------|----------|
-| BE-P2-013 | `GET /reports/profit/by-product` | P2 |
+| BE-P2-013 | `GET /reports/profit/by-product` | ✅ (đã có API + tab Reports) |
 | BE-P2-014 | Lưu `invoices.pdf_path` khi generate | P2 |
 | FE-P2-007 | Recharts chart tab Lợi nhuận | P2 |
 | INV-001 | reserve/release thêm warehouseId (khi có kho thứ 2) | P2 — xem `inventory-known-issues.md` |
 | INV-002 | Pre-order support (khi BA yêu cầu) | P3 — xem `inventory-known-issues.md` |
 | **AI-P** | **AI Purchasing Specialist** — BE 8 tasks + FE 7 tasks | **P1 — xem `ai-purchasing-specialist.md`** |
-| **V3-G1** | Order + Notify + Pricing + Inventory core | **✅ ~97%** — thiếu BE-V3-018 scheduler |
-| **V3-G2** | Dashboard + Product + Master + Profile | **✅ ~92%** — thiếu avatar R2 · Form Requests · suppliers CRUD |
+| **V3-G1** | Order + Notify + Pricing + Inventory core | **✅ 100%** |
+| **V3-G2** | Dashboard + Product + Master + Profile | **✅ ~95%** — thiếu avatar R2 · Form Requests |
 | **V3-G3** | Mobile + Mermaid + validation | **✅ 100%** |
 | OPS | Railway `REDIS_URL` trên service product + redeploy | **P0 ops** |
 | OPS | Railway Secret: set `OPENAI_API_KEY` | **P0 ops** |
@@ -218,7 +218,7 @@ Chi tiết từng task: [backend-tasks.md](./backend-tasks.md) · [frontend-task
 cd project/api && php artisan test
 ```
 
-**73 passed** · FE build OK (`npm run build`)
+**74 passed** · FE build OK (`npm run build`)
 
 ---
 

@@ -277,17 +277,53 @@ class InventoryService
         ]);
     }
 
+    /**
+     * Scheduler BE-V3-018: quét toàn bộ tồn kho và cập nhật restock_status.
+     *
+     * @return int Số bản ghi được cập nhật
+     */
+    public function recalculateAllRestockStatuses(bool $dryRun = false): int
+    {
+        $updated = 0;
+
+        \App\Models\Inventory::query()
+            ->active()
+            ->orderBy('id')
+            ->chunkById(100, function ($inventories) use ($dryRun, &$updated) {
+                foreach ($inventories as $inv) {
+                    $status = $this->computeRestockStatus($inv);
+
+                    if ($inv->restock_status === $status) {
+                        continue;
+                    }
+
+                    if (! $dryRun) {
+                        $inv->update(['restock_status' => $status]);
+                    }
+
+                    $updated++;
+                }
+            });
+
+        return $updated;
+    }
+
     private function syncRestockStatus(\App\Models\Inventory $inv): void
     {
+        $inv->update(['restock_status' => $this->computeRestockStatus($inv)]);
+    }
+
+    /** BRD: NORMAL ≥ min · LOW < min · CRITICAL ≤ min/2 */
+    private function computeRestockStatus(\App\Models\Inventory $inv): string
+    {
         $available = $inv->availableQty();
-        $min = (int) ($inv->min_stock_qty ?? 5);
+        $min = max(1, (int) ($inv->min_stock_qty ?? 5));
+        $criticalThreshold = max(0, (int) floor($min / 2));
 
-        $status = match (true) {
-            $available <= 0 => 'CRITICAL',
-            $available < $min => 'LOW',
-            default => 'NORMAL',
+        return match (true) {
+            $available >= $min => 'NORMAL',
+            $available <= $criticalThreshold => 'CRITICAL',
+            default => 'LOW',
         };
-
-        $inv->update(['restock_status' => $status]);
     }
 }

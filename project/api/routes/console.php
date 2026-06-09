@@ -13,3 +13,6 @@ Schedule::command('invoices:check-overdue')->dailyAt('09:00')->timezone('Asia/To
 
 // 8h JST: Tự động COMPLETED đơn DELIVERED_ADMIN quá 7 ngày không xác nhận
 Schedule::command('orders:auto-complete')->dailyAt('08:00')->timezone('Asia/Tokyo');
+
+// 7h JST: Cập nhật restock_status (NORMAL/LOW/CRITICAL) theo tồn kho
+Schedule::command('inventories:sync-restock-status')->dailyAt('07:00')->timezone('Asia/Tokyo');

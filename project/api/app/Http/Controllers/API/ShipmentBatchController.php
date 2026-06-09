@@ -144,7 +144,12 @@ class ShipmentBatchController extends Controller
         }
 
         try {
-            $batch = $this->service->advanceStatus($id, $request->validated('status'), $auth['user']);
+            $batch = $this->service->advanceStatus(
+                $id,
+                $request->validated('status'),
+                $auth['user'],
+                $request->validated('warehouse_id') ? (int) $request->validated('warehouse_id') : null,
+            );
         } catch (ShipmentBatchException $e) {
             return ApiResponse::error($e->messageCode, null, $e->status);
         }

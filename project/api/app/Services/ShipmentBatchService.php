@@ -206,7 +206,7 @@ class ShipmentBatchService
         });
     }
 
-    public function advanceStatus(int $id, string $newStatus, Admin $admin): ShipmentBatch
+    public function advanceStatus(int $id, string $newStatus, Admin $admin, ?int $warehouseId = null): ShipmentBatch
     {
         $batch = $this->repository->findDetail($id);
 
@@ -227,17 +227,19 @@ class ShipmentBatchService
             throw new ShipmentBatchException('M0505', 409);
         }
 
-        return DB::transaction(function () use ($batch, $newStatus, $admin) {
+        return DB::transaction(function () use ($batch, $newStatus, $admin, $warehouseId) {
             $updated = $this->repository->update($batch, [
-                'status' => $newStatus,
+                'status'   => $newStatus,
                 'modified' => now(),
             ]);
 
             if ($newStatus === 'DELIVERED') {
                 // Hàng về kho Việt Nam từ Nhật → auto NHẬP KHO (stockIn)
                 // Xuất kho sẽ xảy ra khi đại lý xác nhận nhận hàng (confirmReceipt → COMPLETED)
-                // spec: docs/sa/amendments/ai-conversation-upgrade.md, 0-001_Dashboard.xlsx
-                $warehouse = $this->warehouseRepository->defaultWarehouse();
+                // warehouse_id: ưu tiên từ request → defaultWarehouse()
+                $warehouse = $warehouseId
+                    ? $this->warehouseRepository->find($warehouseId)
+                    : $this->warehouseRepository->defaultWarehouse();
                 $orderIds = $updated->items->pluck('order_id');
                 $orders = Order::query()
                     ->with('details')

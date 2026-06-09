@@ -1,6 +1,6 @@
 # Code vs Docs Audit Report
 
-> **Ngày**: 2026-06-08 (lần 4 — sau V3 local + docs sync) | **Tác giả**: SA  
+> **Ngày**: 2026-06-09 (lần 5 — sau BE-V3-018 + suppliers CRUD) | **Tác giả**: SA  
 > **Mục đích**: Kiểm tra code thực tế có phản ánh đúng tài liệu thiết kế không  
 > **Trạng thái tổng**: [docs/tasks/STATUS.md](../../tasks/STATUS.md)
 
@@ -10,9 +10,9 @@
 
 | Câu hỏi | Trả lời |
 |---------|---------|
-| **Docs có khớp code không?** | **~92% khớp** — Phase 2 ✅ · V3 ~80% task |
+| **Docs có khớp code không?** | **~96% khớp** — Phase 2 ✅ · V3 ~98% |
 | **File nào là nguồn sự thật?** | `STATUS.md` + `backend-tasks.md` / `frontend-tasks.md` + code `project/` |
-| **Còn lệch gì?** | V3 partial items + 4 điểm Phase 2 (bảng ⚠️) |
+| **Còn lệch gì?** | P2: Form Requests · avatar R2 · pdf_path · profit chart |
 
 ---
 
@@ -23,10 +23,10 @@
 | RBAC & Auth | 7 | 0 | 0 |
 | Sản phẩm dual pricing | 6 | 0 | 0 |
 | Đơn hàng & Delivery | 6 | 1 | 0 |
-| Invoice / Hóa đơn | 10 | 1 | 0 |
-| Reports / Profit | 2 | 0 | 1 |
-| DevOps staging | 4 | 0 | 1 prod |
-| **V3 Upgrade** | 28 | 8 | 6 |
+| Invoice / Hóa đơn | 11 | 1 | 0 |
+| Reports / Profit | 3 | 0 | 0 |
+| DevOps staging | 5 | 0 | 1 prod |
+| **V3 Upgrade** | 35 | 4 | 3 |
 
 ---
 
@@ -35,29 +35,26 @@
 | Hạng mục | Spec | Code | File tham chiếu |
 |----------|------|------|-----------------|
 | Dual pricing DB | `cost_price_jpy`, `selling_price_jpy`, `fee_rate` | ✅ | migration 100060 |
-| Dual pricing FE form | Admin section + preview VND | ✅ | `ProductFormScreen.tsx` |
-| Dual pricing API save | POST/PUT products | ✅ | `StoreProductRequest.php` |
 | Invoice snapshot | locked_rate, fee, subtotal, items JP/VI | ✅ | migrations 100070/100071 |
+| Invoice detail FE | `product_name_jp/vi`, `line_total_vnd` | ✅ | `InvoiceDetailScreen.tsx` |
 | `createFromOrder` fee | selling × rate × (1+fee) | ✅ | `InvoiceService.php` |
-| PDF hóa đơn | DomPDF stream | ✅ | `InvoiceController.php` + `dompdf/dompdf` |
-| PDF proxy FE | `application/pdf` | ✅ | `proxy/invoices/[id]/pdf/route.ts` |
+| PDF hóa đơn | DomPDF stream | ✅ | `InvoiceController.php` |
 | confirm-receipt | Company + Branch | ✅ | `OrderService.php` |
 | orders:auto-complete | 8h JST, 7 ngày | ✅ | `AutoCompleteDeliveredOrders.php` |
 | GET /reports/profit | Summary + by_order | ✅ | `ReportController.php` |
-| Tab Lợi nhuận FE | `/reports` profit tab | ✅ | `ReportsScreen.tsx` |
-| order_costs API | GET/POST/DELETE | ✅ | `OrderCostController.php` |
-| order_costs UI | Order detail Admin | ✅ | `OrderDetailScreen.tsx` |
-| Notification badge | overdue + DELIVERED_ADMIN | ✅ | `useNotificationCounts.ts` + `AppShell.tsx` |
-| Admin all-users | search + ma trận quyền | ✅ | `AdminScreen.tsx` |
-| Tests | 73 passed | ✅ | `php artisan test` |
+| GET /reports/profit/by-product | Top/bottom sản phẩm | ✅ | `ReportController.php` + `ReportsScreen.tsx` |
+| order_costs API + UI | GET/POST/DELETE | ✅ | `OrderCostController.php` |
 | V3 order flow | APPROVED → PAID → SHIPPING | ✅ | `OrderService`, `ShipmentBatchService` |
-| V3 notifications | Table + API + dropdown FE | ✅ | `NotificationService`, `NotificationDropdown` |
-| V3 dashboard revenue | `/dashboard/revenue`, `/cashflow` | ✅ | `DashboardService` |
-| V3 profile | GET/PUT `/profile` | ⚠️ | Chưa `POST /profile/avatar` |
-| V3 master-data | Categories CRUD + warehouse create | ⚠️ | Chưa 4-tab UI / suppliers CRUD |
-| V3 inventory UI | List + badge | ⚠️ | Chưa edit/delete row FE |
-| V3 mobile | Bottom nav + chat full-screen | ⚠️ | Chưa card list Orders/Products |
-| Mermaid chat | `ChatMessageContent` | ✅ | `components/chat/ChatMessageContent.tsx` |
+| V3 notifications | Table + API + dropdown + ORDER_NEW toast | ✅ | `NotificationService`, `NotificationPoller` |
+| V3 dashboard | Revenue, cashflow, UX redesign | ✅ | `DashboardScreen.tsx` |
+| Toast feedback | Save/delete trên forms | ✅ | `lib/toast.ts`, `ToastContainer` |
+| V3 inventory | List + edit/delete + CSV + restock badge | ✅ | `InventoryScreen.tsx` |
+| **BE-V3-018** | Scheduler restock_status daily | ✅ | `SyncRestockStatus` 7h JST |
+| Restock logic | NORMAL ≥ min · LOW < min · CRITICAL ≤ min/2 | ✅ | `InventoryService::computeRestockStatus` |
+| Suppliers CRUD | POST/PUT/DELETE `/suppliers` | ✅ | `SupplierController.php` |
+| Master-data FE | Categories + warehouses + suppliers | ✅ | `MasterDataScreen.tsx` |
+| Redis staging | `REDIS_URL` + health `redis_configured` | ✅ | `HealthController`, `railway-env.php` |
+| Tests | 74 passed | ✅ | `php artisan test` |
 
 ---
 
@@ -65,10 +62,9 @@
 
 | ID | Spec (docs cũ) | Code thực tế | Hành động docs |
 |----|----------------|--------------|----------------|
-| **DEL-DIFF-01** | `DELIVERED_CLIENT` là status riêng | Nhảy thẳng `DELIVERED_ADMIN` → `COMPLETED`, set `delivered_client_at` | Cập nhật `orders-status.md` ✅ |
-| **INV-DIFF-05** | Lưu `pdf_path` khi xuất PDF | PDF stream trực tiếp, chưa persist path | Ghi backlog P2 |
-| **FE-DIFF-01** | `/reports/profit` route riêng | Tab trong `/reports` (cùng chức năng) | Chấp nhận — UX gọn hơn |
-| **FE-DIFF-02** | Recharts biểu đồ profit | Bảng + summary cards (chưa chart) | P2 enhancement |
+| **DEL-DIFF-01** | `DELIVERED_CLIENT` status riêng | `DELIVERED_ADMIN` → `COMPLETED` | `orders-status.md` ✅ |
+| **INV-DIFF-05** | Lưu `pdf_path` khi xuất PDF | PDF stream, chưa persist | Backlog P2 |
+| **FE-DIFF-02** | Recharts biểu đồ profit | Bảng + summary cards | P2 enhancement |
 
 ---
 
@@ -76,14 +72,12 @@
 
 | ID | Hạng mục | Priority | Ghi chú |
 |----|----------|----------|---------|
-| **BE-P2-013** | `GET /reports/profit/by-product` | P2 | Chỉ có tổng hợp + by_order |
 | **BE-P2-014** | Persist `invoices.pdf_path` khi generate | P2 | PDF vẫn xem/download được |
-| **QA-INV** | Test cases invoice/delivery trong `docs/qa/` | P2 | PHPUnit có `InvoiceTest` |
+| **FE-P2-007** | Recharts chart tab Lợi nhuận | P2 | Bảng đã có |
+| **BE-V3-029** | Required validation all Form Requests | P2 | FE có `form-validation.ts` |
+| **BE-V3-032** | `POST /profile/avatar` upload R2 | P2 | GET/PUT profile ✅ |
 | **PROD** | ConoHa VPS production | Sprint 7 | Staging Railway+Vercel OK |
-| **BE-V3-018** | Scheduler restock_status daily | P1 | `console.php` chưa có command |
-| **BE-V3-029** | Required validation all Form Requests | P2 | FE đã có `form-validation.ts` |
-| **BE-V3-030** | Suppliers full CRUD | P2 | Hiện read-only — đủ cho MVP |
-| **BE-V3-032** | `POST /profile/avatar` upload R2 | P2 | GET/PUT profile ✅ · URL field ✅ |
+| **OPS** | Railway Shell: `products:generate-vi` + `embed` | P0 ops | AI catalog Luồng B |
 
 ---
 
@@ -93,13 +87,14 @@
 |----|-------|-----|
 | BUG-01 | `BranchUserService::list()` Admin TypeError | `BranchUser\|int` |
 | BUG-02 | `order_costs` duplicate primary key | Xóa `$table->primary('id')` thừa |
-| BUG-03 | `InvoiceTest` công thức fee cũ | Cập nhật theo dual pricing |
+| BUG-03 | `InvoiceTest` công thức fee cũ | Dual pricing |
+| BUG-04 | Invoice detail `NaN` / tên SP trống | `line_total_vnd`, `product_name_jp/vi` |
+| BUG-05 | `InventoryController` syntax — warehouse 500 | `bulkImport` trong class |
 
 ---
 
 ## Việc tiếp theo
 
-1. **Push V3 local** → Railway migrate `100100` + `100110` → smoke staging
-2. V3 còn lại P2: BE-V3-018 scheduler · BE-V3-029 Form Requests · avatar R2 (BE/FE-V3-032)
-3. `GET /reports/profit/by-product` (BE-P2-013)
-4. Production deploy (ConoHa) — Sprint 7
+1. OPS Railway: `REDIS_URL` + `products:generate-vi` + `products:embed --force`
+2. P2 code: BE-V3-029 Form Requests · BE-V3-032 avatar R2 · FE-P2-007 profit chart
+3. Production deploy (ConoHa) — Sprint 7

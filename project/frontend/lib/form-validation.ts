@@ -156,6 +156,10 @@ export function validateWarehouseForm(form: { warehouse_name: string }): FieldEr
   return str(form.warehouse_name) ? {} : { warehouse_name: MSG.required };
 }
 
+export function validateSupplierForm(form: { supplier_name: string }): FieldErrors {
+  return str(form.supplier_name) ? {} : { supplier_name: MSG.required };
+}
+
 export function validateShipmentForm(batchName: string, selectedCount: number): FieldErrors {
   const errors: FieldErrors = {};
   if (!str(batchName)) errors.batch_name = MSG.required;

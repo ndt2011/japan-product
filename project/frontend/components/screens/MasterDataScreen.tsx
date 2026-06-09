@@ -5,6 +5,7 @@ import {
   clearFieldError,
   hasFieldErrors,
   validateCategoryName,
+  validateSupplierForm,
   validateWarehouseForm,
   type FieldErrors,
 } from "@/lib/form-validation";
@@ -46,8 +47,14 @@ export function MasterDataScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [supplierForm, setSupplierForm] = useState({
+    supplier_cd: "",
+    supplier_name: "",
+    supplier_name_jp: "",
+  });
   const [catFieldErrors, setCatFieldErrors] = useState<FieldErrors>({});
   const [whFieldErrors, setWhFieldErrors] = useState<FieldErrors>({});
+  const [supplierFieldErrors, setSupplierFieldErrors] = useState<FieldErrors>({});
 
   async function loadCategories() {
     const res = await fetch("/api/proxy/product-categories");
@@ -124,6 +131,45 @@ export function MasterDataScreen() {
     toast.success("Đã thêm kho.");
     setWhForm({ warehouse_name: "", country: "JP", location_type: "JP", address: "" });
     await loadWarehouses();
+  }
+
+  async function addSupplier(e: FormEvent) {
+    e.preventDefault();
+    const errors = validateSupplierForm(supplierForm);
+    setSupplierFieldErrors(errors);
+    if (hasFieldErrors(errors)) return;
+    setError("");
+    const res = await fetch("/api/proxy/suppliers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        supplier_cd: supplierForm.supplier_cd.trim() || null,
+        supplier_name: supplierForm.supplier_name.trim(),
+        supplier_name_jp: supplierForm.supplier_name_jp.trim() || null,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      const msg = translateMessage(data.message ?? "M0002");
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    toast.success("Đã thêm nhà cung cấp.");
+    setSupplierForm({ supplier_cd: "", supplier_name: "", supplier_name_jp: "" });
+    await loadSuppliers();
+  }
+
+  async function deleteSupplier(id: number) {
+    if (!confirm("Xóa nhà cung cấp này?")) return;
+    const res = await fetch(`/api/proxy/suppliers/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!data.success) {
+      toast.error(translateMessage(data.message ?? "M0002"));
+      return;
+    }
+    toast.success("Đã xóa nhà cung cấp.");
+    await loadSuppliers();
   }
 
   const tabs: { id: TabId; label: string }[] = [
@@ -257,31 +303,69 @@ export function MasterDataScreen() {
       )}
 
       {tab === "suppliers" && (
-        <Card className="p-4">
-          <p className="text-xs text-text-muted mb-4">Danh sách NCC (đọc từ master — chỉnh sửa qua DB/admin sau).</p>
-          {loading ? (
-            <p className="text-sm text-text-muted">Đang tải...</p>
-          ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Mã</Th>
-                  <Th>Tên (VN)</Th>
-                  <Th>Tên (JP)</Th>
-                </Tr>
-              </Thead>
-              <tbody>
-                {suppliers.map((s) => (
-                  <Tr key={s.id}>
-                    <Td className="font-mono text-xs">{s.supplier_cd ?? "—"}</Td>
-                    <Td>{s.supplier_name}</Td>
-                    <Td className="text-text-muted">{s.supplier_name_jp ?? "—"}</Td>
+        <div className="space-y-4">
+          <Card className="p-4">
+            <form onSubmit={addSupplier} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-end">
+              <div>
+                <label className="text-xs text-text-muted">Mã NCC</label>
+                <Input
+                  value={supplierForm.supplier_cd}
+                  onChange={(e) => setSupplierForm((f) => ({ ...f, supplier_cd: e.target.value }))}
+                  placeholder="SUP-001"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-text-muted">Tên (VN) *</label>
+                <Input
+                  value={supplierForm.supplier_name}
+                  onChange={(e) => {
+                    setSupplierForm((f) => ({ ...f, supplier_name: e.target.value }));
+                    clearFieldError(setSupplierFieldErrors, "supplier_name");
+                  }}
+                  error={supplierFieldErrors.supplier_name}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-text-muted">Tên (JP)</label>
+                <Input
+                  value={supplierForm.supplier_name_jp}
+                  onChange={(e) => setSupplierForm((f) => ({ ...f, supplier_name_jp: e.target.value }))}
+                />
+              </div>
+              <Button type="submit">+ Thêm NCC</Button>
+            </form>
+          </Card>
+          <Card className="p-4">
+            {loading ? (
+              <p className="text-sm text-text-muted">Đang tải...</p>
+            ) : (
+              <Table>
+                <Thead>
+                  <Tr>
+                    <Th>Mã</Th>
+                    <Th>Tên (VN)</Th>
+                    <Th>Tên (JP)</Th>
+                    <Th />
                   </Tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card>
+                </Thead>
+                <tbody>
+                  {suppliers.map((s) => (
+                    <Tr key={s.id}>
+                      <Td className="font-mono text-xs">{s.supplier_cd ?? "—"}</Td>
+                      <Td>{s.supplier_name}</Td>
+                      <Td className="text-text-muted">{s.supplier_name_jp ?? "—"}</Td>
+                      <Td className="text-right">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => deleteSupplier(s.id)}>
+                          Xóa
+                        </Button>
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </Card>
+        </div>
       )}
 
       {tab === "units" && (
