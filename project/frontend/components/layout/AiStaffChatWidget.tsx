@@ -224,7 +224,7 @@ export function AiStaffChatWidget() {
     <>
       {/* ── Slide-in panel ── */}
       {open && (
-        <div className="fixed inset-0 z-40 pointer-events-none">
+        <div className="fixed inset-0 z-30 pointer-events-none">
           {/* Backdrop nhẹ */}
           <div
             className="absolute inset-0 pointer-events-auto"
@@ -386,7 +386,7 @@ export function AiStaffChatWidget() {
           setOpen((o) => !o);
           setUnread(0);
         }}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-20 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
         title="AI Nhân viên hỗ trợ"
       >
         <span className="text-2xl">{open ? "✕" : "💬"}</span>

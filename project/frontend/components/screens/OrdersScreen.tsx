@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Card,
+  IconButton,
   PageHeader,
   SearchInput,
   Table,
@@ -12,6 +13,7 @@ import {
   Thead,
   Tr,
 } from "@/components/ui";
+import { Eye } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { translateMessage } from "@/lib/messages";
 import { getOrderStatus, ORDER_STATUS_ORDER } from "@/lib/status";
@@ -189,10 +191,10 @@ export function OrdersScreen() {
                       <Badge variant={s.variant}>{s.label}</Badge>
                     </Td>
                     <Td>
-                      <Link href={`/orders/${o.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Chi tiết
-                        </Button>
+                      <Link href={`/orders/${o.id}`} title="Chi tiết">
+                        <IconButton variant="primary">
+                          <Eye className="w-3.5 h-3.5" />
+                        </IconButton>
                       </Link>
                     </Td>
                   </Tr>

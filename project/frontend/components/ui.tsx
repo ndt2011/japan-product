@@ -1,8 +1,9 @@
 "use client";
 
 import { clsx } from "clsx";
+import { AlertTriangle, Search, X } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -63,17 +64,17 @@ export function Badge({
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset",
+        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-medium",
         {
-          "bg-slate-100 text-slate-700 ring-slate-300": variant === "gray",
-          "bg-blue-100 text-blue-800 ring-blue-300": variant === "primary",
-          "bg-green-100 text-green-800 ring-green-300": variant === "success",
-          "bg-amber-100 text-amber-800 ring-amber-300": variant === "warning",
-          "bg-red-100 text-red-800 ring-red-300": variant === "danger",
-          "bg-sky-100 text-sky-800 ring-sky-300": variant === "info",
-          "bg-violet-100 text-violet-800 ring-violet-300": variant === "purple",
-          "bg-orange-100 text-orange-800 ring-orange-300": variant === "orange",
-          "bg-teal-100 text-teal-800 ring-teal-300": variant === "teal",
+          "bg-surface-subtle text-text-muted border-border": variant === "gray",
+          "bg-brand-light text-brand border-brand/20": variant === "primary",
+          "bg-green-50 text-success border-green-200": variant === "success",
+          "bg-amber-50 text-warning border-amber-200": variant === "warning",
+          "bg-red-50 text-danger border-red-200": variant === "danger",
+          "bg-sky-50 text-sky-600 border-sky-200": variant === "info",
+          "bg-violet-50 text-purple-accent border-violet-200": variant === "purple",
+          "bg-orange-50 text-orange-600 border-orange-200": variant === "orange",
+          "bg-teal-50 text-teal-600 border-teal-200": variant === "teal",
         },
         className,
       )}
@@ -81,6 +82,74 @@ export function Badge({
     >
       {children}
     </span>
+  );
+}
+
+export function IconButton({
+  variant = "default",
+  className,
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "default" | "primary" | "danger" | "success";
+}) {
+  return (
+    <button
+      type="button"
+      className={clsx(
+        "w-7 h-7 flex items-center justify-center rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+        {
+          "text-text-muted hover:bg-surface-muted hover:text-text-primary": variant === "default",
+          "text-text-muted hover:bg-brand-light hover:text-brand": variant === "primary",
+          "text-text-muted hover:bg-red-50 hover:text-danger": variant === "danger",
+          "text-text-muted hover:bg-green-50 hover:text-success": variant === "success",
+        },
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function DetailGrid({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={clsx("grid grid-cols-2 gap-4", className)}>{children}</div>;
+}
+
+export function DetailField({
+  label,
+  children,
+  className,
+  span = 1,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+  span?: 1 | 2;
+}) {
+  return (
+    <div
+      className={clsx(
+        "p-4 rounded-xl bg-surface-muted/50 border border-border/50",
+        span === 2 && "col-span-2",
+        className,
+      )}
+    >
+      <p className="text-[11px] font-medium text-text-muted uppercase tracking-wide mb-1">{label}</p>
+      <div className="text-sm text-text-primary">{children}</div>
+    </div>
+  );
+}
+
+export function DetailTotal({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-end mt-3 p-3 bg-brand/5 rounded-xl border border-brand/20">
+      <div className="text-right">
+        <span className="text-text-muted text-sm">{label}</span>
+        <span className="font-semibold text-brand ml-2 text-base">{value}</span>
+      </div>
+    </div>
   );
 }
 
@@ -294,14 +363,19 @@ export function SearchInput({
   className?: string;
 }) {
   return (
-    <div className={clsx("relative", className)}>
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-placeholder text-sm">🔍</span>
+    <div
+      className={clsx(
+        "flex items-center gap-2 bg-surface-muted rounded-lg px-3 py-2 min-w-48",
+        className,
+      )}
+    >
+      <Search className="w-3.5 h-3.5 text-text-placeholder shrink-0" strokeWidth={2} />
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-white text-sm text-text-primary placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
+        className="bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-placeholder flex-1 min-w-0"
       />
     </div>
   );
@@ -361,36 +435,163 @@ export function ComingSoonPanel({
   );
 }
 
+export function ModalFooter({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={clsx("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+const MODAL_SIZES = {
+  sm: "max-w-sm",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+  xl: "max-w-4xl",
+} as const;
+
 export function Modal({
   open,
   onClose,
   title,
+  description,
+  icon,
+  headerIcon,
   children,
-  width = "max-w-lg",
+  footer,
+  size = "md",
+  width,
+  closeOnOverlay = true,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  description?: string;
+  icon?: React.ReactNode;
+  headerIcon?: React.ReactNode;
   children: React.ReactNode;
+  footer?: React.ReactNode;
+  size?: keyof typeof MODAL_SIZES;
   width?: string;
+  closeOnOverlay?: boolean;
 }) {
+  const modalWidth = width ?? MODAL_SIZES[size];
+  const leadingIcon = headerIcon ?? icon;
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx("relative bg-white rounded-2xl shadow-2xl w-full", width)}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h3 className="text-base text-text-primary font-medium">{title}</h3>
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={closeOnOverlay ? onClose : undefined}
+        aria-hidden
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className={clsx(
+          "relative bg-white rounded-xl shadow-2xl border border-border w-full max-h-[90vh] flex flex-col animate-slide-up",
+          modalWidth,
+        )}
+      >
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            {leadingIcon && (
+              <span className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-brand-light text-brand">
+                {leadingIcon}
+              </span>
+            )}
+            <div className="min-w-0">
+              <h3 id="modal-title" className="text-base text-text-primary font-semibold">
+                {title}
+              </h3>
+              {description && <p className="text-sm text-text-muted mt-0.5">{description}</p>}
+            </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-subtle text-text-muted transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-muted text-text-muted transition-colors shrink-0"
+            aria-label="Đóng"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        {footer && <div className="px-6 pb-6 pt-0 shrink-0">{footer}</div>}
       </div>
     </div>
+  );
+}
+
+export function ConfirmDialog({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  detail,
+  confirmLabel = "Xác nhận",
+  cancelLabel = "Hủy",
+  variant = "danger",
+  loading = false,
+  icon,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  detail?: React.ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "danger" | "primary";
+  loading?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      headerIcon={icon ?? <AlertTriangle className="w-4 h-4" />}
+      size="sm"
+      footer={
+        <ModalFooter>
+          <Button variant="secondary" type="button" onClick={onClose} disabled={loading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant={variant === "danger" ? "danger" : "primary"}
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? "Đang xử lý..." : confirmLabel}
+          </Button>
+        </ModalFooter>
+      }
+    >
+      <p className="text-sm text-text-muted">{message}</p>
+      {detail}
+    </Modal>
   );
 }

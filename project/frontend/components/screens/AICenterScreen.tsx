@@ -1,7 +1,7 @@
 "use client";
 
 import { AICatalogSearchPanel } from "@/components/screens/AICatalogSearchPanel";
-import { Badge, Button, Card } from "@/components/ui";
+import { Badge, Button, Card, PageHeader } from "@/components/ui";
 import { translateMessage } from "@/lib/messages";
 import type { AiSearchItem } from "@/types/api";
 import Link from "next/link";
@@ -26,26 +26,27 @@ const suggestedPrompts = [
   "ビタミンC ファンケル",
 ];
 
+const INITIAL_MESSAGE: Message = {
+  id: "0",
+  role: "assistant",
+  content:
+    "Xin chào! Tôi là AI Product Assistant — tìm sản phẩm trên Rakuten/Amazon JP, chọn và gửi duyệt cho JP Agency. Nhập từ khóa hoặc chọn gợi ý bên trái.",
+  timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+};
+
 function itemKey(item: AiSearchItem, index: number) {
   return item.external_id ?? `${item.product_name_jp}-${index}`;
 }
 
 function WebSearchPanel() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "0",
-      role: "assistant",
-      content:
-        "Nhập từ khóa sản phẩm (tiếng Nhật hoặc Việt) để AI tìm trên Rakuten/Amazon JP. Chọn sản phẩm và gửi duyệt cho JP Agency.",
-      timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState<Record<string, AiSearchItem>>({});
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [sidebarTab, setSidebarTab] = useState<"prompts" | "selected">("prompts");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -221,25 +222,89 @@ function WebSearchPanel() {
   }
 
   const selectedCount = Object.keys(selected).length;
+  const selectedItems = Object.entries(selected);
+
+  function clearChat() {
+    setMessages([INITIAL_MESSAGE]);
+    setSelected({});
+    setSessionId(null);
+    setError("");
+    setSidebarTab("prompts");
+  }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-4">
+    <div className="flex h-[calc(100vh-11rem)] gap-4">
       <aside className="w-64 shrink-0">
         <Card className="p-4 h-full flex flex-col overflow-hidden">
-          <p className="text-xs text-text-placeholder mb-2">Từ khóa gợi ý:</p>
-          <div className="space-y-2 overflow-y-auto flex-1">
-            {suggestedPrompts.map((prompt) => (
+          <div className="flex gap-1 mb-3">
+            {(["prompts", "selected"] as const).map((t) => (
               <button
-                key={prompt}
+                key={t}
                 type="button"
-                onClick={() => sendMessage(prompt)}
-                className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-text-body hover:bg-brand-light hover:text-brand border border-border hover:border-brand/30 transition-all leading-relaxed"
+                onClick={() => setSidebarTab(t)}
+                className={`flex-1 py-1.5 rounded-lg text-xs transition-all ${
+                  sidebarTab === t
+                    ? "bg-brand text-white"
+                    : "text-text-muted hover:bg-surface-subtle"
+                }`}
               >
-                {prompt}
+                {t === "prompts" ? "💬 Gợi ý" : `📦 Đã chọn (${selectedCount})`}
               </button>
             ))}
           </div>
-          <Link href="/admin/ai-candidates" className="mt-3">
+
+          {sidebarTab === "prompts" ? (
+            <div className="space-y-2 overflow-y-auto flex-1">
+              <p className="text-xs text-text-placeholder mb-1">Câu hỏi gợi ý:</p>
+              {suggestedPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => sendMessage(prompt)}
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-text-body hover:bg-brand-light hover:text-brand border border-border hover:border-brand/30 transition-all leading-relaxed"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {selectedItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-2xl mb-2">📦</p>
+                  <p className="text-xs text-text-muted">Chưa chọn sản phẩm</p>
+                </div>
+              ) : (
+                selectedItems.map(([key, p]) => (
+                  <div key={key} className="p-3 border border-border rounded-xl">
+                    <p className="text-xs text-text-primary leading-tight line-clamp-2">
+                      {p.product_name_jp}
+                    </p>
+                    {p.price_jpy != null && (
+                      <p className="text-xs text-brand mt-0.5">¥{p.price_jpy.toLocaleString("ja-JP")}</p>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="button"
+                      className="mt-2 text-xs h-auto py-0.5"
+                      onClick={() =>
+                        setSelected((prev) => {
+                          const next = { ...prev };
+                          delete next[key];
+                          return next;
+                        })
+                      }
+                    >
+                      Bỏ chọn
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          <Link href="/admin/ai-candidates" className="mt-3 shrink-0">
             <Button variant="outline" size="sm" className="w-full">
               Duyệt sản phẩm AI →
             </Button>
@@ -254,18 +319,23 @@ function WebSearchPanel() {
               🤖
             </div>
             <div>
-              <p className="text-sm text-text-primary font-medium">AI Product Search</p>
+              <p className="text-sm text-text-primary font-medium">AI Product Assistant</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-                <span className="text-xs text-success">API kết nối</span>
+                <span className="text-xs text-success">Online · Rakuten / Amazon JP</span>
               </div>
             </div>
           </div>
-          {selectedCount > 0 && (
-            <Button size="sm" onClick={submitForApproval} disabled={submitting}>
-              {submitting ? "Đang gửi..." : `Gửi duyệt (${selectedCount})`}
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" type="button" onClick={clearChat}>
+              🗑 Xóa chat
             </Button>
-          )}
+            {selectedCount > 0 && (
+              <Button size="sm" onClick={submitForApproval} disabled={submitting}>
+                {submitting ? "Đang gửi..." : `Gửi duyệt (${selectedCount})`}
+              </Button>
+            )}
+          </div>
         </Card>
 
         {error && (
@@ -374,7 +444,15 @@ function WebSearchPanel() {
                 🤖
               </div>
               <div className="bg-white border border-border rounded-2xl px-4 py-3">
-                <p className="text-xs text-text-muted">Đang tìm sản phẩm...</p>
+                <div className="flex gap-1 items-center">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="w-1.5 h-1.5 bg-text-placeholder rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -392,13 +470,30 @@ function WebSearchPanel() {
                   sendMessage();
                 }
               }}
-              placeholder="Nhập từ khóa sản phẩm (VD: コラーゲン, vitamin C...)"
+              placeholder="Nhập từ khóa sản phẩm (tiếng Nhật hoặc Việt)..."
               rows={2}
               className="flex-1 px-3 py-2 rounded-xl border border-border text-xs text-text-primary placeholder:text-text-placeholder resize-none focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
-            <Button size="sm" onClick={() => sendMessage()} disabled={!input.trim() || loading}>
-              Tìm
+            <Button
+              size="sm"
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || loading}
+              className="px-3"
+            >
+              ↑
             </Button>
+          </div>
+          <div className="flex items-center gap-3 mt-2 px-1 flex-wrap">
+            <span className="text-xs text-text-placeholder">Gợi ý nhanh:</span>
+            <Link href="/purchasing" className="text-xs text-brand hover:underline">
+              🛍️ Tư vấn thu mua
+            </Link>
+            <Link href="/products" className="text-xs text-brand hover:underline">
+              📦 Catalog
+            </Link>
+            <Link href="/debts" className="text-xs text-brand hover:underline">
+              💰 Công nợ
+            </Link>
           </div>
         </Card>
       </div>
@@ -411,7 +506,19 @@ export function AICenterScreen() {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
+      <PageHeader
+        title="AI Product Center"
+        subtitle="Khám phá sản phẩm Nhật · tìm catalog nội bộ · gửi duyệt JP Agency"
+        actions={
+          <Link href="/purchasing/history">
+            <Button variant="secondary" size="sm">
+              📋 Lịch sử thu mua
+            </Button>
+          </Link>
+        }
+      />
+
+      <div className="flex gap-2 flex-wrap">
         <button
           type="button"
           onClick={() => setMode("web")}
@@ -421,7 +528,7 @@ export function AICenterScreen() {
               : "bg-white border border-border text-text-body hover:border-brand/40"
           }`}
         >
-          Khám phá web (Rakuten/Amazon)
+          🌐 Khám phá web (Rakuten/Amazon)
         </button>
         <button
           type="button"
@@ -432,7 +539,7 @@ export function AICenterScreen() {
               : "bg-white border border-border text-text-body hover:border-brand/40"
           }`}
         >
-          Tìm catalog nội bộ
+          📦 Tìm catalog nội bộ
         </button>
       </div>
 

@@ -8,16 +8,26 @@ use App\Models\ProductCategory;
 use App\Models\SupplierJp;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class MasterDataController extends Controller
 {
-    public function suppliers(): JsonResponse
+    public function suppliers(Request $request): JsonResponse
     {
-        $items = SupplierJp::query()
-            ->where('disabled_flag', false)
-            ->where('deleted_flag', false)
-            ->orderBy('supplier_name')
-            ->get(['id', 'supplier_cd', 'supplier_name', 'supplier_name_jp']);
+        $query = SupplierJp::query()->where('deleted_flag', false);
+
+        if (! $request->boolean('include_disabled')) {
+            $query->where('disabled_flag', false);
+        }
+
+        $columns = ['id', 'supplier_cd', 'supplier_name', 'supplier_name_jp'];
+        if ($request->boolean('detail')) {
+            $columns = array_merge($columns, [
+                'address', 'tel', 'email', 'contact_name', 'disabled_flag', 'memo',
+            ]);
+        }
+
+        $items = $query->orderBy('supplier_name')->get($columns);
 
         return ApiResponse::success(['items' => $items]);
     }

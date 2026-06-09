@@ -4,7 +4,7 @@ import { Badge, Button, Card, EmptyState, PageHeader, StatCard } from "@/compone
 import { useIsAdmin, useIsCompany } from "@/hooks/usePermission";
 import { getOrderStatus } from "@/lib/status";
 import { useAuthStore } from "@/stores/useAuthStore";
-import type { AuthUser } from "@/types/api";
+import type { AuthUser, OrderItem } from "@/types/api";
 import { clsx } from "clsx";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -132,6 +132,7 @@ export function DashboardScreen() {
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
   const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [cashflow, setCashflow] = useState<CashflowMonth[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const canViewFinancial = stats?.can_view_financial !== false;
@@ -144,16 +145,18 @@ export function DashboardScreen() {
     async function load() {
       setLoading(true);
       try {
-        const [statsRes, chartRes, revRes, cfRes] = await Promise.all([
+        const [statsRes, chartRes, revRes, cfRes, ordersRes] = await Promise.all([
           fetch("/api/proxy/dashboard/stats"),
           fetch("/api/proxy/dashboard/charts/orders?period=30"),
           fetch(`/api/proxy/dashboard/revenue?year=${year}&month=${month}`),
           fetch(`/api/proxy/dashboard/cashflow?year=${year}&from_month=1&to_month=${month}`),
+          fetch("/api/proxy/orders?per_page=5"),
         ]);
         const statsData = await statsRes.json();
         const chartData = await chartRes.json();
         const revData = await revRes.json();
         const cfData = await cfRes.json();
+        const ordersData = await ordersRes.json();
 
         if (!cancelled) {
           if (statsData.success && statsData.data) setStats(statsData.data);
@@ -163,6 +166,9 @@ export function DashboardScreen() {
           if (cfData.success && cfData.data?.monthly && !cfData.data.restricted) {
             setCashflow(cfData.data.monthly);
           } else setCashflow([]);
+          if (ordersData.success && ordersData.data?.items) {
+            setRecentOrders(ordersData.data.items);
+          } else setRecentOrders([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -267,9 +273,59 @@ export function DashboardScreen() {
         ))}
       </div>
 
-      {/* KPI chính */}
+      {/* KPI — demothietke: 6 thẻ admin / 4 thẻ user */}
       {loading ? (
         <KpiSkeleton />
+      ) : isAdmin ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+          <StatCard
+            title="Sản phẩm"
+            value={String(stats?.products_total ?? 0)}
+            hint="Trong catalog"
+            icon={<span>📦</span>}
+            color="blue"
+            href="/products"
+          />
+          <StatCard
+            title="Đơn hôm nay"
+            value={String(stats?.orders_today ?? 0)}
+            icon={<span>📥</span>}
+            color="green"
+            href="/orders"
+          />
+          <StatCard
+            title="Chờ xử lý"
+            value={String(pendingCount)}
+            hint={pendingCount > 0 ? "Cần duyệt" : "Ổn"}
+            icon={<span>🛒</span>}
+            color="yellow"
+            href="/orders?status=PENDING"
+            highlight={pendingCount > 0}
+          />
+          <StatCard
+            title="Công nợ"
+            value={fmtVndCompact(stats?.outstanding_debt_vnd ?? 0)}
+            hint="Cần thu"
+            icon={<span>💰</span>}
+            color="red"
+            href="/debts"
+          />
+          <StatCard
+            title="Tồn thấp"
+            value={String(lowStock)}
+            icon={<span>⚠️</span>}
+            color={lowStock > 0 ? "red" : "green"}
+            href="/inventory"
+            highlight={lowStock > 0}
+          />
+          <StatCard
+            title="Đại lý"
+            value={String(stats?.companies_total ?? 0)}
+            icon={<span>🏪</span>}
+            color="purple"
+            href="/agents"
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
@@ -315,41 +371,6 @@ export function DashboardScreen() {
             icon={<span>📦</span>}
             color="blue"
             href="/products"
-          />
-        </div>
-      )}
-
-      {/* KPI phụ — admin */}
-      {isAdmin && !loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard
-            title="Công nợ"
-            value={fmtVndCompact(stats?.outstanding_debt_vnd ?? 0)}
-            icon={<span>🧾</span>}
-            color="red"
-            href="/debts"
-          />
-          <StatCard
-            title="Tồn thấp"
-            value={String(lowStock)}
-            hint={lowStock > 0 ? "Cần nhập hàng" : "Ổn định"}
-            icon={<span>⚠️</span>}
-            color={lowStock > 0 ? "red" : "green"}
-            href="/inventory"
-            highlight={lowStock > 0}
-          />
-          <StatCard
-            title="Công ty VN"
-            value={String(stats?.companies_total ?? 0)}
-            icon={<span>🏪</span>}
-            color="purple"
-            href="/admin"
-          />
-          <StatCard
-            title="Đơn tháng"
-            value={String(stats?.orders_month ?? 0)}
-            icon={<span>📊</span>}
-            color="blue"
           />
         </div>
       )}
@@ -612,55 +633,109 @@ export function DashboardScreen() {
         </Card>
       </div>
 
-      {/* Top sản phẩm */}
-      <Card className="p-4 sm:p-5">
-        <SectionTitle
-          title="Top sản phẩm đặt hàng"
-          subtitle="Theo số đơn trong kỳ gần nhất"
-          action={
-            <Link href="/products" className="text-xs font-medium text-brand hover:underline">
-              Xem catalog →
-            </Link>
-          }
-        />
-        {loading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-14 rounded-lg bg-surface-subtle animate-pulse" />
-            ))}
-          </div>
-        ) : !stats?.top_products?.length ? (
-          <EmptyState message="Chưa có dữ liệu bán hàng." icon="🏆" />
-        ) : (
-          <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-            {stats.top_products.map((p, i) => (
-              <Link
-                key={p.id}
-                href={`/products/${p.id}`}
-                className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-surface-subtle/80 transition-colors"
-              >
-                <span
-                  className={clsx(
-                    "w-7 h-7 rounded-lg text-xs flex items-center justify-center shrink-0 font-bold",
-                    i === 0 ? "bg-amber-100 text-amber-800" : i === 1 ? "bg-slate-200 text-slate-700" : i === 2 ? "bg-orange-100 text-orange-800" : "bg-brand-light text-brand",
-                  )}
-                >
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">{p.name}</p>
-                  <p className="text-xs text-text-muted">{p.order_count} đơn đặt</p>
-                </div>
-                {canViewFinancial && (
-                  <p className="text-sm font-semibold text-text-primary shrink-0 tabular-nums">
-                    {fmtVndCompact(p.revenue_vnd)}
-                  </p>
-                )}
+      {/* Top SP + đơn gần đây — demothietke bottom row */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Card className="p-4 sm:p-5">
+          <SectionTitle
+            title="Top sản phẩm đặt hàng"
+            subtitle="Theo số đơn trong kỳ gần nhất"
+            action={
+              <Link href="/products" className="text-xs font-medium text-brand hover:underline">
+                Xem tất cả →
               </Link>
-            ))}
-          </div>
-        )}
-      </Card>
+            }
+          />
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-14 rounded-lg bg-surface-subtle animate-pulse" />
+              ))}
+            </div>
+          ) : !stats?.top_products?.length ? (
+            <EmptyState message="Chưa có dữ liệu bán hàng." icon="🏆" />
+          ) : (
+            <div className="space-y-3">
+              {stats.top_products.map((p, i) => (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.id}`}
+                  className="flex items-center gap-3 hover:bg-surface-subtle/80 rounded-lg px-1 py-1 transition-colors"
+                >
+                  <span
+                    className={clsx(
+                      "w-6 h-6 rounded-lg text-xs flex items-center justify-center shrink-0 font-bold",
+                      i === 0 ? "bg-brand-light text-brand" : "bg-surface-subtle text-text-muted",
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-primary truncate">{p.name}</p>
+                    <p className="text-xs text-text-muted">{p.order_count} đơn đặt</p>
+                  </div>
+                  {canViewFinancial && (
+                    <p className="text-xs font-semibold text-text-primary shrink-0 tabular-nums">
+                      {fmtVndCompact(p.revenue_vnd)}
+                    </p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-4 sm:p-5">
+          <SectionTitle
+            title="Đơn hàng gần đây"
+            subtitle="5 đơn mới nhất"
+            action={
+              <Link href="/orders" className="text-xs font-medium text-brand hover:underline">
+                Xem tất cả →
+              </Link>
+            }
+          />
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-14 rounded-lg bg-surface-subtle animate-pulse" />
+              ))}
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <EmptyState message="Chưa có đơn hàng." icon="🛒" />
+          ) : (
+            <div className="space-y-3">
+              {recentOrders.map((o) => {
+                const s = getOrderStatus(o.status);
+                return (
+                  <Link
+                    key={o.id}
+                    href={`/orders/${o.id}`}
+                    className="flex items-center gap-3 hover:bg-surface-subtle/80 rounded-lg px-1 py-1 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-surface flex items-center justify-center text-sm shrink-0">
+                      🛒
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-brand">{o.order_no}</p>
+                      <p className="text-xs text-text-muted truncate">{o.company_name ?? "—"}</p>
+                    </div>
+                    <div className="text-right shrink-0 space-y-1">
+                      <Badge variant={s.variant} className="text-[10px]">
+                        {s.label}
+                      </Badge>
+                      {o.total_vnd && (
+                        <p className="text-[10px] text-text-muted tabular-nums">
+                          {fmtVndCompact(Number(o.total_vnd))}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

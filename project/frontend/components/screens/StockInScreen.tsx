@@ -1,6 +1,26 @@
 "use client";
 
-import { Button, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  DetailField,
+  DetailGrid,
+  EmptyState,
+  IconButton,
+  Input,
+  Modal,
+  ModalFooter,
+  PageHeader,
+  SearchInput,
+  Select,
+  Table,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@/components/ui";
+import { Eye, FileText, Plus, Truck } from "lucide-react";
 import {
   clearFieldError,
   hasFieldErrors,
@@ -9,7 +29,7 @@ import {
 } from "@/lib/form-validation";
 import { translateMessage } from "@/lib/messages";
 import { toast } from "@/lib/toast";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface WarehouseOption {
   id: number;
@@ -19,9 +39,15 @@ interface WarehouseOption {
 interface ProductOption {
   id: number;
   product_cd: string;
-  name_jp: string;
+  product_name?: string;
+  product_name_jp?: string;
   name_vi?: string;
   primary_image_url?: string;
+}
+
+interface WarehouseInventoryInfo {
+  quantity: number;
+  available_qty: number;
 }
 
 interface MovementItem {
@@ -36,6 +62,26 @@ interface MovementItem {
   created?: string;
 }
 
+const EMPTY_FORM = {
+  warehouse_id: "",
+  product_id: "",
+  quantity: "",
+  reason: "",
+};
+
+function productDisplayName(p: ProductOption): string {
+  return p.name_vi || p.product_name || p.product_name_jp || p.product_cd;
+}
+
+function productSelectLabel(p: ProductOption): string {
+  return `${p.product_cd} — ${productDisplayName(p)}`;
+}
+
+function formatDate(value?: string): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("vi-VN");
+}
+
 export function StockInScreen() {
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [movements, setMovements] = useState<MovementItem[]>([]);
@@ -43,14 +89,15 @@ export function StockInScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [form, setForm] = useState({
-    warehouse_id: "",
-    product_id: "",
-    quantity: "",
-    reason: "",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selected, setSelected] = useState<MovementItem | null>(null);
 
-  // Product autocomplete state
+  const [warehouseStock, setWarehouseStock] = useState<Record<number, WarehouseInventoryInfo>>({});
+  const [stockLoading, setStockLoading] = useState(false);
+
   const [productQuery, setProductQuery] = useState("");
   const [productSuggestions, setProductSuggestions] = useState<ProductOption[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(null);
@@ -58,6 +105,38 @@ export function StockInScreen() {
   const [searchLoading, setSearchLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loadWarehouseStock = useCallback(async (warehouseId: string) => {
+    if (!warehouseId) {
+      setWarehouseStock({});
+      return;
+    }
+    setStockLoading(true);
+    try {
+      const res = await fetch(
+        `/api/proxy/inventories?warehouse_id=${warehouseId}&per_page=200`,
+      );
+      const data = await res.json();
+      const map: Record<number, WarehouseInventoryInfo> = {};
+      if (data.success && data.data?.items) {
+        for (const item of data.data.items as Array<{
+          product_id: number;
+          quantity: number;
+          available_qty: number;
+        }>) {
+          map[item.product_id] = {
+            quantity: item.quantity,
+            available_qty: item.available_qty,
+          };
+        }
+      }
+      setWarehouseStock(map);
+    } catch {
+      setWarehouseStock({});
+    } finally {
+      setStockLoading(false);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -81,7 +160,10 @@ export function StockInScreen() {
     loadData();
   }, [loadData]);
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    loadWarehouseStock(form.warehouse_id);
+  }, [form.warehouse_id, loadWarehouseStock]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -92,7 +174,59 @@ export function StockInScreen() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced product search
+  const stats = useMemo(() => {
+    const now = new Date();
+    const thisMonth = movements.filter((m) => {
+      if (!m.created) return false;
+      const d = new Date(m.created);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+    const totalQty = movements.reduce((sum, m) => sum + m.quantity, 0);
+    const warehouseCount = new Set(movements.map((m) => m.warehouse_name).filter(Boolean)).size;
+    return { total: movements.length, thisMonth, totalQty, warehouseCount };
+  }, [movements]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return movements;
+    return movements.filter(
+      (m) =>
+        (m.product_name ?? "").toLowerCase().includes(q) ||
+        (m.warehouse_name ?? "").toLowerCase().includes(q) ||
+        (m.reason ?? "").toLowerCase().includes(q),
+    );
+  }, [movements, search]);
+
+  function stockInfoFor(productId: number): WarehouseInventoryInfo | null {
+    return warehouseStock[productId] ?? null;
+  }
+
+  function stockBadge(productId: number): string {
+    if (!form.warehouse_id) return "Chọn kho để xem tồn";
+    const info = stockInfoFor(productId);
+    if (!info) return "Chưa có trong kho";
+    return `Tồn ${info.quantity} · Khả dụng ${info.available_qty}`;
+  }
+
+  function resetForm() {
+    setForm(EMPTY_FORM);
+    setProductQuery("");
+    setSelectedProduct(null);
+    setProductSuggestions([]);
+    setFieldErrors({});
+    setError("");
+  }
+
+  function openCreate() {
+    resetForm();
+    setCreateOpen(true);
+  }
+
+  function closeCreate() {
+    setCreateOpen(false);
+    resetForm();
+  }
+
   function handleProductQueryChange(value: string) {
     setProductQuery(value);
     setSelectedProduct(null);
@@ -126,7 +260,7 @@ export function StockInScreen() {
 
   function handleSelectProduct(p: ProductOption) {
     setSelectedProduct(p);
-    setProductQuery(p.product_cd + (p.name_vi ? ` — ${p.name_vi}` : ` — ${p.name_jp}`));
+    setProductQuery(productSelectLabel(p));
     setForm((f) => ({ ...f, product_id: String(p.id) }));
     setShowDropdown(false);
     setFieldErrors((prev) => clearFieldError(prev, "product_id"));
@@ -135,6 +269,11 @@ export function StockInScreen() {
   function patchForm<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setFieldErrors((prev) => clearFieldError(prev, key));
+    if (key === "warehouse_id") {
+      setSelectedProduct(null);
+      setProductQuery("");
+      setForm((f) => ({ ...f, product_id: "" }));
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -145,6 +284,11 @@ export function StockInScreen() {
       setError("Vui lòng kiểm tra các trường được đánh dấu.");
       return;
     }
+
+    const productId = Number(form.product_id);
+    const qty = Number(form.quantity);
+    const existing = stockInfoFor(productId);
+
     setSaving(true);
     setError("");
     try {
@@ -154,8 +298,8 @@ export function StockInScreen() {
         body: JSON.stringify({
           movement_type: "IN",
           warehouse_id: Number(form.warehouse_id),
-          product_id: Number(form.product_id),
-          quantity: Number(form.quantity),
+          product_id: productId,
+          quantity: qty,
           reason: form.reason || "Nhập kho thủ công",
           ref_type: "manual",
         }),
@@ -167,12 +311,16 @@ export function StockInScreen() {
         toast.error(msg);
         return;
       }
-      toast.success("Đã nhập kho thành công.");
-      setForm({ warehouse_id: "", product_id: "", quantity: "", reason: "" });
-      setProductQuery("");
-      setSelectedProduct(null);
-      setProductSuggestions([]);
-      await loadData();
+
+      const afterQty = existing ? existing.quantity + qty : qty;
+      toast.success(
+        existing
+          ? `Đã bổ sung +${qty} vào kho (tồn mới: ${afterQty}).`
+          : `Đã tạo tồn kho mới và nhập ${qty} sản phẩm.`,
+      );
+
+      closeCreate();
+      await Promise.all([loadData(), loadWarehouseStock(form.warehouse_id)]);
     } catch {
       const msg = "Không thể nhập kho.";
       setError(msg);
@@ -182,12 +330,108 @@ export function StockInScreen() {
     }
   }
 
+  const selectedStock = selectedProduct ? stockInfoFor(selectedProduct.id) : null;
+
   return (
     <div className="space-y-4">
-      <PageHeader title="Phiếu Nhập Kho" subtitle="Nhập kho thủ công theo sản phẩm" />
+      <PageHeader
+        title="Phiếu Nhập Kho"
+        subtitle={`${movements.length} phiếu nhập`}
+        actions={
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="w-4 h-4" />
+            Tạo Phiếu Nhập
+          </Button>
+        }
+      />
 
-      <Card className="p-6">
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Tổng Phiếu", value: stats.total, color: "text-brand" },
+          { label: "Tháng Này", value: stats.thisMonth, color: "text-success" },
+          { label: "Tổng SL Nhập", value: stats.totalQty.toLocaleString("vi-VN"), color: "text-warning" },
+          { label: "Số Kho", value: stats.warehouseCount, color: "text-text-muted" },
+        ].map((s) => (
+          <Card key={s.label} className="p-4">
+            <p className="text-xs text-text-muted">{s.label}</p>
+            <p className={`text-xl mt-1 font-semibold ${s.color}`}>{s.value}</p>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-4">
+        <SearchInput
+          placeholder="Tìm sản phẩm, kho, lý do..."
+          value={search}
+          onChange={setSearch}
+          className="w-full"
+        />
+      </Card>
+
+      <Card>
+        {loading ? (
+          <EmptyState message="Đang tải..." icon="⏳" />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            message={search ? "Không tìm thấy phiếu nhập phù hợp." : "Chưa có phiếu nhập kho."}
+            icon="📥"
+          />
+        ) : (
+          <Table>
+            <Thead>
+              <tr>
+                <Th>Sản phẩm</Th>
+                <Th>Kho</Th>
+                <Th>Số lượng</Th>
+                <Th>Trước → Sau</Th>
+                <Th>Lý do</Th>
+                <Th>Thời gian</Th>
+                <Th>Thao tác</Th>
+              </tr>
+            </Thead>
+            <tbody>
+              {filtered.map((m) => (
+                <Tr key={m.id}>
+                  <Td>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-brand shrink-0" />
+                      <span className="text-xs font-medium">{m.product_name ?? `ID:${m.id}`}</span>
+                    </div>
+                  </Td>
+                  <Td className="text-xs">{m.warehouse_name ?? "—"}</Td>
+                  <Td className="font-semibold text-success text-xs">+{m.quantity}</Td>
+                  <Td className="text-xs text-text-muted">
+                    {m.quantity_before} → {m.quantity_after}
+                  </Td>
+                  <Td className="text-xs max-w-[160px] truncate">{m.reason ?? "—"}</Td>
+                  <Td className="text-xs text-text-muted">{formatDate(m.created)}</Td>
+                  <Td>
+                    <IconButton
+                      variant="primary"
+                      title="Chi tiết"
+                      onClick={() => {
+                        setSelected(m);
+                        setDetailOpen(true);
+                      }}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </IconButton>
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+
+      <Modal
+        open={createOpen}
+        onClose={closeCreate}
+        title="Tạo Phiếu Nhập Kho"
+        headerIcon={<Truck className="w-4 h-4" />}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Select
             label="Kho *"
             required
@@ -198,61 +442,81 @@ export function StockInScreen() {
             error={fieldErrors.warehouse_id}
           />
 
-          {/* Product Autocomplete */}
           <div className="relative" ref={dropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sản phẩm *
-            </label>
+            <label className="block text-sm font-medium text-text-body mb-1.5">Sản phẩm *</label>
             <div className="relative">
               <input
                 type="text"
                 value={productQuery}
                 onChange={(e) => handleProductQueryChange(e.target.value)}
                 onFocus={() => productSuggestions.length > 0 && setShowDropdown(true)}
-                placeholder="Tìm theo tên hoặc mã sản phẩm..."
-                className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                  fieldErrors.product_id ? "border-danger" : "border-gray-300"
+                placeholder={
+                  form.warehouse_id
+                    ? "Tìm theo tên hoặc mã sản phẩm..."
+                    : "Chọn kho trước, rồi tìm sản phẩm..."
+                }
+                disabled={!form.warehouse_id}
+                className={`w-full px-3.5 py-2.5 rounded-xl border bg-surface-subtle/50 text-sm text-text-primary placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand focus:bg-white transition-all disabled:opacity-60 ${
+                  fieldErrors.product_id ? "border-danger" : "border-border"
                 }`}
               />
-              {searchLoading && (
-                <span className="absolute right-2 top-2.5 text-xs text-gray-400">⏳</span>
+              {(searchLoading || stockLoading) && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-placeholder">
+                  ⏳
+                </span>
               )}
             </div>
             {fieldErrors.product_id && (
               <p className="text-xs text-danger mt-1">{fieldErrors.product_id}</p>
             )}
             {selectedProduct && (
-              <p className="text-xs text-success mt-1">
-                ✅ ID: {selectedProduct.id} · {selectedProduct.product_cd}
-              </p>
+              <div className="text-xs mt-1.5 space-y-0.5">
+                <p className="text-success">✅ {productSelectLabel(selectedProduct)}</p>
+                {form.warehouse_id && (
+                  <p className={selectedStock ? "text-text-muted" : "text-warning"}>
+                    {selectedStock
+                      ? `Đã có trong kho — tồn ${selectedStock.quantity}, khả dụng ${selectedStock.available_qty}`
+                      : "Chưa có trong kho — lần nhập này sẽ tạo bản ghi tồn mới"}
+                  </p>
+                )}
+              </div>
             )}
 
-            {/* Dropdown suggestions */}
             {showDropdown && productSuggestions.length > 0 && (
-              <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto">
-                {productSuggestions.map((p) => (
-                  <li
-                    key={p.id}
-                    onMouseDown={() => handleSelectProduct(p)}
-                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 text-sm"
-                  >
-                    {p.primary_image_url && (
-                      <img src={p.primary_image_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{p.product_cd}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {p.name_vi || p.name_jp}
-                      </p>
-                    </div>
-                  </li>
-                ))}
+              <ul className="absolute z-[60] w-full mt-1 bg-white border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto">
+                {productSuggestions.map((p) => {
+                  const inStock = !!stockInfoFor(p.id);
+                  return (
+                    <li
+                      key={p.id}
+                      onMouseDown={() => handleSelectProduct(p)}
+                      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-surface transition-colors text-sm"
+                    >
+                      {p.primary_image_url && (
+                        <img
+                          src={p.primary_image_url}
+                          alt=""
+                          className="w-8 h-8 rounded-lg object-cover shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate text-brand text-xs">{p.product_cd}</p>
+                        <p className="text-xs text-text-muted truncate">{productDisplayName(p)}</p>
+                      </div>
+                      {form.warehouse_id && (
+                        <Badge variant={inStock ? "success" : "warning"} className="shrink-0 text-[10px]">
+                          {inStock ? stockBadge(p.id) : "Chưa có"}
+                        </Badge>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
 
             {showDropdown && !searchLoading && productSuggestions.length === 0 && productQuery.length >= 2 && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg px-3 py-2 text-sm text-gray-500">
-                Không tìm thấy sản phẩm
+              <div className="absolute z-[60] w-full mt-1 bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-sm text-text-muted">
+                Không tìm thấy sản phẩm trong danh mục hàng hóa
               </div>
             )}
           </div>
@@ -272,51 +536,69 @@ export function StockInScreen() {
             onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
             placeholder="VD: Hàng về từ nhà cung cấp, điều chỉnh tồn kho..."
           />
-          <div className="md:col-span-2">
-            <Button type="submit" disabled={saving || !form.product_id}>
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <ModalFooter>
+            <Button variant="secondary" type="button" onClick={closeCreate}>
+              Hủy
+            </Button>
+            <Button type="submit" disabled={saving || !form.product_id || !form.warehouse_id}>
               {saving ? "Đang lưu..." : "Nhập kho"}
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-        {error && <p className="text-sm text-danger mt-3">{error}</p>}
-      </Card>
+      </Modal>
 
-      <Card>
-        {loading ? (
-          <EmptyState message="Đang tải..." icon="⏳" />
-        ) : movements.length === 0 ? (
-          <EmptyState message="Chưa có phiếu nhập kho." />
-        ) : (
-          <Table>
-            <Thead>
-              <tr>
-                <Th>Sản phẩm</Th>
-                <Th>Kho</Th>
-                <Th>Số lượng</Th>
-                <Th>Trước → Sau</Th>
-                <Th>Lý do</Th>
-                <Th>Thời gian</Th>
-              </tr>
-            </Thead>
-            <tbody>
-              {movements.map((m) => (
-                <Tr key={m.id}>
-                  <Td>{m.product_name ?? `ID:${m.id}`}</Td>
-                  <Td>{m.warehouse_name ?? "—"}</Td>
-                  <Td className="font-semibold text-success">+{m.quantity}</Td>
-                  <Td className="text-xs text-gray-500">
-                    {m.quantity_before} → {m.quantity_after}
-                  </Td>
-                  <Td className="text-xs">{m.reason ?? "—"}</Td>
-                  <Td className="text-xs text-gray-400">
-                    {m.created ? new Date(m.created).toLocaleDateString("vi-VN") : "—"}
-                  </Td>
+      <Modal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        title={`Chi Tiết Phiếu Nhập #${selected?.id ?? ""}`}
+        headerIcon={<FileText className="w-4 h-4" />}
+        size="xl"
+        footer={
+          <ModalFooter>
+            <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => setDetailOpen(false)}>
+              Đóng
+            </Button>
+          </ModalFooter>
+        }
+      >
+        {selected && (
+          <div className="space-y-5">
+            <DetailGrid>
+              <DetailField label="Mã phiếu">
+                <span className="font-mono font-semibold">#{selected.id}</span>
+              </DetailField>
+              <DetailField label="Trạng thái">
+                <Badge variant="success">Hoàn thành</Badge>
+              </DetailField>
+              <DetailField label="Sản phẩm" span={2}>
+                {selected.product_name ?? "—"}
+              </DetailField>
+              <DetailField label="Kho nhập">{selected.warehouse_name ?? "—"}</DetailField>
+              <DetailField label="Ngày tạo">{formatDate(selected.created)}</DetailField>
+            </DetailGrid>
+
+            <Table>
+              <Thead>
+                <tr>
+                  <Th>Số lượng nhập</Th>
+                  <Th>Tồn trước</Th>
+                  <Th>Tồn sau</Th>
+                  <Th>Lý do</Th>
+                </tr>
+              </Thead>
+              <tbody>
+                <Tr>
+                  <Td className="text-success font-semibold">+{selected.quantity}</Td>
+                  <Td className="text-xs">{selected.quantity_before}</Td>
+                  <Td className="text-xs font-medium">{selected.quantity_after}</Td>
+                  <Td className="text-xs">{selected.reason ?? "—"}</Td>
                 </Tr>
-              ))}
-            </tbody>
-          </Table>
+              </tbody>
+            </Table>
+          </div>
         )}
-      </Card>
+      </Modal>
     </div>
   );
 }

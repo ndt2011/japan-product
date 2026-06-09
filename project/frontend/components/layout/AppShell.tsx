@@ -1,6 +1,7 @@
 "use client";
 
 import { AppLogo } from "@/components/AppLogo";
+import { NavIcon } from "@/components/NavIcon";
 import { AiStaffChatWidget } from "@/components/layout/AiStaffChatWidget";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { NotificationPoller } from "@/components/layout/NotificationPoller";
@@ -171,7 +172,7 @@ function NavLink({
         active ? "bg-brand-light text-brand font-medium" : "text-text-body hover:bg-surface-muted hover:text-text-primary",
       )}
     >
-      <span className="text-base shrink-0">{item.icon}</span>
+      <NavIcon id={item.id} className="w-4 h-4 shrink-0" />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );

@@ -150,11 +150,12 @@ class AiPurchasingService
                 'inventories.available_qty',
             ])
             ->where('products.deleted_flag', false)
-            ->where('products.status', 'active')
+            ->where('products.disabled_flag', false)
             ->where(function ($q) use ($keywords) {
                 foreach ($keywords as $kw) {
                     $q->orWhere('products.product_name', 'like', "%{$kw}%")
-                      ->orWhere('products.name_jp', 'like', "%{$kw}%")
+                      ->orWhere('products.product_name_jp', 'like', "%{$kw}%")
+                      ->orWhere('products.name_vi', 'like', "%{$kw}%")
                       ->orWhere('products.brand', 'like', "%{$kw}%");
                 }
             })

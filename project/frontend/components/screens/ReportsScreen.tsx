@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Card, EmptyState, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, Input, PageHeader, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useIsAdmin } from "@/hooks/usePermission";
 import type { ProfitReportOrderRow, ProfitReportProductRow, ProfitReportSummary } from "@/types/api";
 import { useCallback, useEffect, useState } from "react";
@@ -114,7 +114,15 @@ export function ReportsScreen() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Báo Cáo" subtitle="Đơn hàng · Tồn kho · Doanh thu · Lợi nhuận (Admin)" />
+      <PageHeader
+        title="Báo Cáo Vận Hành"
+        subtitle="Phân tích đơn hàng · tồn kho · doanh thu · lợi nhuận"
+        actions={
+          <Button variant="secondary" size="sm" disabled>
+            📤 Xuất Excel
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {visibleTabs.map((t) => (

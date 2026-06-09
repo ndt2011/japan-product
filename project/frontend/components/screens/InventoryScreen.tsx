@@ -1,6 +1,23 @@
 "use client";
 
-import { Button, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  IconButton,
+  Input,
+  Modal,
+  ModalFooter,
+  PageHeader,
+  Select,
+  Table,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@/components/ui";
+import { Edit2, Trash2, Upload } from "lucide-react";
 import {
   clearFieldError,
   hasFieldErrors,
@@ -303,10 +320,12 @@ export function InventoryScreen() {
                       <Td className="text-xs text-text-muted">{row.min_stock_qty ?? 5}</Td>
                       <Td>
                         <div className="flex gap-1">
-                          <button type="button" onClick={() => openEdit(row)}
-                            className="text-xs text-brand hover:underline px-1" title="Sửa">✏️</button>
-                          <button type="button" onClick={() => setDeleting(row)}
-                            className="text-xs text-danger hover:underline px-1" title="Xóa">🗑️</button>
+                          <IconButton variant="primary" onClick={() => openEdit(row)} title="Sửa">
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </IconButton>
+                          <IconButton variant="danger" onClick={() => setDeleting(row)} title="Xóa">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </IconButton>
                         </div>
                       </Td>
                     </Tr>
@@ -317,105 +336,135 @@ export function InventoryScreen() {
         </Card>
       )}
 
-      {/* Edit Modal */}
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <p className="font-medium text-text-primary">Cập nhật — {editing.product_name ?? `ID ${editing.id}`}</p>
-              <button type="button" onClick={() => setEditing(null)} className="text-text-muted hover:text-text-primary">✕</button>
-            </div>
-            <form onSubmit={handleEdit} className="p-5 space-y-4">
-              <Input label="Ngưỡng tối thiểu" type="number" min={0} value={editForm.min_stock_qty}
-                onChange={(e) => {
-                  setEditForm((f) => ({ ...f, min_stock_qty: e.target.value }));
-                  setEditFieldErrors((prev) => clearFieldError(prev, "min_stock_qty"));
-                }}
-                error={editFieldErrors.min_stock_qty} />
-              <Select label="Trạng thái nhập hàng" value={editForm.restock_status}
-                onChange={(e) => setEditForm((f) => ({ ...f, restock_status: e.target.value }))}
-                options={RESTOCK_OPTIONS} />
-              <Input label="ETA nhập hàng" type="date" value={editForm.restock_eta}
-                onChange={(e) => setEditForm((f) => ({ ...f, restock_eta: e.target.value }))} />
-              <Input label="Ghi chú" value={editForm.notes}
-                onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))} />
-              {editError && <p className="text-sm text-danger">{editError}</p>}
-              <div className="flex gap-2 justify-end pt-1">
-                <Button variant="outline" type="button" onClick={() => setEditing(null)}>Hủy</Button>
-                <Button type="submit" disabled={editSaving}>{editSaving ? "Đang lưu..." : "Lưu"}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirm Modal */}
-      {deleting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
-            <p className="font-medium text-text-primary">Xóa bản ghi kho?</p>
-            <p className="text-sm text-text-muted">
-              <span className="font-mono">{deleting.inventory_cd ?? `ID ${deleting.id}`}</span> — {deleting.product_name}
-            </p>
-            <p className="text-xs text-danger">Hành động này không thể hoàn tác.</p>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" type="button" onClick={() => setDeleting(null)}>Hủy</Button>
-              <Button variant="danger" disabled={deleteLoading} onClick={handleDelete}>
-                {deleteLoading ? "Đang xóa..." : "Xóa"}
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title={`Cập nhật — ${editing?.product_name ?? `ID ${editing?.id ?? ""}`}`}
+        headerIcon={<Edit2 className="w-4 h-4" />}
+        size="sm"
+      >
+        {editing && (
+          <form onSubmit={handleEdit} className="space-y-4">
+            <Input
+              label="Ngưỡng tối thiểu"
+              type="number"
+              min={0}
+              value={editForm.min_stock_qty}
+              onChange={(e) => {
+                setEditForm((f) => ({ ...f, min_stock_qty: e.target.value }));
+                setEditFieldErrors((prev) => clearFieldError(prev, "min_stock_qty"));
+              }}
+              error={editFieldErrors.min_stock_qty}
+            />
+            <Select
+              label="Trạng thái nhập hàng"
+              value={editForm.restock_status}
+              onChange={(e) => setEditForm((f) => ({ ...f, restock_status: e.target.value }))}
+              options={RESTOCK_OPTIONS}
+            />
+            <Input
+              label="ETA nhập hàng"
+              type="date"
+              value={editForm.restock_eta}
+              onChange={(e) => setEditForm((f) => ({ ...f, restock_eta: e.target.value }))}
+            />
+            <Input
+              label="Ghi chú"
+              value={editForm.notes}
+              onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
+            />
+            {editError && <p className="text-sm text-danger">{editError}</p>}
+            <ModalFooter>
+              <Button variant="secondary" type="button" onClick={() => setEditing(null)}>
+                Hủy
               </Button>
-            </div>
+              <Button type="submit" disabled={editSaving}>
+                {editSaving ? "Đang lưu..." : "Lưu"}
+              </Button>
+            </ModalFooter>
+          </form>
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        onConfirm={handleDelete}
+        title="Xóa bản ghi kho?"
+        message="Hành động này không thể hoàn tác."
+        confirmLabel="Xóa"
+        loading={deleteLoading}
+        detail={
+          deleting ? (
+            <p className="text-sm text-text-primary mt-2">
+              <span className="font-mono">{deleting.inventory_cd ?? `ID ${deleting.id}`}</span> —{" "}
+              {deleting.product_name}
+            </p>
+          ) : undefined
+        }
+      />
+
+      <Modal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Import Kho từ CSV"
+        headerIcon={<Upload className="w-4 h-4" />}
+        size="sm"
+        footer={
+          <ModalFooter>
+            <Button variant="secondary" type="button" onClick={() => setShowImport(false)}>
+              Đóng
+            </Button>
+            <Button type="button" disabled={!csvFile || importLoading} onClick={handleImport}>
+              {importLoading ? "Đang nhập..." : "Import"}
+            </Button>
+          </ModalFooter>
+        }
+      >
+        <div className="space-y-4">
+          <div className="bg-surface-subtle rounded-xl p-3 text-xs text-text-muted space-y-1">
+            <p className="font-medium text-text-primary">Định dạng CSV (header bắt buộc):</p>
+            <p className="font-mono">product_cd,warehouse_id,quantity,min_stock_qty,notes</p>
+            <p className="text-[10px]">• product_cd: mã sản phẩm (bắt buộc)</p>
+            <p className="text-[10px]">• warehouse_id: ID kho (bắt buộc)</p>
+            <p className="text-[10px]">• quantity: số lượng nhập (bắt buộc)</p>
+            <p className="text-[10px]">• min_stock_qty, notes: tùy chọn</p>
           </div>
-        </div>
-      )}
-      {/* CSV Import Modal (FE-V3-013) */}
-      {showImport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <p className="font-medium text-text-primary">📥 Import Kho từ CSV</p>
-              <button type="button" onClick={() => setShowImport(false)} className="text-text-muted hover:text-text-primary">✕</button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="bg-surface-subtle rounded-lg p-3 text-xs text-text-muted space-y-1">
-                <p className="font-medium text-text-primary">Định dạng CSV (header bắt buộc):</p>
-                <p className="font-mono">product_cd,warehouse_id,quantity,min_stock_qty,notes</p>
-                <p className="text-[10px]">• product_cd: mã sản phẩm (bắt buộc)</p>
-                <p className="text-[10px]">• warehouse_id: ID kho (bắt buộc)</p>
-                <p className="text-[10px]">• quantity: số lượng nhập (bắt buộc)</p>
-                <p className="text-[10px]">• min_stock_qty, notes: tùy chọn</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Chọn file CSV</label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => { setCsvFile(e.target.files?.[0] ?? null); setImportResult(null); }}
-                  className="block w-full text-sm text-text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-brand file:text-white hover:file:bg-brand/90"
-                />
-              </div>
-              {importResult && (
-                <div className={`rounded-lg p-3 text-sm ${importResult.imported > 0 ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
-                  <p className="font-medium">
-                    ✅ Đã nhập: {importResult.imported}/{importResult.total_rows} dòng
-                  </p>
-                  {importResult.errors.length > 0 && (
-                    <ul className="mt-1.5 text-xs space-y-0.5">
-                      {importResult.errors.slice(0, 5).map((e, i) => <li key={i}>⚠️ {e}</li>)}
-                      {importResult.errors.length > 5 && <li>... và {importResult.errors.length - 5} lỗi khác</li>}
-                    </ul>
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">Chọn file CSV</label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => {
+                setCsvFile(e.target.files?.[0] ?? null);
+                setImportResult(null);
+              }}
+              className="block w-full text-sm text-text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-brand file:text-white hover:file:bg-brand/90"
+            />
+          </div>
+          {importResult && (
+            <div
+              className={`rounded-xl p-3 text-sm ${
+                importResult.imported > 0 ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+              }`}
+            >
+              <p className="font-medium">
+                ✅ Đã nhập: {importResult.imported}/{importResult.total_rows} dòng
+              </p>
+              {importResult.errors.length > 0 && (
+                <ul className="mt-1.5 text-xs space-y-0.5">
+                  {importResult.errors.slice(0, 5).map((e, i) => (
+                    <li key={i}>⚠️ {e}</li>
+                  ))}
+                  {importResult.errors.length > 5 && (
+                    <li>... và {importResult.errors.length - 5} lỗi khác</li>
                   )}
-                </div>
+                </ul>
               )}
-              <div className="flex gap-2 justify-end pt-1">
-                <Button variant="outline" type="button" onClick={() => setShowImport(false)}>Đóng</Button>
-                <Button type="button" disabled={!csvFile || importLoading} onClick={handleImport}>
-                  {importLoading ? "Đang nhập..." : "Import"}
-                </Button>
-              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

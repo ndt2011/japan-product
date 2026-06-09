@@ -1,7 +1,8 @@
 import { jsonFromProxy, proxyToApi } from "@/lib/server-api";
 
-export async function GET() {
-  const { result, status } = await proxyToApi("/suppliers", { method: "GET" });
+export async function GET(request: Request) {
+  const qs = new URL(request.url).search;
+  const { result, status } = await proxyToApi(`/suppliers${qs}`, { method: "GET" });
   return jsonFromProxy(result, status);
 }
 

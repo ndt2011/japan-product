@@ -63,7 +63,7 @@ export function AICatalogSearchPanel() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-4">
+    <div className="flex h-[calc(100vh-11rem)] gap-4">
       <aside className="w-72 shrink-0">
         <Card className="p-4 h-full flex flex-col gap-3">
           <div>
@@ -103,6 +103,16 @@ export function AICatalogSearchPanel() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
+        <Card className="px-4 py-3 mb-3 shrink-0 flex items-center gap-3">
+          <div className="w-9 h-9 bg-gradient-to-br from-brand to-purple-accent rounded-xl flex items-center justify-center text-white shrink-0">
+            📦
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-text-primary font-medium">Tìm Catalog Nội Bộ</p>
+            <p className="text-xs text-text-muted">Semantic + keyword · GPT mở rộng query</p>
+          </div>
+        </Card>
+
         <Card className="p-3 mb-3 shrink-0 flex gap-2 items-end">
           <input
             value={query}
