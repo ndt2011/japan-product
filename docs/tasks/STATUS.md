@@ -1,6 +1,6 @@
 # Trạng thái dự án & Việc cần làm tiếp
 
-> **Cập nhật**: 2026-06-09 (lần 20 — sync **qa-tasks** · **devops-tasks** · **local, chưa push**)  
+> **Cập nhật**: 2026-06-09 (lần 20 — pushed `4e31a76` → staging auto-deploy)  
 > **Repo**: https://github.com/ndt2011/japan-product  
 > **Staging**: https://japan-product.vercel.app · API https://product-production-7e4e.up.railway.app  
 > **Audit**: [code-vs-docs-audit.md](../sa/amendments/code-vs-docs-audit.md) — **~99% khớp** (V3 + AI-P 100%)  
